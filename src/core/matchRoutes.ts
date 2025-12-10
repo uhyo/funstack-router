@@ -6,7 +6,7 @@ import type { RouteDefinition, MatchedRoute } from "../types.js";
  */
 export function matchRoutes(
   routes: RouteDefinition[],
-  pathname: string
+  pathname: string,
 ): MatchedRoute[] | null {
   for (const route of routes) {
     const matched = matchRoute(route, pathname);
@@ -22,7 +22,7 @@ export function matchRoutes(
  */
 function matchRoute(
   route: RouteDefinition,
-  pathname: string
+  pathname: string,
 ): MatchedRoute[] | null {
   const hasChildren = Boolean(route.children?.length);
 
@@ -31,7 +31,7 @@ function matchRoute(
   const { matched, params, consumedPathname } = matchPath(
     route.path,
     pathname,
-    !hasChildren
+    !hasChildren,
   );
 
   if (!matched) {
@@ -86,8 +86,12 @@ function matchRoute(
 function matchPath(
   pattern: string,
   pathname: string,
-  exact: boolean
-): { matched: boolean; params: Record<string, string>; consumedPathname: string } {
+  exact: boolean,
+): {
+  matched: boolean;
+  params: Record<string, string>;
+  consumedPathname: string;
+} {
   // Normalize pattern
   const normalizedPattern = pattern.startsWith("/") ? pattern : `/${pattern}`;
 

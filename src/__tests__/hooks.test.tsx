@@ -85,7 +85,7 @@ describe("hooks", () => {
       }
 
       expect(() => render(<TestComponent />)).toThrow(
-        "useNavigate must be used within a Router"
+        "useNavigate must be used within a Router",
       );
     });
   });
@@ -93,7 +93,7 @@ describe("hooks", () => {
   describe("useLocation", () => {
     it("returns current location", () => {
       mockNavigation = setupNavigationMock(
-        "http://localhost/page?foo=bar#section"
+        "http://localhost/page?foo=bar#section",
       );
 
       function TestComponent() {
@@ -125,7 +125,7 @@ describe("hooks", () => {
       }
 
       expect(() => render(<TestComponent />)).toThrow(
-        "useLocation must be used within a Router"
+        "useLocation must be used within a Router",
       );
     });
   });
@@ -168,7 +168,7 @@ describe("hooks", () => {
       }
 
       expect(() => render(<TestComponent />)).toThrow(
-        "useParams must be used within a Router"
+        "useParams must be used within a Router",
       );
     });
   });
@@ -176,7 +176,7 @@ describe("hooks", () => {
   describe("useSearchParams", () => {
     it("returns current search params", () => {
       mockNavigation = setupNavigationMock(
-        "http://localhost/page?foo=bar&baz=qux"
+        "http://localhost/page?foo=bar&baz=qux",
       );
 
       function TestComponent() {
@@ -220,7 +220,7 @@ describe("hooks", () => {
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(
         "/page?newKey=newValue",
-        { history: "replace", state: undefined }
+        { history: "replace", state: undefined },
       );
     });
 
@@ -253,7 +253,7 @@ describe("hooks", () => {
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(
         "/page?foo=updated&new=param",
-        { history: "replace", state: undefined }
+        { history: "replace", state: undefined },
       );
     });
 
@@ -264,7 +264,7 @@ describe("hooks", () => {
       }
 
       expect(() => render(<TestComponent />)).toThrow(
-        "useSearchParams must be used within a Router"
+        "useSearchParams must be used within a Router",
       );
     });
   });

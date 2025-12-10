@@ -22,7 +22,7 @@ export type LinkProps = Omit<
 
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
   { to, replace, state, onClick, children, ...rest },
-  ref
+  ref,
 ) {
   const navigate = useNavigate();
 
@@ -46,7 +46,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
       event.preventDefault();
       navigate(to, { replace, state });
     },
-    [navigate, to, replace, state, onClick]
+    [navigate, to, replace, state, onClick],
   );
 
   return (

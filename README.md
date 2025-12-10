@@ -79,10 +79,10 @@ The root component that provides routing context.
 <Router routes={routes} />
 ```
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `routes` | `RouteDefinition[]` | Array of route definitions |
-| `children` | `ReactNode` | Optional children rendered alongside routes |
+| Prop       | Type                | Description                                 |
+| ---------- | ------------------- | ------------------------------------------- |
+| `routes`   | `RouteDefinition[]` | Array of route definitions                  |
+| `children` | `ReactNode`         | Optional children rendered alongside routes |
 
 #### `<Link>`
 
@@ -94,11 +94,11 @@ Navigation link component.
 </Link>
 ```
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `to` | `string` | Destination URL |
+| Prop      | Type      | Description                           |
+| --------- | --------- | ------------------------------------- |
+| `to`      | `string`  | Destination URL                       |
 | `replace` | `boolean` | Replace history entry instead of push |
-| `state` | `unknown` | State to pass to the destination |
+| `state`   | `unknown` | State to pass to the destination      |
 
 #### `<Outlet>`
 
@@ -204,11 +204,11 @@ type NavigateOptions = {
 
 FUNSTACK Router uses the [URLPattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) for path matching.
 
-| Pattern | Example | Matches |
-|---------|---------|---------|
-| `/users` | `/users` | Exact match |
-| `/users/:id` | `/users/123` | Named parameter |
-| `/files/*` | `/files/a/b/c` | Wildcard |
+| Pattern      | Example        | Matches         |
+| ------------ | -------------- | --------------- |
+| `/users`     | `/users`       | Exact match     |
+| `/users/:id` | `/users/123`   | Named parameter |
+| `/files/*`   | `/files/a/b/c` | Wildcard        |
 
 ## Browser Support
 

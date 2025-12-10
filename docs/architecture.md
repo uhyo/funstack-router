@@ -8,13 +8,13 @@ FUNSTACK Router is a modern React router built on the [Navigation API](https://d
 
 The Navigation API provides several advantages over the History API:
 
-| Feature | History API | Navigation API |
-|---------|-------------|----------------|
-| Navigation interception | Requires `popstate` + link click handlers | Single `navigate` event |
-| Programmatic navigation | `pushState`/`replaceState` | `navigation.navigate()` |
-| Traversal handling | Limited `popstate` | Proper traverse events |
-| Navigation state | Manual URL parsing | `currentEntry` with state |
-| Cancel/redirect | Manual, error-prone | Built-in `intercept()` |
+| Feature                 | History API                               | Navigation API            |
+| ----------------------- | ----------------------------------------- | ------------------------- |
+| Navigation interception | Requires `popstate` + link click handlers | Single `navigate` event   |
+| Programmatic navigation | `pushState`/`replaceState`                | `navigation.navigate()`   |
+| Traversal handling      | Limited `popstate`                        | Proper traverse events    |
+| Navigation state        | Manual URL parsing                        | `currentEntry` with state |
+| Cancel/redirect         | Manual, error-prone                       | Built-in `intercept()`    |
 
 ## Core Concepts
 
@@ -83,6 +83,7 @@ const routes: RouteDefinition[] = [
 Path matching uses the [URLPattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) where available, with a fallback for unsupported browsers.
 
 Pattern syntax:
+
 - `/users` - Exact match
 - `/users/:id` - Named parameter
 - `/files/*` - Wildcard (catch-all)
@@ -117,6 +118,7 @@ Pattern syntax:
 #### `<Router>`
 
 The root provider component that:
+
 - Receives route definitions as a prop
 - Subscribes to Navigation API events
 - Performs route matching against current URL
@@ -136,7 +138,7 @@ const routes: RouteDefinition[] = [
   },
 ];
 
-<Router routes={routes} />
+<Router routes={routes} />;
 ```
 
 #### `<Link>`
@@ -267,11 +269,12 @@ const currentEntry = useSyncExternalStore(
   // getSnapshot: returns current state
   () => navigation.currentEntry,
   // getServerSnapshot: for SSR (Navigation API not available)
-  () => null
+  () => null,
 );
 ```
 
 **Why `useSyncExternalStore` over `useState` + `useEffect`:**
+
 - Handles React concurrent rendering correctly (prevents tearing)
 - Clean subscription/snapshot separation
 - React manages subscription lifecycle automatically
@@ -301,11 +304,13 @@ src/
 ## Browser Support
 
 The Navigation API is supported in:
+
 - Chrome 102+
 - Edge 102+
 - Opera 88+
 
 For unsupported browsers (Firefox, Safari), a polyfill or fallback strategy will be needed. Options:
+
 1. Use the `navigation-api-polyfill` package
 2. Provide a History API fallback mode
 3. Require polyfill as peer dependency

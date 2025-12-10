@@ -44,42 +44,48 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     canGoForward: false,
     transition: null,
 
-    navigate: vi.fn((url: string, options?: { state?: unknown; history?: string }) => {
-      const newUrl = new URL(url, currentEntry.url).href;
-      const newEntry = new MockNavigationHistoryEntry(
-        newUrl,
-        entries.length,
-        options?.state
-      );
+    navigate: vi.fn(
+      (url: string, options?: { state?: unknown; history?: string }) => {
+        const newUrl = new URL(url, currentEntry.url).href;
+        const newEntry = new MockNavigationHistoryEntry(
+          newUrl,
+          entries.length,
+          options?.state,
+        );
 
-      if (options?.history !== "replace") {
-        entries.push(newEntry);
-      } else {
-        entries[entries.length - 1] = newEntry;
-      }
+        if (options?.history !== "replace") {
+          entries.push(newEntry);
+        } else {
+          entries[entries.length - 1] = newEntry;
+        }
 
-      currentEntry = newEntry;
-      mockNavigation.currentEntry = currentEntry;
+        currentEntry = newEntry;
+        mockNavigation.currentEntry = currentEntry;
 
-      // Dispatch currententrychange event
-      dispatchEvent("currententrychange", new Event("currententrychange"));
+        // Dispatch currententrychange event
+        dispatchEvent("currententrychange", new Event("currententrychange"));
 
-      return {
-        committed: Promise.resolve(currentEntry),
-        finished: Promise.resolve(currentEntry),
-      };
-    }),
+        return {
+          committed: Promise.resolve(currentEntry),
+          finished: Promise.resolve(currentEntry),
+        };
+      },
+    ),
 
-    addEventListener: vi.fn((type: string, listener: (event: Event) => void) => {
-      if (!listeners.has(type)) {
-        listeners.set(type, new Set());
-      }
-      listeners.get(type)!.add(listener);
-    }),
+    addEventListener: vi.fn(
+      (type: string, listener: (event: Event) => void) => {
+        if (!listeners.has(type)) {
+          listeners.set(type, new Set());
+        }
+        listeners.get(type)!.add(listener);
+      },
+    ),
 
-    removeEventListener: vi.fn((type: string, listener: (event: Event) => void) => {
-      listeners.get(type)?.delete(listener);
-    }),
+    removeEventListener: vi.fn(
+      (type: string, listener: (event: Event) => void) => {
+        listeners.get(type)?.delete(listener);
+      },
+    ),
 
     // Test helper to simulate navigation
     __simulateNavigation(url: string, state?: unknown) {

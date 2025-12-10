@@ -66,22 +66,22 @@ interface Navigation extends EventTarget {
   addEventListener(
     type: "navigate",
     listener: (event: NavigateEvent) => void,
-    options?: AddEventListenerOptions
+    options?: AddEventListenerOptions,
   ): void;
   addEventListener(
     type: "navigatesuccess" | "navigateerror" | "currententrychange",
     listener: (event: Event) => void,
-    options?: AddEventListenerOptions
+    options?: AddEventListenerOptions,
   ): void;
   removeEventListener(
     type: "navigate",
     listener: (event: NavigateEvent) => void,
-    options?: EventListenerOptions
+    options?: EventListenerOptions,
   ): void;
   removeEventListener(
     type: "navigatesuccess" | "navigateerror" | "currententrychange",
     listener: (event: Event) => void,
-    options?: EventListenerOptions
+    options?: EventListenerOptions,
   ): void;
 }
 
@@ -151,7 +151,10 @@ declare class URLPattern {
   readonly hash: string;
 
   test(input?: URLPatternInit | string, baseURL?: string): boolean;
-  exec(input?: URLPatternInit | string, baseURL?: string): URLPatternResult | null;
+  exec(
+    input?: URLPatternInit | string,
+    baseURL?: string,
+  ): URLPatternResult | null;
 }
 
 interface URLPatternOptions {

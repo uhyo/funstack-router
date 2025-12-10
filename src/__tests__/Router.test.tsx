@@ -83,7 +83,9 @@ describe("Router", () => {
   });
 
   it("provides location via useLocation", () => {
-    mockNavigation = setupNavigationMock("http://localhost/page?foo=bar#section");
+    mockNavigation = setupNavigationMock(
+      "http://localhost/page?foo=bar#section",
+    );
 
     function Page() {
       const location = useLocation();

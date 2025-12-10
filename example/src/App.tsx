@@ -31,7 +31,12 @@ function Layout() {
       <main>
         <p style={{ color: "#666", fontSize: "0.9rem" }}>
           Current path: <code>{location.pathname}</code>
-          {location.search && <> | Search: <code>{location.search}</code></>}
+          {location.search && (
+            <>
+              {" "}
+              | Search: <code>{location.search}</code>
+            </>
+          )}
         </p>
         <Outlet />
       </main>

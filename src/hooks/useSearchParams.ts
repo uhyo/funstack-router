@@ -5,7 +5,7 @@ type SetSearchParams = (
   params:
     | URLSearchParams
     | Record<string, string>
-    | ((prev: URLSearchParams) => URLSearchParams | Record<string, string>)
+    | ((prev: URLSearchParams) => URLSearchParams | Record<string, string>),
 ) => void;
 
 /**
@@ -49,7 +49,7 @@ export function useSearchParams(): [URLSearchParams, SetSearchParams] {
       url.search = newParams.toString();
       context.navigate(url.pathname + url.search + url.hash, { replace: true });
     },
-    [context]
+    [context],
   );
 
   return [searchParams, setSearchParams];

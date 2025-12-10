@@ -25,7 +25,7 @@ describe("Link", () => {
     render(
       <Router routes={routes}>
         <Link to="/about">Go to About</Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByRole("link", { name: "Go to About" });
@@ -37,7 +37,7 @@ describe("Link", () => {
     render(
       <Router routes={routes}>
         <Link to="/about">Go to About</Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByRole("link", { name: "Go to About" });
@@ -55,7 +55,7 @@ describe("Link", () => {
         <Link to="/about" replace>
           Go to About
         </Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByRole("link", { name: "Go to About" });
@@ -75,7 +75,7 @@ describe("Link", () => {
         <Link to="/about" state={state}>
           Go to About
         </Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByRole("link", { name: "Go to About" });
@@ -91,7 +91,7 @@ describe("Link", () => {
     render(
       <Router routes={routes}>
         <Link to="/about">Go to About</Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByRole("link", { name: "Go to About" });
@@ -117,7 +117,7 @@ describe("Link", () => {
     render(
       <Router routes={routes}>
         <Link to="/about">Go to About</Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByRole("link", { name: "Go to About" });
@@ -134,7 +134,7 @@ describe("Link", () => {
         <Link to="/about" onClick={handleClick}>
           Go to About
         </Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByRole("link", { name: "Go to About" });
@@ -152,7 +152,7 @@ describe("Link", () => {
         <Link to="/about" onClick={handleClick}>
           Go to About
         </Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByRole("link", { name: "Go to About" });
@@ -170,7 +170,7 @@ describe("Link", () => {
         <Link to="/about" ref={ref}>
           Go to About
         </Link>
-      </Router>
+      </Router>,
     );
 
     expect(ref.current).toBeInstanceOf(HTMLAnchorElement);
@@ -183,7 +183,7 @@ describe("Link", () => {
         <Link to="/about" className="nav-link" data-testid="about-link">
           Go to About
         </Link>
-      </Router>
+      </Router>,
     );
 
     const link = screen.getByTestId("about-link");

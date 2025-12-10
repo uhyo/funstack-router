@@ -7,7 +7,11 @@ import {
 } from "react";
 import { RouterContext } from "./context/RouterContext.js";
 import { RouteContext } from "./context/RouteContext.js";
-import type { RouteDefinition, NavigateOptions, MatchedRoute } from "./types.js";
+import type {
+  RouteDefinition,
+  NavigateOptions,
+  MatchedRoute,
+} from "./types.js";
 import { matchRoutes } from "./core/matchRoutes.js";
 
 export type RouterProps = {
@@ -58,7 +62,7 @@ export function Router({ routes, children }: RouterProps): ReactNode {
   const currentEntry = useSyncExternalStore(
     subscribeToNavigation,
     getNavigationSnapshot,
-    getServerSnapshot
+    getServerSnapshot,
   );
 
   // Set up navigation interception
@@ -115,7 +119,7 @@ export function Router({ routes, children }: RouterProps): ReactNode {
 
   const routerContextValue = useMemo(
     () => ({ currentEntry, navigate }),
-    [currentEntry, navigate]
+    [currentEntry, navigate],
   );
 
   return (
@@ -154,7 +158,7 @@ function RouteRenderer({
 
   const routeContextValue = useMemo(
     () => ({ params, matchedPath: pathname, outlet }),
-    [params, pathname, outlet]
+    [params, pathname, outlet],
   );
 
   return (
