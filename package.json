@@ -1,16 +1,44 @@
 {
   "name": "@funstack/router",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "version": "0.0.0",
+  "description": "A modern React router based on the Navigation API",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
-  "keywords": [],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [
+    "react",
+    "router",
+    "navigation-api"
+  ],
   "author": "uhyo <uhyo@uhy.ooo>",
   "license": "MIT",
-  "type": "module",
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
   "devDependencies": {
-    "prettier": "^3.7.4"
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.0.0",
+    "jsdom": "^27.3.0",
+    "prettier": "^3.7.4",
+    "react": "^19.0.0",
+    "tsdown": "^0.9.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   }
 }
