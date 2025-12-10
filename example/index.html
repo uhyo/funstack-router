@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FUNSTACK Router Example</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+      }
+      nav {
+        background: #333;
+        padding: 1rem;
+      }
+      nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+      }
+      nav a:hover {
+        background: #555;
+      }
+      main {
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .user-card {
+        border: 1px solid #ddd;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border-radius: 4px;
+      }
+      .user-card a {
+        color: #0066cc;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
