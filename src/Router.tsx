@@ -12,20 +12,38 @@ import { matchRoutes } from "./core/matchRoutes.js";
 
 export type RouterProps = {
   routes: RouteDefinition[];
+  children?: ReactNode;
 };
+
+/**
+ * Check if Navigation API is available.
+ */
+function hasNavigation(): boolean {
+  return typeof navigation !== "undefined";
+}
 
 /**
  * Subscribe to Navigation API's currententrychange event.
  */
 function subscribeToNavigation(callback: () => void): () => void {
+  if (!hasNavigation()) {
+    return () => {};
+  }
   navigation.addEventListener("currententrychange", callback);
-  return () => navigation.removeEventListener("currententrychange", callback);
+  return () => {
+    if (hasNavigation()) {
+      navigation.removeEventListener("currententrychange", callback);
+    }
+  };
 }
 
 /**
  * Get current navigation entry snapshot.
  */
 function getNavigationSnapshot(): NavigationHistoryEntry | null {
+  if (!hasNavigation()) {
+    return null;
+  }
   return navigation.currentEntry;
 }
 
@@ -36,7 +54,7 @@ function getServerSnapshot(): null {
   return null;
 }
 
-export function Router({ routes }: RouterProps): ReactNode {
+export function Router({ routes, children }: RouterProps): ReactNode {
   const currentEntry = useSyncExternalStore(
     subscribeToNavigation,
     getNavigationSnapshot,
@@ -45,6 +63,10 @@ export function Router({ routes }: RouterProps): ReactNode {
 
   // Set up navigation interception
   useEffect(() => {
+    if (!hasNavigation()) {
+      return;
+    }
+
     const handleNavigate = (event: NavigateEvent) => {
       // Only intercept same-origin navigations
       if (!event.canIntercept || event.hashChange) {
@@ -65,11 +87,18 @@ export function Router({ routes }: RouterProps): ReactNode {
     };
 
     navigation.addEventListener("navigate", handleNavigate);
-    return () => navigation.removeEventListener("navigate", handleNavigate);
+    return () => {
+      if (hasNavigation()) {
+        navigation.removeEventListener("navigate", handleNavigate);
+      }
+    };
   }, [routes]);
 
   // Navigate function for programmatic navigation
   const navigate = useCallback((to: string, options?: NavigateOptions) => {
+    if (!hasNavigation()) {
+      return;
+    }
     navigation.navigate(to, {
       history: options?.replace ? "replace" : "push",
       state: options?.state,
@@ -94,6 +123,7 @@ export function Router({ routes }: RouterProps): ReactNode {
       {matchedRoutes ? (
         <RouteRenderer matchedRoutes={matchedRoutes} index={0} />
       ) : null}
+      {children}
     </RouterContext.Provider>
   );
 }
