@@ -34,17 +34,21 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(function Link(
       // Don't handle if default was prevented
       if (event.defaultPrevented) return;
 
-      // Don't handle modified clicks (new tab, etc.)
-      if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
-        return;
+      // Only need custom handling when state or replace is specified
+      // Otherwise, let the Navigation API intercept the native navigation
+      if (state !== undefined || replace) {
+        // Don't handle modified clicks (new tab, etc.)
+        if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
+          return;
+        }
+
+        // Don't handle right clicks
+        if (event.button !== 0) return;
+
+        // Prevent default and navigate via Navigation API
+        event.preventDefault();
+        navigate(to, { replace, state });
       }
-
-      // Don't handle right clicks
-      if (event.button !== 0) return;
-
-      // Prevent default and navigate via Navigation API
-      event.preventDefault();
-      navigate(to, { replace, state });
     },
     [navigate, to, replace, state, onClick],
   );

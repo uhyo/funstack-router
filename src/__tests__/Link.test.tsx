@@ -33,7 +33,7 @@ describe("Link", () => {
     expect(link).toHaveAttribute("href", "/about");
   });
 
-  it("navigates on click", () => {
+  it("does not call navigate for basic links (relies on Navigation API)", () => {
     render(
       <Router routes={routes}>
         <Link to="/about">Go to About</Link>
@@ -43,10 +43,9 @@ describe("Link", () => {
     const link = screen.getByRole("link", { name: "Go to About" });
     fireEvent.click(link);
 
-    expect(mockNavigation.navigate).toHaveBeenCalledWith("/about", {
-      history: "push",
-      state: undefined,
-    });
+    // Basic links without state/replace let the native click through
+    // The Navigation API intercepts via the navigate event
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
 
   it("uses replace when specified", () => {
@@ -87,10 +86,12 @@ describe("Link", () => {
     });
   });
 
-  it("does not navigate on modified clicks", () => {
+  it("does not navigate on modified clicks when state is provided", () => {
     render(
       <Router routes={routes}>
-        <Link to="/about">Go to About</Link>
+        <Link to="/about" state={{ from: "home" }}>
+          Go to About
+        </Link>
       </Router>,
     );
 
@@ -113,10 +114,12 @@ describe("Link", () => {
     expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
 
-  it("does not navigate on right click", () => {
+  it("does not navigate on right click when state is provided", () => {
     render(
       <Router routes={routes}>
-        <Link to="/about">Go to About</Link>
+        <Link to="/about" state={{ from: "home" }}>
+          Go to About
+        </Link>
       </Router>,
     );
 
@@ -141,7 +144,7 @@ describe("Link", () => {
     fireEvent.click(link);
 
     expect(handleClick).toHaveBeenCalled();
-    expect(mockNavigation.navigate).toHaveBeenCalled();
+    // Basic links without state/replace rely on native navigation
   });
 
   it("respects preventDefault in custom onClick", () => {

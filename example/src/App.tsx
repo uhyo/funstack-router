@@ -23,10 +23,11 @@ function Layout() {
   return (
     <div>
       <nav>
-        <Link to="/">Home</Link>
-        <Link to="/about">About</Link>
-        <Link to="/users">Users</Link>
-        <Link to="/search?q=react">Search</Link>
+        {/* Native <a> tags work for basic navigation thanks to Navigation API */}
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/users">Users</a>
+        <a href="/search?q=react">Search</a>
       </nav>
       <main>
         <p style={{ color: "#666", fontSize: "0.9rem" }}>
@@ -53,16 +54,22 @@ function Home() {
       <h2>Features demonstrated:</h2>
       <ul>
         <li>
-          <Link to="/about">Basic navigation</Link>
+          <a href="/about">Basic navigation</a> (native &lt;a&gt; tag)
         </li>
         <li>
-          <Link to="/users">Nested routes</Link>
+          <a href="/users">Nested routes</a>
         </li>
         <li>
-          <Link to="/users/1">Route parameters</Link>
+          <a href="/users/1">Route parameters</a>
         </li>
         <li>
-          <Link to="/search?q=hello&page=1">Search parameters</Link>
+          <a href="/search?q=hello&page=1">Search parameters</a>
+        </li>
+        <li>
+          <Link to="/about" state={{ from: "home" }}>
+            Navigation with state
+          </Link>{" "}
+          (using &lt;Link&gt; for state)
         </li>
       </ul>
     </div>
@@ -94,7 +101,7 @@ function Users() {
           <div key={user.id} className="user-card">
             <strong>{user.name}</strong> - {user.role}
             <br />
-            <Link to={`/users/${user.id}`}>View Profile</Link>
+            <a href={`/users/${user.id}`}>View Profile</a>
           </div>
         ))}
       </div>
@@ -186,7 +193,7 @@ function NotFound() {
       <p>
         The page <code>{location.pathname}</code> does not exist.
       </p>
-      <Link to="/">Go Home</Link>
+      <a href="/">Go Home</a>
     </div>
   );
 }

@@ -8,6 +8,7 @@ A modern React router built on the [Navigation API](https://developer.mozilla.or
 ## Features
 
 - **Navigation API based** - Uses the modern Navigation API instead of the History API
+- **Native `<a>` tags work** - No need for special `<Link>` component for basic navigation
 - **Object-based routes** - Define routes as plain JavaScript objects
 - **Nested routing** - Support for layouts and nested routes with `<Outlet>`
 - **Type-safe** - Full TypeScript support
@@ -86,9 +87,18 @@ The root component that provides routing context.
 
 #### `<Link>`
 
-Navigation link component.
+Navigation link component. **Unlike traditional History API-based routers, you don't need `<Link>` for basic navigation.** The Navigation API automatically intercepts native `<a>` tag clicks, so a plain `<a href="/users">Users</a>` works for client-side routing.
+
+Use `<Link>` only when you need:
+
+- **`state`** - Pass state data to the destination
+- **`replace`** - Replace history entry instead of push
 
 ```tsx
+// Basic navigation: just use <a>
+<a href="/users">Users</a>
+
+// Need state or replace: use <Link>
 <Link to="/users" replace state={{ from: "home" }}>
   Users
 </Link>
