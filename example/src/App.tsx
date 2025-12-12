@@ -1,6 +1,5 @@
 import {
   Router,
-  Link,
   Outlet,
   useLocation,
   useParams,
@@ -66,10 +65,7 @@ function Home() {
           <a href="/search?q=hello&page=1">Search parameters</a>
         </li>
         <li>
-          <Link to="/about" state={{ from: "home" }}>
-            Navigation with state
-          </Link>{" "}
-          (using &lt;Link&gt; for state)
+          See About page for <code>useNavigate()</code> hook demo
         </li>
       </ul>
     </div>

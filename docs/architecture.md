@@ -141,14 +141,6 @@ const routes: RouteDefinition[] = [
 <Router routes={routes} />;
 ```
 
-#### `<Link>`
-
-Navigation component that uses the Navigation API:
-
-```tsx
-<Link to="/users/123">View User</Link>
-```
-
 #### `<Outlet>`
 
 Renders the matched child route in a layout component:
@@ -285,7 +277,6 @@ const currentEntry = useSyncExternalStore(
 src/
 ├── index.ts                 # Public exports
 ├── Router.tsx               # <Router> provider component
-├── Link.tsx                 # <Link> component
 ├── Outlet.tsx               # <Outlet> component
 ├── hooks/
 │   ├── useNavigate.ts

@@ -8,11 +8,11 @@ A modern React router built on the [Navigation API](https://developer.mozilla.or
 ## Features
 
 - **Navigation API based** - Uses the modern Navigation API instead of the History API
-- **Native `<a>` tags work** - No need for special `<Link>` component for basic navigation
+- **Native `<a>` tags just work** - No special `<Link>` component needed; use standard HTML links
 - **Object-based routes** - Define routes as plain JavaScript objects
 - **Nested routing** - Support for layouts and nested routes with `<Outlet>`
 - **Type-safe** - Full TypeScript support
-- **Lightweight** - ~2.5 kB gzipped
+- **Lightweight** - Minimal API surface
 
 ## Installation
 
@@ -23,15 +23,16 @@ npm install @funstack/router
 ## Quick Start
 
 ```tsx
-import { Router, Link, Outlet, useParams } from "@funstack/router";
+import { Router, Outlet, useParams } from "@funstack/router";
 import type { RouteDefinition } from "@funstack/router";
 
 function Layout() {
   return (
     <div>
       <nav>
-        <Link to="/">Home</Link>
-        <Link to="/users">Users</Link>
+        {/* Native <a> tags work for client-side navigation */}
+        <a href="/">Home</a>
+        <a href="/users">Users</a>
       </nav>
       <Outlet />
     </div>
@@ -84,31 +85,6 @@ The root component that provides routing context.
 | ---------- | ------------------- | ------------------------------------------- |
 | `routes`   | `RouteDefinition[]` | Array of route definitions                  |
 | `children` | `ReactNode`         | Optional children rendered alongside routes |
-
-#### `<Link>`
-
-Navigation link component. **Unlike traditional History API-based routers, you don't need `<Link>` for basic navigation.** The Navigation API automatically intercepts native `<a>` tag clicks, so a plain `<a href="/users">Users</a>` works for client-side routing.
-
-Use `<Link>` only when you need:
-
-- **`state`** - Pass state data to the destination
-- **`replace`** - Replace history entry instead of push
-
-```tsx
-// Basic navigation: just use <a>
-<a href="/users">Users</a>
-
-// Need state or replace: use <Link>
-<Link to="/users" replace state={{ from: "home" }}>
-  Users
-</Link>
-```
-
-| Prop      | Type      | Description                           |
-| --------- | --------- | ------------------------------------- |
-| `to`      | `string`  | Destination URL                       |
-| `replace` | `boolean` | Replace history entry instead of push |
-| `state`   | `unknown` | State to pass to the destination      |
 
 #### `<Outlet>`
 

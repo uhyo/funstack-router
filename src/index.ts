@@ -2,7 +2,6 @@
 
 // Components
 export { Router, type RouterProps } from "./Router.js";
-export { Link, type LinkProps } from "./Link.js";
 export { Outlet } from "./Outlet.js";
 
 // Hooks
