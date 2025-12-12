@@ -7,7 +7,11 @@ import {
 } from "react";
 import { RouterContext } from "./context/RouterContext.js";
 import { RouteContext } from "./context/RouteContext.js";
-import type { RouteDefinition, NavigateOptions, MatchedRoute } from "./types.js";
+import type {
+  RouteDefinition,
+  NavigateOptions,
+  MatchedRoute,
+} from "./types.js";
 import { matchRoutes } from "./core/matchRoutes.js";
 import {
   subscribeToNavigation,
