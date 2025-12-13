@@ -294,11 +294,29 @@ function getOrCreateLoaderResult(
 }
 ```
 
+### Cache Retention for History Navigation
+
+Navigation entry keys are **stable across history traversal**. When user navigates back/forward, the same entry key is used, enabling cache reuse:
+
+```
+Navigate to /users/1  → entry key "abc" → loader runs, cached
+Navigate to /users/2  → entry key "def" → loader runs, cached
+Press Back            → entry key "abc" → cache HIT, no loader execution
+Press Forward         → entry key "def" → cache HIT, no loader execution
+```
+
+This provides instant back/forward navigation without re-fetching data.
+
 ### Cache Invalidation
 
-- Clear cache entry when navigating away from a route
-- Clear entire cache on full page navigation
+Cache entries are **not** cleared on navigation. They persist for the session to support history traversal.
+
+Invalidation occurs:
+
+- On full page reload (cache is in-memory)
 - Optionally: provide `revalidate()` function for manual invalidation
+
+**Future consideration**: Cache size limits to prevent unbounded memory growth. Could use LRU eviction for entries not in the current history stack.
 
 ## Parallel vs Sequential Loading
 
