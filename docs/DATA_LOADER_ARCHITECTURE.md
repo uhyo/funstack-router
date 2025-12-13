@@ -24,6 +24,7 @@ type RouteDefinition<TData = unknown> = {
 type LoaderArgs = {
   params: Record<string, string>;
   request: Request; // Allows access to URL, headers, etc.
+  signal: AbortSignal; // For cancellation on navigation
 };
 ```
 
@@ -60,8 +61,8 @@ const routes: RouteDefinition[] = [
   {
     path: "users/:userId",
     component: UserDetail,
-    loader: async ({ params }) => {
-      const res = await fetch(`/api/users/${params.userId}`);
+    loader: async ({ params, signal }) => {
+      const res = await fetch(`/api/users/${params.userId}`, { signal });
       return res.json();
     },
   },
@@ -317,19 +318,20 @@ function createLoaderRequest(url: URL): Request {
 ### Use Cases
 
 - Access full URL including search params
-- Future: Abort controller for cancellation
 - Future: Include authentication headers
 
-## Open Questions
+## Navigation Cancellation
 
-### 1. How to handle navigation during loading?
+The `signal` parameter in `LoaderArgs` enables cancellation when navigating away:
 
-When user navigates away while a loader is pending:
+```typescript
+loader: async ({ params, signal }) => {
+  const res = await fetch(`/api/users/${params.userId}`, { signal });
+  return res.json();
+};
+```
 
-- Option A: Let the Promise complete, ignore result
-- Option B: Abort the request via AbortController
-
-**Recommendation**: Start with Option A, add abort support later
+**Implementation approach**: The router creates an `AbortController` per navigation. When a new navigation occurs, the previous controller is aborted. This is a future enhancement - initial implementation may pass a never-aborting signal.
 
 ## Implementation Phases
 
@@ -340,10 +342,11 @@ When user navigates away while a loader is pending:
 - [ ] Pass `data` as prop to route components
 - [ ] Add loader result caching by navigation entry
 
-### Phase 2: Request Object
+### Phase 2: Request & Signal
 
 - [ ] Create Request object for loaders
-- [ ] Pass request to loader functions
+- [ ] Create AbortController per navigation
+- [ ] Abort previous loader when navigating away
 
 ### Phase 3: Documentation & Examples
 
@@ -355,7 +358,6 @@ When user navigates away while a loader is pending:
 
 - Route-level error elements
 - Dependent/sequential loaders
-- Abort controller support
 - Loader revalidation API
 
 ## Comparison with Other Routers
