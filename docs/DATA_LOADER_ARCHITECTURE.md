@@ -42,22 +42,22 @@ Using `RouteDefinition[]` directly loses type inference for each route's `TData`
 
 ```typescript
 // Helper for routes with loader - infers TData from loader return type
-function defineRoute<TData>(route: {
+function route<TData>(definition: {
   path: string;
   loader: (args: LoaderArgs) => TData;
   component: ComponentType<{ data: TData }>;
   children?: RouteDefinition[];
 }): RouteDefinition<TData> {
-  return route;
+  return definition;
 }
 
 // Helper for routes without loader
-function defineRoute(route: {
+function route(definition: {
   path: string;
   component?: ComponentType;
   children?: RouteDefinition[];
 }): RouteDefinition {
-  return route;
+  return definition;
 }
 ```
 
@@ -65,7 +65,7 @@ function defineRoute(route: {
 
 ```typescript
 const routes = [
-  defineRoute({
+  route({
     path: "users/:userId",
     component: UserDetail,
     loader: async ({ params, signal }) => {
@@ -74,13 +74,13 @@ const routes = [
     },
     // ✅ TypeScript knows component must accept { data: Promise<User> }
   }),
-  defineRoute({
+  route({
     path: "settings",
     component: Settings,
     loader: () => getSettingsFromLocalStorage(),
     // ✅ TypeScript infers TData from loader return type
   }),
-  defineRoute({
+  route({
     path: "about",
     component: AboutPage,
     // ✅ No loader, no data prop required
@@ -400,7 +400,7 @@ loader: async ({ params, signal }) => {
 ### Phase 1: Core Implementation
 
 - [ ] Add `loader` field to RouteDefinition type
-- [ ] Add `defineRoute` helper function for type inference
+- [ ] Add `route` helper function for type inference
 - [ ] Implement loader execution in Router
 - [ ] Pass `data` as prop to route components
 - [ ] Add loader result caching by navigation entry
