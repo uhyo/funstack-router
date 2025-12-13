@@ -4,9 +4,9 @@ This document describes the architecture for adding a data loader feature to FUN
 
 ## Core Design Principle
 
-**Components receive a Promise, not resolved data.**
+**Components receive loader results directly as props.**
 
-The router provides the data loading Promise to route components, allowing them to handle Suspense as they see fit. This gives maximum flexibility to component authors while keeping the router's responsibility minimal.
+The router passes whatever the loader returns (Promise or value) to the component as a `data` prop. Components handle Promises with React's `use()` hook when needed. This gives maximum flexibility to component authors while keeping the router's responsibility minimal.
 
 ## API Design
 
@@ -17,8 +17,8 @@ type RouteDefinition<TData = unknown> = {
   path: string;
   component?: ComponentType;
   children?: RouteDefinition[];
-  // New: data loader function
-  loader?: (args: LoaderArgs) => Promise<TData>;
+  // New: data loader function (can return Promise or value)
+  loader?: (args: LoaderArgs) => TData;
 };
 
 type LoaderArgs = {
@@ -29,19 +29,18 @@ type LoaderArgs = {
 
 ### Component Access
 
-Components receive the loader Promise directly as a prop:
+Components receive the loader result directly as a `data` prop:
 
 ```typescript
-type UserDetailProps = {
-  dataPromise: Promise<User>;
-};
-
-function UserDetail({ dataPromise }: UserDetailProps) {
-  // Component decides how to handle the Promise
-  // Use React 19's `use()` hook (requires Suspense boundary)
-  const user = use(dataPromise);
-
+// Async loader - component receives Promise
+function UserDetail({ data }: { data: Promise<User> }) {
+  const user = use(data); // Suspends until resolved
   return <div>{user.name}</div>;
+}
+
+// Sync loader - component receives value directly
+function UserDetail({ data }: { data: User }) {
+  return <div>{data.name}</div>;
 }
 ```
 
@@ -51,11 +50,12 @@ function UserDetail({ dataPromise }: UserDetailProps) {
 2. Better TypeScript inference - prop type tied to loader's return type
 3. No context lookup overhead
 4. Simpler implementation
+5. Flexible - works with both sync and async loaders
 
 ### Usage Example
 
 ```tsx
-// Route definition with loader
+// Route definition with async loader
 const routes: RouteDefinition[] = [
   {
     path: "users/:userId",
@@ -67,7 +67,7 @@ const routes: RouteDefinition[] = [
   },
 ];
 
-// App with Suspense boundary
+// App with Suspense boundary (needed for async loaders)
 function App() {
   return (
     <Suspense fallback={<Loading />}>
@@ -76,10 +76,26 @@ function App() {
   );
 }
 
-// Component receives Promise as prop
-function UserDetail({ dataPromise }: { dataPromise: Promise<User> }) {
-  const user = use(dataPromise); // Suspends here
+// Component receives Promise, uses `use()` to suspend
+function UserDetail({ data }: { data: Promise<User> }) {
+  const user = use(data);
   return <div>{user.name}</div>;
+}
+```
+
+```tsx
+// Route definition with sync loader (e.g., reading from cache)
+const routes: RouteDefinition[] = [
+  {
+    path: "settings",
+    component: Settings,
+    loader: () => getSettingsFromLocalStorage(),
+  },
+];
+
+// No Suspense needed for sync loaders
+function Settings({ data }: { data: Settings }) {
+  return <div>{data.theme}</div>;
 }
 ```
 
@@ -96,33 +112,33 @@ matchRoutes() → MatchedRoute[]
     ↓
 Execute loaders for each matched route (in parallel)
     ↓
-Render RouteRenderer tree (Promises passed as props)
+Render RouteRenderer tree (loader results passed as props)
     ↓
-Components receive dataPromise prop
+Components receive data prop (Promise or value)
     ↓
-Components use `use()` to suspend until data ready
+Components use `use()` if data is a Promise
 ```
 
-**Key insight**: The router does NOT await the Promises. It immediately renders the component tree, passing Promises as props. Suspension happens when components call `use()`.
+**Key insight**: The router does NOT await Promises. It immediately renders the component tree, passing loader results as props. Suspension happens when components call `use()` on Promise values.
 
 ### 2. Extended Types
 
 ```typescript
 // Extended MatchedRoute with loader data
 type MatchedRouteWithData = MatchedRoute & {
-  dataPromise: Promise<unknown> | undefined;
+  data: unknown | undefined;
 };
 
-// Loader function type
-type LoaderFunction<TData = unknown> = (args: LoaderArgs) => Promise<TData>;
+// Loader function type (can return Promise or value)
+type LoaderFunction<TData = unknown> = (args: LoaderArgs) => TData;
 
 // Component prop type (when loader is defined)
 type RouteComponentProps<TData = unknown> = {
-  dataPromise: Promise<TData>;
+  data: TData;
 };
 ```
 
-Note: RouteContext remains unchanged - it doesn't need to store the data promise since it's passed directly as a prop.
+Note: RouteContext remains unchanged - it doesn't need to store the data since it's passed directly as a prop.
 
 ### 3. Loader Execution Strategy
 
@@ -134,11 +150,9 @@ function executeLoaders(
 ): MatchedRouteWithData[] {
   return matchedRoutes.map((match) => {
     const { route, params } = match;
-    const dataPromise = route.loader
-      ? route.loader({ params, request })
-      : undefined;
+    const data = route.loader ? route.loader({ params, request }) : undefined;
 
-    return { ...match, dataPromise };
+    return { ...match, data };
   });
 }
 ```
@@ -151,7 +165,7 @@ function RouteRenderer({
   index,
 }: RouteRendererProps): ReactNode {
   const match = matchedRoutes[index];
-  const { route, params, pathname, dataPromise } = match;
+  const { route, params, pathname, data } = match;
   const Component = route.component;
 
   const outlet = /* ... existing outlet logic ... */;
@@ -168,12 +182,8 @@ function RouteRenderer({
   return (
     <RouteContext.Provider value={routeContextValue}>
       {Component ? (
-        // Pass dataPromise as prop if loader exists
-        dataPromise ? (
-          <Component dataPromise={dataPromise} />
-        ) : (
-          <Component />
-        )
+        // Pass data as prop if loader exists
+        data !== undefined ? <Component data={data} /> : <Component />
       ) : (
         outlet
       )}
@@ -182,27 +192,27 @@ function RouteRenderer({
 }
 ```
 
-## Promise Caching Strategy
+## Loader Result Caching Strategy
 
 ### Problem
 
-If RouteRenderer re-renders, we must NOT create a new loader Promise. Creating new Promises would:
+If RouteRenderer re-renders, we must NOT re-execute loaders. Re-executing would:
 
-1. Trigger new network requests
+1. Trigger new network requests (for async loaders)
 2. Cause Suspense to re-suspend unnecessarily
 3. Break the component's ability to track loading state
 
-### Solution: Cache Promises by Navigation Entry
+### Solution: Cache Results by Navigation Entry
 
 ```typescript
 // Cache keyed by navigation entry key + route path
-const loaderCache = new Map<string, Promise<unknown>>();
+const loaderCache = new Map<string, unknown>();
 
-function getOrCreateLoaderPromise(
+function getOrCreateLoaderResult(
   entryKey: string,
   route: RouteDefinition,
   args: LoaderArgs,
-): Promise<unknown> | undefined {
+): unknown | undefined {
   if (!route.loader) return undefined;
 
   const cacheKey = `${entryKey}:${route.path}`;
@@ -257,12 +267,12 @@ This is **out of scope** for the initial implementation.
 
 ## Error Handling
 
-### Design: Errors Propagate Through Promises
+### Design: Errors Propagate Naturally
 
 The router does not catch loader errors. Errors propagate naturally:
 
-1. Loader throws/rejects → Promise rejects
-2. Component calls `use(dataPromise)` → Error thrown
+1. Loader throws or returns rejected Promise
+2. Component calls `use(data)` → Error thrown (for Promises)
 3. Nearest ErrorBoundary catches the error
 
 ```tsx
@@ -312,19 +322,7 @@ function createLoaderRequest(url: URL): Request {
 
 ## Open Questions
 
-### 1. Should we support synchronous loaders?
-
-```typescript
-// Synchronous loader - returns data directly
-loader: ({ params }) => getCachedUser(params.id);
-
-// vs always async
-loader: async ({ params }) => getCachedUser(params.id);
-```
-
-**Recommendation**: Always async (return Promise) for consistency
-
-### 3. How to handle navigation during loading?
+### 1. How to handle navigation during loading?
 
 When user navigates away while a loader is pending:
 
@@ -339,8 +337,8 @@ When user navigates away while a loader is pending:
 
 - [ ] Add `loader` field to RouteDefinition type
 - [ ] Implement loader execution in Router
-- [ ] Pass `dataPromise` as prop to route components
-- [ ] Add Promise caching by navigation entry
+- [ ] Pass `data` as prop to route components
+- [ ] Add loader result caching by navigation entry
 
 ### Phase 2: Request Object
 
@@ -373,13 +371,18 @@ const data = useLoaderData(); // Returns resolved data
 
 ### FUNSTACK Router (This Design)
 
-FUNSTACK passes the Promise as a prop, component handles suspension:
+FUNSTACK passes loader result as a prop, component handles it:
 
 ```typescript
-// FUNSTACK - component receives Promise as prop
-function UserDetail({ dataPromise }: { dataPromise: Promise<User> }) {
-  const data = use(dataPromise); // Component chooses when to suspend
-  return <div>{data.name}</div>;
+// FUNSTACK - async loader, component receives Promise
+function UserDetail({ data }: { data: Promise<User> }) {
+  const user = use(data); // Component chooses when to suspend
+  return <div>{user.name}</div>;
+}
+
+// FUNSTACK - sync loader, component receives value directly
+function Settings({ data }: { data: Settings }) {
+  return <div>{data.theme}</div>;
 }
 ```
 
@@ -390,13 +393,14 @@ function UserDetail({ dataPromise }: { dataPromise: Promise<User> }) {
 3. Can handle multiple data sources differently
 4. Works naturally with React 19's `use()` hook
 5. No "loading state" managed by router
+6. Supports both sync and async loaders
 
 ## Summary
 
 The data loader feature adds:
 
-1. `loader` property on route definitions
-2. `dataPromise` prop passed to route components
-3. Promise caching to prevent duplicate requests
+1. `loader` property on route definitions (can return Promise or value)
+2. `data` prop passed to route components
+3. Loader result caching to prevent duplicate execution
 
-Components receive Promises as props and handle Suspense themselves using React's `use()` hook, giving maximum flexibility while keeping the router simple.
+Components receive loader results as props and handle Promises with React's `use()` hook when needed, giving maximum flexibility while keeping the router simple.
