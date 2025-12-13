@@ -166,10 +166,12 @@ function Settings({ data }: { data: Settings }) {
 
 ### 1. Loader Execution Timing
 
-Loaders are executed **during route matching**, before component rendering begins.
+Loaders execute whenever the Router renders with a URL - both on **initial page load** and **subsequent navigations**.
 
 ```
-Navigation Event
+Initial Page Load / Navigation
+    ↓
+Router renders, reads current URL
     ↓
 matchRoutes() → MatchedRoute[]
     ↓
@@ -181,6 +183,10 @@ Components receive data prop (Promise or value)
     ↓
 Components use `use()` if data is a Promise
 ```
+
+**Initial load**: Router reads URL from `navigation.currentEntry` (or `window.location` as fallback) on first render and executes loaders immediately.
+
+**Navigation**: Router subscribes to Navigation API via `useSyncExternalStore`. When URL changes, component re-renders, triggering route matching and loader execution.
 
 **Key insight**: The router does NOT await Promises. It immediately renders the component tree, passing loader results as props. Suspension happens when components call `use()` on Promise values.
 
