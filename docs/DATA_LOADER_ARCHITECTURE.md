@@ -70,13 +70,13 @@ const routes = [
     component: UserDetail,
     loader: async ({ params, signal }) => {
       const res = await fetch(`/api/users/${params.userId}`, { signal });
-      return res.json() as Promise<User>;
+      return res.json() as User;
     },
     // ✅ TypeScript knows component must accept { data: Promise<User> }
   }),
   route({
     path: "settings",
-    component: Settings,
+    component: SettingsPage,
     loader: () => getSettingsFromLocalStorage(),
     // ✅ TypeScript infers TData from loader return type
   }),
@@ -102,8 +102,8 @@ function UserDetail({ data }: { data: Promise<User> }) {
 }
 
 // Sync loader - component receives value directly
-function UserDetail({ data }: { data: User }) {
-  return <div>{data.name}</div>;
+function SettingsPage({ data }: { data: Settings }) {
+  return <div>{data.theme}</div>;
 }
 ```
 
@@ -151,13 +151,13 @@ function UserDetail({ data }: { data: Promise<User> }) {
 const routes: RouteDefinition[] = [
   {
     path: "settings",
-    component: Settings,
+    component: SettingsPage,
     loader: () => getSettingsFromLocalStorage(),
   },
 ];
 
 // No Suspense needed for sync loaders
-function Settings({ data }: { data: Settings }) {
+function SettingsPage({ data }: { data: Settings }) {
   return <div>{data.theme}</div>;
 }
 ```
@@ -241,10 +241,13 @@ Note: RouteContext remains unchanged - it doesn't need to store the data since i
 function executeLoaders(
   matchedRoutes: MatchedRoute[],
   request: Request,
+  signal: AbortSignal,
 ): MatchedRouteWithData[] {
   return matchedRoutes.map((match) => {
     const { route, params } = match;
-    const data = route.loader ? route.loader({ params, request }) : undefined;
+    const data = route.loader
+      ? route.loader({ params, request, signal })
+      : undefined;
 
     return { ...match, data };
   });
@@ -495,7 +498,7 @@ function UserDetail({ data }: { data: Promise<User> }) {
 }
 
 // FUNSTACK - sync loader, component receives value directly
-function Settings({ data }: { data: Settings }) {
+function SettingsPage({ data }: { data: Settings }) {
   return <div>{data.theme}</div>;
 }
 ```
