@@ -1,6 +1,21 @@
 import type { ComponentType } from "react";
 
 /**
+ * Arguments passed to a route loader function.
+ */
+export type LoaderArgs = {
+  /** Extracted path parameters */
+  params: Record<string, string>;
+  /** The request URL */
+  request: Request;
+};
+
+/**
+ * A loader function that fetches data for a route.
+ */
+export type LoaderFunction<T = unknown> = (args: LoaderArgs) => Promise<T> | T;
+
+/**
  * Route definition for the router.
  */
 export type RouteDefinition = {
@@ -8,6 +23,8 @@ export type RouteDefinition = {
   path: string;
   /** Component to render when this route matches */
   component?: ComponentType;
+  /** Loader function to fetch data for this route */
+  loader?: LoaderFunction;
   /** Child routes for nested routing */
   children?: RouteDefinition[];
 };

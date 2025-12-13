@@ -20,6 +20,7 @@ import {
   setupNavigationInterception,
   performNavigation,
 } from "./core/navigation.js";
+import { getLoaderResource } from "./core/loaderCache.js";
 
 export type RouterProps = {
   routes: RouteDefinition[];
@@ -59,8 +60,12 @@ export function Router({ routes, children }: RouterProps): ReactNode {
 
   return (
     <RouterContext.Provider value={routerContextValue}>
-      {matchedRoutes ? (
-        <RouteRenderer matchedRoutes={matchedRoutes} index={0} />
+      {matchedRoutes && currentUrl ? (
+        <RouteRenderer
+          matchedRoutes={matchedRoutes}
+          index={0}
+          url={currentUrl}
+        />
       ) : null}
       {children}
     </RouterContext.Provider>
@@ -70,14 +75,17 @@ export function Router({ routes, children }: RouterProps): ReactNode {
 type RouteRendererProps = {
   matchedRoutes: MatchedRoute[];
   index: number;
+  url: string;
 };
 
 /**
  * Recursively render matched routes with proper context.
+ * If the route has a loader, reading its resource will suspend until data is ready.
  */
 function RouteRenderer({
   matchedRoutes,
   index,
+  url,
 }: RouteRendererProps): ReactNode {
   const match = matchedRoutes[index];
   if (!match) return null;
@@ -85,15 +93,23 @@ function RouteRenderer({
   const { route, params, pathname } = match;
   const Component = route.component;
 
+  // Get loader data (will suspend if loader is pending)
+  const loaderResource = getLoaderResource(match, url);
+  const loaderData = loaderResource ? loaderResource.read() : undefined;
+
   // Create outlet for child routes
   const outlet =
     index < matchedRoutes.length - 1 ? (
-      <RouteRenderer matchedRoutes={matchedRoutes} index={index + 1} />
+      <RouteRenderer
+        matchedRoutes={matchedRoutes}
+        index={index + 1}
+        url={url}
+      />
     ) : null;
 
   const routeContextValue = useMemo(
-    () => ({ params, matchedPath: pathname, outlet }),
-    [params, pathname, outlet],
+    () => ({ params, matchedPath: pathname, outlet, loaderData }),
+    [params, pathname, outlet, loaderData],
   );
 
   return (

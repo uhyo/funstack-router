@@ -1,5 +1,6 @@
 import type { RouteDefinition, NavigateOptions } from "../types.js";
 import { matchRoutes } from "./matchRoutes.js";
+import { preloadRouteLoaders } from "./loaderCache.js";
 
 /**
  * Check if Navigation API is available.
@@ -65,7 +66,8 @@ export function setupNavigationInterception(
     if (matched) {
       event.intercept({
         handler: async () => {
-          // Navigation will complete and currententrychange will fire
+          // Preload all route loaders before completing navigation
+          await preloadRouteLoaders(matched, event.destination.url);
         },
       });
     }

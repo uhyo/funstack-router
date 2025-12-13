@@ -7,6 +7,8 @@ export type RouteContextValue = {
   matchedPath: string;
   /** Child route element to render via Outlet */
   outlet: ReactNode;
+  /** Data returned by the route's loader */
+  loaderData: unknown;
 };
 
 export const RouteContext = createContext<RouteContextValue | null>(null);

@@ -10,6 +10,10 @@ export { useNavigate } from "./hooks/useNavigate.js";
 export { useLocation } from "./hooks/useLocation.js";
 export { useParams } from "./hooks/useParams.js";
 export { useSearchParams } from "./hooks/useSearchParams.js";
+export { useLoaderData } from "./hooks/useLoaderData.js";
+
+// Loader utilities
+export { invalidateLoader, clearLoaderCache } from "./core/loaderCache.js";
 
 // Types
 export type {
@@ -17,4 +21,6 @@ export type {
   MatchedRoute,
   NavigateOptions,
   Location,
+  LoaderArgs,
+  LoaderFunction,
 } from "./types.js";
