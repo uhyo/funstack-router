@@ -36,6 +36,60 @@ type LoaderArgs = {
 };
 ```
 
+### Route Definition Helper
+
+Using `RouteDefinition[]` directly loses type inference for each route's `TData`. A helper function preserves the inferred types:
+
+```typescript
+// Helper for routes with loader - infers TData from loader return type
+function defineRoute<TData>(route: {
+  path: string;
+  loader: (args: LoaderArgs) => TData;
+  component: ComponentType<{ data: TData }>;
+  children?: RouteDefinition[];
+}): RouteDefinition<TData> {
+  return route;
+}
+
+// Helper for routes without loader
+function defineRoute(route: {
+  path: string;
+  component?: ComponentType;
+  children?: RouteDefinition[];
+}): RouteDefinition {
+  return route;
+}
+```
+
+**Usage**:
+
+```typescript
+const routes = [
+  defineRoute({
+    path: "users/:userId",
+    component: UserDetail,
+    loader: async ({ params, signal }) => {
+      const res = await fetch(`/api/users/${params.userId}`, { signal });
+      return res.json() as Promise<User>;
+    },
+    // ✅ TypeScript knows component must accept { data: Promise<User> }
+  }),
+  defineRoute({
+    path: "settings",
+    component: Settings,
+    loader: () => getSettingsFromLocalStorage(),
+    // ✅ TypeScript infers TData from loader return type
+  }),
+  defineRoute({
+    path: "about",
+    component: AboutPage,
+    // ✅ No loader, no data prop required
+  }),
+];
+```
+
+Without the helper, all routes would have `TData = unknown`, breaking type safety between loader and component.
+
 ### Component Access
 
 Components receive the loader result directly as a `data` prop:
@@ -346,6 +400,7 @@ loader: async ({ params, signal }) => {
 ### Phase 1: Core Implementation
 
 - [ ] Add `loader` field to RouteDefinition type
+- [ ] Add `defineRoute` helper function for type inference
 - [ ] Implement loader execution in Router
 - [ ] Pass `data` as prop to route components
 - [ ] Add loader result caching by navigation entry
