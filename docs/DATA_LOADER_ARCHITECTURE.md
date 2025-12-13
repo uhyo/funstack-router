@@ -15,11 +15,19 @@ The router passes whatever the loader returns (Promise or value) to the componen
 ```typescript
 type RouteDefinition<TData = unknown> = {
   path: string;
-  component?: ComponentType;
   children?: RouteDefinition[];
-  // New: data loader function (can return Promise or value)
-  loader?: (args: LoaderArgs) => TData;
-};
+} & (
+  | {
+      // Route with loader - component receives data prop
+      loader: (args: LoaderArgs) => TData;
+      component: ComponentType<{ data: TData }>;
+    }
+  | {
+      // Route without loader - component receives no data prop
+      loader?: never;
+      component?: ComponentType;
+    }
+);
 
 type LoaderArgs = {
   params: Record<string, string>;
