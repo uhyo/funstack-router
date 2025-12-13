@@ -166,29 +166,54 @@ function Settings({ data }: { data: Settings }) {
 
 ### 1. Loader Execution Timing
 
-Loaders execute whenever the Router renders with a URL - both on **initial page load** and **subsequent navigations**.
+Loaders execute at different times depending on the trigger:
+
+**Initial page load**: Loaders execute during Router's first render.
+
+**Navigation events**: Loaders execute immediately in `navigation.intercept()` handler, before React re-renders. Results are written to cache, so when React renders, it hits the cache.
 
 ```
-Initial Page Load / Navigation
-    ↓
-Router renders, reads current URL
-    ↓
-matchRoutes() → MatchedRoute[]
-    ↓
-Execute loaders for each matched route (in parallel)
-    ↓
-Render RouteRenderer tree (loader results passed as props)
-    ↓
-Components receive data prop (Promise or value)
-    ↓
-Components use `use()` if data is a Promise
+┌─────────────────────────────────────────────────────────────────┐
+│ Initial Page Load                                               │
+├─────────────────────────────────────────────────────────────────┤
+│ Router mounts                                                   │
+│     ↓                                                           │
+│ matchRoutes() → MatchedRoute[]                                  │
+│     ↓                                                           │
+│ Execute loaders, write to cache                                 │
+│     ↓                                                           │
+│ Render with data                                                │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ Navigation Event                                                │
+├─────────────────────────────────────────────────────────────────┤
+│ navigation.addEventListener("navigate", (event) => {           │
+│   event.intercept({                                             │
+│     handler: async () => {                                      │
+│       matchRoutes() for destination URL                         │
+│           ↓                                                     │
+│       Execute loaders, write to cache  ← Starts immediately!   │
+│     }                                                           │
+│   });                                                           │
+│ });                                                             │
+│     ↓                                                           │
+│ React re-renders (useSyncExternalStore)                         │
+│     ↓                                                           │
+│ Cache HIT - no re-execution                                     │
+│     ↓                                                           │
+│ Render with cached data                                         │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Initial load**: Router reads URL from `navigation.currentEntry` (or `window.location` as fallback) on first render and executes loaders immediately.
+**Benefits of intercept-based loading**:
 
-**Navigation**: Router subscribes to Navigation API via `useSyncExternalStore`. When URL changes, component re-renders, triggering route matching and loader execution.
+1. Loaders start immediately when navigation begins (no React render cycle delay)
+2. Browser shows loading indicator during `intercept()` handler
+3. By the time React renders, Promises are already in-flight
+4. Natural integration with Navigation API's lifecycle
 
-**Key insight**: The router does NOT await Promises. It immediately renders the component tree, passing loader results as props. Suspension happens when components call `use()` on Promise values.
+**Key insight**: The router does NOT await Promises in the handler. It starts the loaders (caching the Promises), then lets the navigation complete. Suspension happens when components call `use()` on Promise values.
 
 ### 2. Extended Types
 
