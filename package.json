@@ -3,16 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm -r run build",
-    "dev": "pnpm -r --parallel run dev",
-    "test": "pnpm -r run test",
-    "test:run": "pnpm -r run test:run",
-    "typecheck": "pnpm -r run typecheck",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:run": "turbo run test:run",
+    "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "prettier": "^3.7.4"
+    "prettier": "^3.7.4",
+    "turbo": "^2.6.3"
   },
   "packageManager": "pnpm@10.25.0"
 }
