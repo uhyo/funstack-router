@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import { resetNavigationState } from "../core/navigation.js";
+import { resetNavigationState } from "../core/NavigationAPIAdapter.js";
 
 // Mock Navigation API for testing
 export function createMockNavigation(initialUrl = "http://localhost/") {

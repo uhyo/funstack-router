@@ -86,3 +86,13 @@ export type OnNavigateCallback = (
   event: NavigateEvent,
   matched: readonly MatchedRoute[] | null,
 ) => void;
+
+/**
+ * Fallback mode when Navigation API is unavailable.
+ *
+ * - `"none"` (default): Render nothing when Navigation API is unavailable
+ * - `"static"`: Render matched routes without navigation capabilities (MPA behavior)
+ */
+export type FallbackMode =
+  | "none" // Default: render nothing when Navigation API unavailable
+  | "static"; // Render matched routes without navigation capabilities

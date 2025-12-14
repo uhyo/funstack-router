@@ -11,17 +11,11 @@ import {
   type NavigateOptions,
   type MatchedRouteWithData,
   type OnNavigateCallback,
+  type FallbackMode,
   internalRoutes,
 } from "./types.js";
 import { matchRoutes } from "./core/matchRoutes.js";
-import {
-  subscribeToNavigation,
-  getNavigationSnapshot,
-  getServerSnapshot,
-  setupNavigationInterception,
-  performNavigation,
-  getIdleAbortSignal,
-} from "./core/navigation.js";
+import { createAdapter } from "./core/createAdapter.js";
 import { executeLoaders, createLoaderRequest } from "./core/loaderCache.js";
 import type { RouteDefinition } from "./route.js";
 
@@ -35,57 +29,70 @@ export type RouterProps = {
    * @param matched - Array of matched routes, or null if no routes matched
    */
   onNavigate?: OnNavigateCallback;
+  /**
+   * Fallback mode when Navigation API is unavailable.
+   *
+   * - `"none"` (default): Render nothing when Navigation API is unavailable
+   * - `"static"`: Render matched routes without navigation capabilities (MPA behavior)
+   */
+  fallback?: FallbackMode;
 };
 
 export function Router({
   routes: inputRoutes,
   onNavigate,
+  fallback = "none",
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
-  const currentEntry = useSyncExternalStore(
-    subscribeToNavigation,
-    getNavigationSnapshot,
-    getServerSnapshot,
+  // Create adapter once based on browser capabilities and fallback setting
+  const adapter = useMemo(() => createAdapter(fallback), [fallback]);
+
+  // Subscribe to location changes via adapter
+  const locationEntry = useSyncExternalStore(
+    useCallback(
+      (callback) => adapter?.subscribe(callback) ?? (() => {}),
+      [adapter],
+    ),
+    () => adapter?.getSnapshot() ?? null,
+    () => adapter?.getServerSnapshot() ?? null,
   );
 
-  // Set up navigation interception
+  // Set up navigation interception via adapter
   useEffect(() => {
-    return setupNavigationInterception(routes, onNavigate);
-  }, [routes, onNavigate]);
+    return adapter?.setupInterception(routes, onNavigate);
+  }, [adapter, routes, onNavigate]);
 
-  // Navigate function for programmatic navigation
+  // Navigate function from adapter
   const navigate = useCallback(
-    (to: string, options?: NavigateOptions) => performNavigation(to, options),
-    [],
+    (to: string, options?: NavigateOptions) => {
+      adapter?.navigate(to, options);
+    },
+    [adapter],
   );
 
   return useMemo(() => {
-    if (currentEntry === null) {
-      // This happens either when Navigation API is unavailable,
+    if (locationEntry === null) {
+      // This happens either when Navigation API is unavailable (and no fallback),
       // or the current document is not fully active.
       return null;
     }
-    const currentUrl = currentEntry.url;
-    if (currentUrl === null) {
-      // This means currentEntry is not in this document, which is impossible
-      return null;
-    }
 
-    const url = new URL(currentUrl);
-    const currentEntryId = currentEntry.id;
+    const { url, key } = locationEntry;
+
     // Match current URL against routes and execute loaders
     const matchedRoutesWithData = (() => {
       const matched = matchRoutes(routes, url.pathname);
       if (!matched) return null;
 
-      // Execute loaders (results are cached by navigation entry id)
+      // Execute loaders (results are cached by location entry key)
       const request = createLoaderRequest(url);
-      const signal = getIdleAbortSignal();
-      return executeLoaders(matched, currentEntryId, request, signal);
+      const signal =
+        adapter?.getIdleAbortSignal() ?? new AbortController().signal;
+      return executeLoaders(matched, key, request, signal);
     })();
 
-    const routerContextValue = { currentEntry, url, navigate };
+    const routerContextValue = { locationEntry, url, navigate };
 
     return (
       <RouterContext.Provider value={routerContextValue}>
@@ -94,7 +101,7 @@ export function Router({
         ) : null}
       </RouterContext.Provider>
     );
-  }, [navigate, currentEntry, routes]);
+  }, [navigate, locationEntry, routes, adapter]);
 }
 
 type RouteRendererProps = {
