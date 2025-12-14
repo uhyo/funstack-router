@@ -1,50 +1,18 @@
 {
-  "name": "@funstack/router",
-  "version": "0.0.1-alpha.1",
-  "description": "A modern React router based on the Navigation API",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/uhyo/funstack-router.git"
-  },
+  "name": "funstack-router-monorepo",
+  "private": true,
   "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    }
-  },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r --parallel run dev",
+    "test": "pnpm -r run test",
+    "test:run": "pnpm -r run test:run",
+    "typecheck": "pnpm -r run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
-  "keywords": [
-    "react",
-    "router",
-    "navigation-api"
-  ],
-  "author": "uhyo <uhyo@uhy.ooo>",
-  "license": "MIT",
-  "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
-  },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
-    "@types/react": "^19.0.0",
-    "jsdom": "^27.3.0",
-    "prettier": "^3.7.4",
-    "react": "^19.0.0",
-    "tsdown": "^0.17.2",
-    "typescript": "^5.7.0",
-    "urlpattern-polyfill": "^10.1.0",
-    "vitest": "^4.0.15"
-  }
+    "prettier": "^3.7.4"
+  },
+  "packageManager": "pnpm@10.25.0"
 }

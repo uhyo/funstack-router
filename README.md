@@ -20,6 +20,29 @@ A modern React router built on the [Navigation API](https://developer.mozilla.or
 npm install @funstack/router
 ```
 
+## Development
+
+This is a pnpm monorepo. To set up the development environment:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build the router package
+pnpm build
+
+# Run the example app
+pnpm --filter funstack-router-example dev
+
+# Run tests
+pnpm test
+```
+
+### Packages
+
+- `packages/router` - The main `@funstack/router` library
+- `packages/example` - Example application
+
 ## Quick Start
 
 ```tsx
