@@ -26,10 +26,9 @@ import { executeLoaders, createLoaderRequest } from "./core/loaderCache.js";
 export type RouterProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   routes: RouteDefinition<any>[];
-  children?: ReactNode;
 };
 
-export function Router({ routes, children }: RouterProps): ReactNode {
+export function Router({ routes }: RouterProps): ReactNode {
   const currentEntry = useSyncExternalStore(
     subscribeToNavigation,
     getNavigationSnapshot,
@@ -47,16 +46,16 @@ export function Router({ routes, children }: RouterProps): ReactNode {
     [],
   );
 
-  const render = useMemo(() => {
+  return useMemo(() => {
     if (currentEntry === null) {
       // This happens either when Navigation API is unavailable,
       // or the current document is not fully active.
-      return (children: ReactNode) => children;
+      return null;
     }
     const currentUrl = currentEntry.url;
     if (currentUrl === null) {
       // This means currentEntry is not in this document, which is impossible
-      return (children: ReactNode) => children;
+      return null;
     }
 
     const url = new URL(currentUrl);
@@ -74,17 +73,14 @@ export function Router({ routes, children }: RouterProps): ReactNode {
 
     const routerContextValue = { currentEntry, url, navigate };
 
-    return (children: ReactNode) => (
+    return (
       <RouterContext.Provider value={routerContextValue}>
         {matchedRoutesWithData ? (
           <RouteRenderer matchedRoutes={matchedRoutesWithData} index={0} />
         ) : null}
-        {children}
       </RouterContext.Provider>
     );
   }, [navigate, currentEntry, routes]);
-
-  return render(children);
 }
 
 type RouteRendererProps = {
