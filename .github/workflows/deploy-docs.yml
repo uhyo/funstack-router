@@ -34,7 +34,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build docs
-        run: pnpm --filter funstack-router-docs build
+        run: pnpm turbo run build --filter=funstack-router-docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
