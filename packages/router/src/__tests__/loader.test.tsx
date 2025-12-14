@@ -4,7 +4,7 @@ import { Router } from "../Router.js";
 import { Outlet } from "../Outlet.js";
 import { route } from "../route.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
-import type { LoaderArgs } from "../types.js";
+import type { LoaderArgs, RouteDefinition } from "../types.js";
 import { clearLoaderCache } from "../core/loaderCache.js";
 
 describe("Data Loader", () => {
@@ -391,7 +391,7 @@ describe("Data Loader", () => {
         path: "/users/:id",
         loader: (): User => ({ id: 1, name: "Test" }),
         component: ({ data }: { data: User }) => <div>{data.name}</div>,
-      });
+      }) as RouteDefinition<User>;
 
       expect(userRoute.path).toBe("/users/:id");
       expect(userRoute.loader).toBeDefined();
@@ -402,7 +402,7 @@ describe("Data Loader", () => {
       const aboutRoute = route({
         path: "/about",
         component: () => <div>About</div>,
-      });
+      }) as RouteDefinition;
 
       expect(aboutRoute.path).toBe("/about");
       expect(aboutRoute.loader).toBeUndefined();

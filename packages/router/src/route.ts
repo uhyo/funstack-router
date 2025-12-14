@@ -1,6 +1,17 @@
 import type { ComponentType } from "react";
 import type { LoaderArgs, RouteDefinition } from "./types.js";
 
+const routeDefinitionSymbol = Symbol("RouteDefinition");
+
+/**
+ * Route definition created by the `route` helper function.
+ */
+export interface OpaqueRouteDefinition {
+  [routeDefinitionSymbol]: never;
+  path: string;
+  children?: OpaqueRouteDefinition[];
+}
+
 /**
  * Route definition with loader - infers TData from loader return type.
  */
@@ -49,10 +60,10 @@ type RouteWithoutLoader = {
  */
 export function route<TData>(
   definition: RouteWithLoader<TData>,
-): RouteDefinition<TData>;
-export function route(definition: RouteWithoutLoader): RouteDefinition;
+): OpaqueRouteDefinition;
+export function route(definition: RouteWithoutLoader): OpaqueRouteDefinition;
 export function route<TData>(
   definition: RouteWithLoader<TData> | RouteWithoutLoader,
-): RouteDefinition<TData> | RouteDefinition {
-  return definition as RouteDefinition<TData>;
+): OpaqueRouteDefinition {
+  return definition as OpaqueRouteDefinition;
 }
