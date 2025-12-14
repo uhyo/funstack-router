@@ -97,8 +97,15 @@ export function setupNavigationInterception(
       const request = createLoaderRequest(url);
 
       // Execute loaders immediately (before React re-renders)
-      // Results are cached, so React render will hit the cache
-      executeLoaders(matched, url.pathname, request, event.signal);
+      // Results are cached by entry id, so React render will hit the cache
+      // Note: destination.id is only available for traverse navigations (back/forward)
+      // For push/replace navigations, destination.id is empty and cache won't be shared
+      executeLoaders(
+        matched,
+        event.destination.id ?? "",
+        request,
+        event.signal,
+      );
 
       event.intercept({
         handler: async () => {

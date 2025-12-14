@@ -93,6 +93,17 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       mockNavigation.navigate(url, { state });
     },
 
+    // Test helper to simulate traverse navigation (back/forward)
+    // This reuses an existing entry instead of creating a new one
+    __simulateTraversal(entryIndex: number) {
+      if (entryIndex < 0 || entryIndex >= entries.length) {
+        throw new Error(`Invalid entry index: ${entryIndex}`);
+      }
+      currentEntry = entries[entryIndex];
+      mockNavigation.currentEntry = currentEntry;
+      dispatchEvent("currententrychange", new Event("currententrychange"));
+    },
+
     // Test helper to get listeners
     __getListeners(type: string) {
       return listeners.get(type);

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import { Router } from "../Router.js";
 import { Outlet } from "../Outlet.js";
 import { route } from "../route.js";
@@ -298,7 +298,7 @@ describe("Data Loader", () => {
       expect(screen.getByText(/Count:/).textContent).toBe(firstCount);
     });
 
-    it("caches results per URL pathname", () => {
+    it("caches results per navigation entry id", () => {
       mockNavigation = setupNavigationMock("http://localhost/page1");
 
       const loaderSpy = vi.fn(({ params }: LoaderArgs) => ({
@@ -321,22 +321,60 @@ describe("Data Loader", () => {
       expect(loaderSpy).toHaveBeenCalledTimes(1);
       expect(screen.getByText("Page: page1")).toBeInTheDocument();
 
-      // Navigate to a different page
+      // Navigate to a different page (creates new entry at index 1)
       act(() => {
         mockNavigation.__simulateNavigation("http://localhost/page2");
       });
 
-      // Loader should be called again for the new URL
+      // Loader should be called again for the new entry
       expect(loaderSpy).toHaveBeenCalledTimes(2);
       expect(screen.getByText("Page: page2")).toBeInTheDocument();
 
-      // Navigate back to the first page
+      // Traverse back to the first entry (back button behavior)
+      act(() => {
+        mockNavigation.__simulateTraversal(0);
+      });
+
+      // Loader should NOT be called again (cache hit - same entry id)
+      expect(loaderSpy).toHaveBeenCalledTimes(2);
+      expect(screen.getByText("Page: page1")).toBeInTheDocument();
+    });
+
+    it("calls loader again for new navigation to same URL", () => {
+      mockNavigation = setupNavigationMock("http://localhost/page1");
+
+      const loaderSpy = vi.fn(({ params }: LoaderArgs) => ({
+        page: params.page,
+      }));
+
+      function Page({ data }: { data: { page: string } }) {
+        return <div>Page: {data.page}</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/:page",
+          component: Page,
+          loader: loaderSpy,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(loaderSpy).toHaveBeenCalledTimes(1);
+
+      // Navigate to a different page
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/page2");
+      });
+      expect(loaderSpy).toHaveBeenCalledTimes(2);
+
+      // Navigate forward to the same URL as the first page (creates new entry)
       act(() => {
         mockNavigation.__simulateNavigation("http://localhost/page1");
       });
 
-      // Loader should NOT be called again (cache hit)
-      expect(loaderSpy).toHaveBeenCalledTimes(2);
+      // Loader SHOULD be called again (new entry, different id)
+      expect(loaderSpy).toHaveBeenCalledTimes(3);
       expect(screen.getByText("Page: page1")).toBeInTheDocument();
     });
   });

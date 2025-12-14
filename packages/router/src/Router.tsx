@@ -49,17 +49,18 @@ export function Router({ routes, children }: RouterProps): ReactNode {
 
   // Match current URL against routes and execute loaders
   const currentUrl = currentEntry?.url;
+  const currentEntryId = currentEntry?.id;
   const matchedRoutesWithData = useMemo(() => {
-    if (!currentUrl) return null;
+    if (!currentUrl || !currentEntryId) return null;
     const url = new URL(currentUrl);
     const matched = matchRoutes(routes, url.pathname);
     if (!matched) return null;
 
-    // Execute loaders (results are cached by URL pathname)
+    // Execute loaders (results are cached by navigation entry id)
     const request = createLoaderRequest(url);
     const signal = getIdleAbortSignal();
-    return executeLoaders(matched, url.pathname, request, signal);
-  }, [currentUrl, routes]);
+    return executeLoaders(matched, currentEntryId, request, signal);
+  }, [currentUrl, currentEntryId, routes]);
 
   const routerContextValue = useMemo(
     () => ({ currentEntry, navigate }),
