@@ -12,8 +12,8 @@ interface NavigationHistoryEntry {
 
 interface NavigationDestination {
   readonly url: string;
-  readonly key: string | null;
-  readonly id: string | null;
+  readonly key: string;
+  readonly id: string;
   readonly index: number;
   readonly sameDocument: boolean;
   getState(): unknown;

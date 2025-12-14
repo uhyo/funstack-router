@@ -94,22 +94,29 @@ export function setupNavigationInterception(
         idleController = null;
       }
 
-      const request = createLoaderRequest(url);
-
-      // Execute loaders immediately (before React re-renders)
-      // Results are cached by entry id, so React render will hit the cache
-      // Note: destination.id is only available for traverse navigations (back/forward)
-      // For push/replace navigations, destination.id is empty and cache won't be shared
-      executeLoaders(
-        matched,
-        event.destination.id ?? "",
-        request,
-        event.signal,
-      );
-
       event.intercept({
         handler: async () => {
-          // Navigation will complete and currententrychange will fire
+          const request = createLoaderRequest(url);
+
+          // Note: in response to `currententrychange` event, <Router> should already
+          // have dispatched data loaders and the results should be cached.
+          // Here we run executeLoader to retrieve cached results.
+          const currentEntry = navigation.currentEntry;
+          if (!currentEntry) {
+            throw new Error(
+              "Navigation currentEntry is null during navigation interception",
+            );
+          }
+
+          const results = executeLoaders(
+            matched,
+            currentEntry.id,
+            request,
+            event.signal,
+          );
+
+          // Delay navigation until async loaders complete
+          await Promise.all(results.map((r) => r.data));
         },
       });
     }
