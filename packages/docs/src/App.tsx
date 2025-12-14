@@ -31,5 +31,5 @@ const routes = [
 ];
 
 export function App() {
-  return <Router routes={routes} />;
+  return <Router routes={routes} fallback="static" />;
 }
