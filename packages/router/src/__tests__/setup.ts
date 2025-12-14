@@ -1,4 +1,5 @@
 import { vi } from "vitest";
+import { resetNavigationState } from "../core/navigation.js";
 
 // Mock Navigation API for testing
 export function createMockNavigation(initialUrl = "http://localhost/") {
@@ -111,4 +112,5 @@ export function setupNavigationMock(initialUrl = "http://localhost/") {
 // Cleanup
 export function cleanupNavigationMock() {
   delete (globalThis as Record<string, unknown>).navigation;
+  resetNavigationState();
 }

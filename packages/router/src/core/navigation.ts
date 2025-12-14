@@ -3,30 +3,39 @@ import { matchRoutes } from "./matchRoutes.js";
 import { executeLoaders, createLoaderRequest } from "./loaderCache.js";
 
 /**
- * Current AbortController for the active navigation.
- * Aborted when a new navigation starts.
+ * Fallback AbortController for initial page load (no NavigateEvent).
+ * Aborted when the first real navigation occurs.
  */
-let currentAbortController: AbortController | null = null;
+let initialLoadController: AbortController | null = new AbortController();
+
+/**
+ * Current abort signal from the active NavigateEvent.
+ * null during initial page load (before first navigation).
+ */
+let currentNavigationSignal: AbortSignal | null = null;
 
 /**
  * Get the current abort signal for loader cancellation.
  */
 export function getCurrentAbortSignal(): AbortSignal {
-  if (!currentAbortController) {
-    currentAbortController = new AbortController();
+  // During navigation: use the NavigateEvent's signal
+  if (currentNavigationSignal) {
+    return currentNavigationSignal;
   }
-  return currentAbortController.signal;
+  // Initial load: use fallback controller
+  if (!initialLoadController) {
+    initialLoadController = new AbortController();
+  }
+  return initialLoadController.signal;
 }
 
 /**
- * Abort the current navigation and create a new AbortController.
+ * Reset navigation state. Used for testing.
  */
-function abortCurrentNavigation(): AbortController {
-  if (currentAbortController) {
-    currentAbortController.abort();
-  }
-  currentAbortController = new AbortController();
-  return currentAbortController;
+export function resetNavigationState(): void {
+  initialLoadController?.abort();
+  initialLoadController = new AbortController();
+  currentNavigationSignal = null;
 }
 
 /**
@@ -91,13 +100,21 @@ export function setupNavigationInterception(
     const matched = matchRoutes(routes, url.pathname);
 
     if (matched) {
-      // Abort previous navigation and create new AbortController
-      const controller = abortCurrentNavigation();
+      // Abort initial load's loaders if this is the first navigation
+      if (initialLoadController) {
+        initialLoadController.abort();
+        initialLoadController = null;
+      }
+
+      // Use the NavigateEvent's signal directly -
+      // browser will abort it automatically on new navigation
+      currentNavigationSignal = event.signal;
+
       const request = createLoaderRequest(url);
 
       // Execute loaders immediately (before React re-renders)
       // Results are cached, so React render will hit the cache
-      executeLoaders(matched, url.pathname, request, controller.signal);
+      executeLoaders(matched, url.pathname, request, event.signal);
 
       event.intercept({
         handler: async () => {

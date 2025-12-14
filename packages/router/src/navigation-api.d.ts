@@ -36,6 +36,7 @@ interface NavigateEvent extends Event {
 
 interface NavigationInterceptOptions {
   handler?: () => Promise<void>;
+  precommitHandler?: () => Promise<void>;
   focusReset?: "after-transition" | "manual";
   scroll?: "after-transition" | "manual";
 }
