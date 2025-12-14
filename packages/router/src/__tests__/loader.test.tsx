@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { Router } from "../Router.js";
 import { Outlet } from "../Outlet.js";
-import { route } from "../route.js";
+import { route, type LoaderArgs } from "../route.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
-import type { LoaderArgs, RouteDefinition } from "../types.js";
+import { internalRoutes, type InternalRouteDefinition } from "../types.js";
 import { clearLoaderCache } from "../core/loaderCache.js";
 
 describe("Data Loader", () => {
@@ -387,11 +387,13 @@ describe("Data Loader", () => {
       type User = { id: number; name: string };
 
       // This should compile without errors
-      const userRoute = route({
-        path: "/users/:id",
-        loader: (): User => ({ id: 1, name: "Test" }),
-        component: ({ data }: { data: User }) => <div>{data.name}</div>,
-      }) as RouteDefinition<User>;
+      const userRoute = internalRoutes([
+        route({
+          path: "/users/:id",
+          loader: (): User => ({ id: 1, name: "Test" }),
+          component: ({ data }: { data: User }) => <div>{data.name}</div>,
+        }),
+      ])[0];
 
       expect(userRoute.path).toBe("/users/:id");
       expect(userRoute.loader).toBeDefined();
@@ -399,10 +401,12 @@ describe("Data Loader", () => {
 
     it("allows routes without loader and without data prop", () => {
       // This should compile without errors
-      const aboutRoute = route({
-        path: "/about",
-        component: () => <div>About</div>,
-      }) as RouteDefinition;
+      const aboutRoute = internalRoutes([
+        route({
+          path: "/about",
+          component: () => <div>About</div>,
+        }),
+      ])[0];
 
       expect(aboutRoute.path).toBe("/about");
       expect(aboutRoute.loader).toBeUndefined();

@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { matchRoutes } from "../core/matchRoutes.js";
-import type { RouteDefinition } from "../types.js";
+import { internalRoutes, type InternalRouteDefinition } from "../types.js";
 
 describe("matchRoutes", () => {
   describe("basic matching", () => {
     it("matches exact paths", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         { path: "/", component: () => null },
         { path: "/about", component: () => null },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/about");
       expect(result).toHaveLength(1);
@@ -16,17 +16,17 @@ describe("matchRoutes", () => {
     });
 
     it("returns null for non-matching paths", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         { path: "/", component: () => null },
         { path: "/about", component: () => null },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/contact");
       expect(result).toBeNull();
     });
 
     it("matches root path", () => {
-      const routes: RouteDefinition[] = [{ path: "/", component: () => null }];
+      const routes = internalRoutes([{ path: "/", component: () => null }]);
 
       const result = matchRoutes(routes, "/");
       expect(result).toHaveLength(1);
@@ -36,9 +36,9 @@ describe("matchRoutes", () => {
 
   describe("path parameters", () => {
     it("extracts single parameter", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         { path: "/users/:id", component: () => null },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/users/123");
       expect(result).toHaveLength(1);
@@ -46,9 +46,9 @@ describe("matchRoutes", () => {
     });
 
     it("extracts multiple parameters", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         { path: "/users/:userId/posts/:postId", component: () => null },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/users/42/posts/99");
       expect(result).toHaveLength(1);
@@ -58,7 +58,7 @@ describe("matchRoutes", () => {
 
   describe("nested routes", () => {
     it("matches nested routes", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         {
           path: "/",
           component: () => null,
@@ -67,7 +67,7 @@ describe("matchRoutes", () => {
             { path: "about", component: () => null },
           ],
         },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/about");
       expect(result).toHaveLength(2);
@@ -76,7 +76,7 @@ describe("matchRoutes", () => {
     });
 
     it("matches deeply nested routes", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         {
           path: "/",
           component: () => null,
@@ -88,7 +88,7 @@ describe("matchRoutes", () => {
             },
           ],
         },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/users/123");
       expect(result).toHaveLength(3);
@@ -99,13 +99,13 @@ describe("matchRoutes", () => {
     });
 
     it("merges params from parent routes", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         {
           path: "/org/:orgId",
           component: () => null,
           children: [{ path: "users/:userId", component: () => null }],
         },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/org/acme/users/123");
       expect(result).toHaveLength(2);
@@ -113,13 +113,13 @@ describe("matchRoutes", () => {
     });
 
     it("matches index route (empty path)", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         {
           path: "/",
           component: () => null,
           children: [{ path: "", component: () => null }],
         },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/");
       expect(result).toHaveLength(2);
@@ -130,10 +130,10 @@ describe("matchRoutes", () => {
 
   describe("route priority", () => {
     it("matches first matching route", () => {
-      const routes: RouteDefinition[] = [
+      const routes = internalRoutes([
         { path: "/users/new", component: () => null },
         { path: "/users/:id", component: () => null },
-      ];
+      ]);
 
       const result = matchRoutes(routes, "/users/new");
       expect(result).toHaveLength(1);

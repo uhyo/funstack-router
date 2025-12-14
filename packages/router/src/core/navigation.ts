@@ -1,4 +1,4 @@
-import type { RouteDefinition, NavigateOptions } from "../types.js";
+import type { InternalRouteDefinition, NavigateOptions } from "../types.js";
 import { matchRoutes } from "./matchRoutes.js";
 import { executeLoaders, createLoaderRequest } from "./loaderCache.js";
 
@@ -71,7 +71,7 @@ export function getServerSnapshot(): null {
  * Returns a cleanup function.
  */
 export function setupNavigationInterception(
-  routes: RouteDefinition[],
+  routes: InternalRouteDefinition[],
 ): () => void {
   if (!hasNavigation()) {
     return () => {};

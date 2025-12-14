@@ -6,7 +6,7 @@ import { useLocation } from "../hooks/useLocation.js";
 import { useParams } from "../hooks/useParams.js";
 import { useSearchParams } from "../hooks/useSearchParams.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
-import type { RouteDefinition } from "../types.js";
+import type { RouteDefinition } from "../route.js";
 
 describe("hooks", () => {
   let mockNavigation: ReturnType<typeof setupNavigationMock>;

@@ -1,11 +1,11 @@
-import type { RouteDefinition, MatchedRoute } from "../types.js";
+import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
 
 /**
  * Match a pathname against a route tree, returning the matched route stack.
  * Returns null if no match is found.
  */
 export function matchRoutes(
-  routes: RouteDefinition[],
+  routes: InternalRouteDefinition[],
   pathname: string,
 ): MatchedRoute[] | null {
   for (const route of routes) {
@@ -21,7 +21,7 @@ export function matchRoutes(
  * Match a single route and its children recursively.
  */
 function matchRoute(
-  route: RouteDefinition,
+  route: InternalRouteDefinition,
   pathname: string,
 ): MatchedRoute[] | null {
   const hasChildren = Boolean(route.children?.length);

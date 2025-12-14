@@ -1,7 +1,18 @@
 import type { ComponentType } from "react";
-import type { LoaderArgs, RouteDefinition } from "./types.js";
 
-const routeDefinitionSymbol = Symbol("RouteDefinition");
+const routeDefinitionSymbol = Symbol();
+
+/**
+ * Arguments passed to loader functions.
+ */
+export type LoaderArgs = {
+  /** Extracted path parameters */
+  params: Record<string, string>;
+  /** Request object with URL and headers */
+  request: Request;
+  /** AbortSignal for cancellation on navigation */
+  signal: AbortSignal;
+};
 
 /**
  * Route definition created by the `route` helper function.
@@ -9,8 +20,19 @@ const routeDefinitionSymbol = Symbol("RouteDefinition");
 export interface OpaqueRouteDefinition {
   [routeDefinitionSymbol]: never;
   path: string;
-  children?: OpaqueRouteDefinition[];
+  children?: RouteDefinition[];
 }
+
+/**
+ * Any route definition defined by user.
+ */
+export type RouteDefinition =
+  | OpaqueRouteDefinition
+  | {
+      path: string;
+      component?: ComponentType<{}>;
+      children?: RouteDefinition[];
+    };
 
 /**
  * Route definition with loader - infers TData from loader return type.
@@ -20,7 +42,7 @@ type RouteWithLoader<TData> = {
   loader: (args: LoaderArgs) => TData;
   component: ComponentType<{ data: TData }>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  children?: RouteDefinition<any>[];
+  children?: RouteDefinition[];
 };
 
 /**
@@ -30,7 +52,7 @@ type RouteWithoutLoader = {
   path: string;
   component?: ComponentType;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  children?: RouteDefinition<any>[];
+  children?: RouteDefinition[];
 };
 
 /**

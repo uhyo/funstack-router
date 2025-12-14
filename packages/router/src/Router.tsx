@@ -7,10 +7,10 @@ import {
 } from "react";
 import { RouterContext } from "./context/RouterContext.js";
 import { RouteContext } from "./context/RouteContext.js";
-import type {
-  RouteDefinition,
-  NavigateOptions,
-  MatchedRouteWithData,
+import {
+  type NavigateOptions,
+  type MatchedRouteWithData,
+  internalRoutes,
 } from "./types.js";
 import { matchRoutes } from "./core/matchRoutes.js";
 import {
@@ -22,13 +22,15 @@ import {
   getIdleAbortSignal,
 } from "./core/navigation.js";
 import { executeLoaders, createLoaderRequest } from "./core/loaderCache.js";
+import type { RouteDefinition } from "./route.js";
 
 export type RouterProps = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  routes: RouteDefinition<any>[];
+  routes: RouteDefinition[];
 };
 
-export function Router({ routes }: RouterProps): ReactNode {
+export function Router({ routes: inputRoutes }: RouterProps): ReactNode {
+  const routes = internalRoutes(inputRoutes);
+
   const currentEntry = useSyncExternalStore(
     subscribeToNavigation,
     getNavigationSnapshot,

@@ -1,8 +1,8 @@
+import type { LoaderArgs } from "../route.js";
 import type {
-  LoaderArgs,
   MatchedRoute,
   MatchedRouteWithData,
-  RouteDefinition,
+  InternalRouteDefinition,
 } from "../types.js";
 
 /**
@@ -17,7 +17,7 @@ const loaderCache = new Map<string, unknown>();
  */
 function getOrCreateLoaderResult(
   entryId: string,
-  route: RouteDefinition<unknown>,
+  route: InternalRouteDefinition,
   args: LoaderArgs,
 ): unknown | undefined {
   if (!route.loader) {

@@ -15,10 +15,10 @@ export { route } from "./route.js";
 
 // Types
 export type {
-  RouteDefinition,
   MatchedRoute,
   MatchedRouteWithData,
   NavigateOptions,
   Location,
-  LoaderArgs,
 } from "./types.js";
+
+export type { LoaderArgs, RouteDefinition } from "./route.js";
