@@ -10,7 +10,7 @@ import { RouteContext } from "./context/RouteContext.js";
 import type {
   RouteDefinition,
   NavigateOptions,
-  MatchedRoute,
+  MatchedRouteWithData,
 } from "./types.js";
 import { matchRoutes } from "./core/matchRoutes.js";
 import {
@@ -19,10 +19,13 @@ import {
   getServerSnapshot,
   setupNavigationInterception,
   performNavigation,
+  getCurrentAbortSignal,
 } from "./core/navigation.js";
+import { executeLoaders, createLoaderRequest } from "./core/loaderCache.js";
 
 export type RouterProps = {
-  routes: RouteDefinition[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  routes: RouteDefinition<any>[];
   children?: ReactNode;
 };
 
@@ -44,12 +47,18 @@ export function Router({ routes, children }: RouterProps): ReactNode {
     [],
   );
 
-  // Match current URL against routes
+  // Match current URL against routes and execute loaders
   const currentUrl = currentEntry?.url;
-  const matchedRoutes = useMemo(() => {
+  const matchedRoutesWithData = useMemo(() => {
     if (!currentUrl) return null;
     const url = new URL(currentUrl);
-    return matchRoutes(routes, url.pathname);
+    const matched = matchRoutes(routes, url.pathname);
+    if (!matched) return null;
+
+    // Execute loaders (results are cached by URL pathname)
+    const request = createLoaderRequest(url);
+    const signal = getCurrentAbortSignal();
+    return executeLoaders(matched, url.pathname, request, signal);
   }, [currentUrl, routes]);
 
   const routerContextValue = useMemo(
@@ -59,8 +68,8 @@ export function Router({ routes, children }: RouterProps): ReactNode {
 
   return (
     <RouterContext.Provider value={routerContextValue}>
-      {matchedRoutes ? (
-        <RouteRenderer matchedRoutes={matchedRoutes} index={0} />
+      {matchedRoutesWithData ? (
+        <RouteRenderer matchedRoutes={matchedRoutesWithData} index={0} />
       ) : null}
       {children}
     </RouterContext.Provider>
@@ -68,7 +77,7 @@ export function Router({ routes, children }: RouterProps): ReactNode {
 }
 
 type RouteRendererProps = {
-  matchedRoutes: MatchedRoute[];
+  matchedRoutes: MatchedRouteWithData[];
   index: number;
 };
 
@@ -82,7 +91,7 @@ function RouteRenderer({
   const match = matchedRoutes[index];
   if (!match) return null;
 
-  const { route, params, pathname } = match;
+  const { route, params, pathname, data } = match;
   const Component = route.component;
 
   // Create outlet for child routes
@@ -96,9 +105,26 @@ function RouteRenderer({
     [params, pathname, outlet],
   );
 
+  // Render component with or without data prop based on loader presence
+  const renderComponent = () => {
+    if (!Component) return outlet;
+
+    // When loader exists, data is defined and component expects data prop
+    // When loader doesn't exist, data is undefined and component doesn't expect data prop
+    // TypeScript can't narrow this union, so we use runtime check with type assertion
+    if (route.loader) {
+      const ComponentWithData = Component as React.ComponentType<{
+        data: unknown;
+      }>;
+      return <ComponentWithData data={data} />;
+    }
+    const ComponentWithoutData = Component as React.ComponentType;
+    return <ComponentWithoutData />;
+  };
+
   return (
     <RouteContext.Provider value={routeContextValue}>
-      {Component ? <Component /> : outlet}
+      {renderComponent()}
     </RouteContext.Provider>
   );
 }

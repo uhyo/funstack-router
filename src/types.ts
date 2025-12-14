@@ -1,27 +1,62 @@
 import type { ComponentType } from "react";
 
 /**
- * Route definition for the router.
+ * Arguments passed to loader functions.
  */
-export type RouteDefinition = {
+export type LoaderArgs = {
+  /** Extracted path parameters */
+  params: Record<string, string>;
+  /** Request object with URL and headers */
+  request: Request;
+  /** AbortSignal for cancellation on navigation */
+  signal: AbortSignal;
+};
+
+/**
+ * Route definition for the router.
+ * When a loader is defined, the component receives the loader result as a `data` prop.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RouteDefinition<TData = unknown> = {
   /** Path pattern to match (e.g., "users/:id") */
   path: string;
-  /** Component to render when this route matches */
-  component?: ComponentType;
   /** Child routes for nested routing */
-  children?: RouteDefinition[];
-};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  children?: RouteDefinition<any>[];
+} & (
+  | {
+      /** Loader function that fetches data for this route */
+      loader: (args: LoaderArgs) => TData;
+      /** Component to render - receives data prop from loader */
+      component: ComponentType<{ data: TData }>;
+    }
+  | {
+      /** No loader defined */
+      loader?: never;
+      /** Component to render when this route matches */
+      component?: ComponentType;
+    }
+);
 
 /**
  * A matched route with its parameters.
  */
 export type MatchedRoute = {
   /** The original route definition */
-  route: RouteDefinition;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  route: RouteDefinition<any>;
   /** Extracted path parameters */
   params: Record<string, string>;
   /** The matched pathname segment */
   pathname: string;
+};
+
+/**
+ * A matched route with loader data.
+ */
+export type MatchedRouteWithData = MatchedRoute & {
+  /** Data returned from the loader (undefined if no loader) */
+  data: unknown | undefined;
 };
 
 /**

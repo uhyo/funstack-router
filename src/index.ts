@@ -10,10 +10,15 @@ export { useLocation } from "./hooks/useLocation.js";
 export { useParams } from "./hooks/useParams.js";
 export { useSearchParams } from "./hooks/useSearchParams.js";
 
+// Route Definition Helper
+export { route } from "./route.js";
+
 // Types
 export type {
   RouteDefinition,
   MatchedRoute,
+  MatchedRouteWithData,
   NavigateOptions,
   Location,
+  LoaderArgs,
 } from "./types.js";
