@@ -13,7 +13,7 @@ export function useLocation(): Location {
   }
 
   return useMemo(() => {
-    if (!context.currentEntry?.url) {
+    if (!context.currentEntry.url) {
       return { pathname: "/", search: "", hash: "" };
     }
 
@@ -23,5 +23,5 @@ export function useLocation(): Location {
       search: url.search,
       hash: url.hash,
     };
-  }, [context.currentEntry?.url]);
+  }, [context.currentEntry.url]);
 }

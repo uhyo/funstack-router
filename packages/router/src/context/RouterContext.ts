@@ -3,7 +3,7 @@ import type { NavigateOptions } from "../types.js";
 
 export type RouterContextValue = {
   /** Current navigation entry */
-  currentEntry: NavigationHistoryEntry | null;
+  currentEntry: NavigationHistoryEntry;
   /** Navigate to a new URL */
   navigate: (to: string, options?: NavigateOptions) => void;
 };

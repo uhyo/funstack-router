@@ -47,34 +47,44 @@ export function Router({ routes, children }: RouterProps): ReactNode {
     [],
   );
 
-  // Match current URL against routes and execute loaders
-  const currentUrl = currentEntry?.url;
-  const currentEntryId = currentEntry?.id;
-  const matchedRoutesWithData = useMemo(() => {
-    if (!currentUrl || !currentEntryId) return null;
-    const url = new URL(currentUrl);
-    const matched = matchRoutes(routes, url.pathname);
-    if (!matched) return null;
+  const render = useMemo(() => {
+    if (currentEntry === null) {
+      // This happens either when Navigation API is unavailable,
+      // or the current document is not fully active.
+      return (children: ReactNode) => children;
+    }
+    const currentUrl = currentEntry.url;
+    if (currentUrl === null) {
+      // This means currentEntry is not in this document, which is impossible
+      return (children: ReactNode) => children;
+    }
 
-    // Execute loaders (results are cached by navigation entry id)
-    const request = createLoaderRequest(url);
-    const signal = getIdleAbortSignal();
-    return executeLoaders(matched, currentEntryId, request, signal);
-  }, [currentUrl, currentEntryId, routes]);
+    const currentEntryId = currentEntry.id;
+    // Match current URL against routes and execute loaders
+    const matchedRoutesWithData = (() => {
+      const url = new URL(currentUrl);
+      const matched = matchRoutes(routes, url.pathname);
+      if (!matched) return null;
 
-  const routerContextValue = useMemo(
-    () => ({ currentEntry, navigate }),
-    [currentEntry, navigate],
-  );
+      // Execute loaders (results are cached by navigation entry id)
+      const request = createLoaderRequest(url);
+      const signal = getIdleAbortSignal();
+      return executeLoaders(matched, currentEntryId, request, signal);
+    })();
 
-  return (
-    <RouterContext.Provider value={routerContextValue}>
-      {matchedRoutesWithData ? (
-        <RouteRenderer matchedRoutes={matchedRoutesWithData} index={0} />
-      ) : null}
-      {children}
-    </RouterContext.Provider>
-  );
+    const routerContextValue = { currentEntry, navigate };
+
+    return (children: ReactNode) => (
+      <RouterContext.Provider value={routerContextValue}>
+        {matchedRoutesWithData ? (
+          <RouteRenderer matchedRoutes={matchedRoutesWithData} index={0} />
+        ) : null}
+        {children}
+      </RouterContext.Provider>
+    );
+  }, [navigate, currentEntry, routes]);
+
+  return render(children);
 }
 
 type RouteRendererProps = {

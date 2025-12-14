@@ -19,16 +19,16 @@ export function useSearchParams(): [URLSearchParams, SetSearchParams] {
   }
 
   const searchParams = useMemo(() => {
-    if (!context.currentEntry?.url) {
+    if (!context.currentEntry.url) {
       return new URLSearchParams();
     }
     const url = new URL(context.currentEntry.url);
     return url.searchParams;
-  }, [context.currentEntry?.url]);
+  }, [context.currentEntry.url]);
 
   const setSearchParams = useCallback<SetSearchParams>(
     (params) => {
-      const currentUrl = context.currentEntry?.url;
+      const currentUrl = context.currentEntry.url;
       if (!currentUrl) return;
 
       const url = new URL(currentUrl);
