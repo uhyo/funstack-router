@@ -38,6 +38,41 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     }
   };
 
+  // Create a mock NavigateEvent
+  const createMockNavigateEvent = (
+    destinationUrl: string,
+  ): NavigateEvent & { defaultPrevented: boolean } => {
+    let defaultPrevented = false;
+    return {
+      type: "navigate",
+      canIntercept: true,
+      hashChange: false,
+      destination: {
+        url: destinationUrl,
+        key: `key-${entries.length}`,
+        id: `id-${entries.length}`,
+        index: entries.length,
+        sameDocument: true,
+        getState: () => undefined,
+      },
+      navigationType: "push",
+      userInitiated: false,
+      signal: new AbortController().signal,
+      formData: null,
+      downloadRequest: null,
+      info: undefined,
+      hasUAVisualTransition: false,
+      intercept: vi.fn(),
+      scroll: vi.fn(),
+      get defaultPrevented() {
+        return defaultPrevented;
+      },
+      preventDefault: vi.fn(() => {
+        defaultPrevented = true;
+      }),
+    } as unknown as NavigateEvent & { defaultPrevented: boolean };
+  };
+
   const mockNavigation = {
     currentEntry,
     entries: () => [...entries],
@@ -88,9 +123,43 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       },
     ),
 
-    // Test helper to simulate navigation
+    // Test helper to simulate navigation (bypasses navigate event)
     __simulateNavigation(url: string, state?: unknown) {
       mockNavigation.navigate(url, { state });
+    },
+
+    // Test helper to simulate navigation with navigate event dispatch
+    // This allows testing of onNavigate callback behavior
+    __simulateNavigationWithEvent(url: string): {
+      event: NavigateEvent & { defaultPrevented: boolean };
+      proceed: () => void;
+    } {
+      const newUrl = new URL(url, currentEntry.url).href;
+      const event = createMockNavigateEvent(newUrl);
+
+      // Dispatch navigate event first (allows onNavigate to be called)
+      dispatchEvent("navigate", event);
+
+      // Return event and a proceed function
+      // If event.defaultPrevented is true, proceeding should be skipped
+      return {
+        event,
+        proceed: () => {
+          if (!event.defaultPrevented) {
+            const newEntry = new MockNavigationHistoryEntry(
+              newUrl,
+              entries.length,
+            );
+            entries.push(newEntry);
+            currentEntry = newEntry;
+            mockNavigation.currentEntry = currentEntry;
+            dispatchEvent(
+              "currententrychange",
+              new Event("currententrychange"),
+            );
+          }
+        },
+      };
     },
 
     // Test helper to simulate traverse navigation (back/forward)

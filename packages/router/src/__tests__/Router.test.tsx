@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { Router } from "../Router.js";
 import { Outlet } from "../Outlet.js";
@@ -135,5 +135,111 @@ describe("Router", () => {
     });
 
     expect(screen.getByText("About")).toBeInTheDocument();
+  });
+
+  describe("onNavigate callback", () => {
+    it("calls onNavigate with NavigateEvent and matched routes before navigation", () => {
+      const onNavigate = vi.fn();
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} onNavigate={onNavigate} />);
+
+      act(() => {
+        const { proceed } = mockNavigation.__simulateNavigationWithEvent(
+          "http://localhost/about",
+        );
+        proceed();
+      });
+
+      expect(onNavigate).toHaveBeenCalledTimes(1);
+      expect(onNavigate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          destination: expect.objectContaining({
+            url: "http://localhost/about",
+          }),
+        }),
+        expect.arrayContaining([
+          expect.objectContaining({
+            pathname: "/about",
+          }),
+        ]),
+      );
+    });
+
+    it("prevents navigation when onNavigate calls event.preventDefault()", () => {
+      const onNavigate = vi.fn((event: NavigateEvent) => {
+        event.preventDefault();
+      });
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} onNavigate={onNavigate} />);
+
+      act(() => {
+        const { proceed } = mockNavigation.__simulateNavigationWithEvent(
+          "http://localhost/about",
+        );
+        proceed();
+      });
+
+      // Should still show Home because navigation was prevented
+      expect(screen.getByText("Home")).toBeInTheDocument();
+      expect(screen.queryByText("About")).not.toBeInTheDocument();
+    });
+
+    it("allows navigation when onNavigate does not call preventDefault()", () => {
+      const onNavigate = vi.fn(); // Does not call preventDefault
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} onNavigate={onNavigate} />);
+
+      act(() => {
+        const { proceed } = mockNavigation.__simulateNavigationWithEvent(
+          "http://localhost/about",
+        );
+        proceed();
+      });
+
+      expect(screen.getByText("About")).toBeInTheDocument();
+    });
+
+    it("calls onNavigate with null for unmatched routes", () => {
+      const onNavigate = vi.fn();
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+      ];
+
+      render(<Router routes={routes} onNavigate={onNavigate} />);
+
+      act(() => {
+        const { proceed } = mockNavigation.__simulateNavigationWithEvent(
+          "http://localhost/unknown",
+        );
+        proceed();
+      });
+
+      // onNavigate should be called with null for unmatched routes
+      expect(onNavigate).toHaveBeenCalledTimes(1);
+      expect(onNavigate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          destination: expect.objectContaining({
+            url: "http://localhost/unknown",
+          }),
+        }),
+        null,
+      );
+    });
   });
 });

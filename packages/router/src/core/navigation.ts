@@ -1,4 +1,8 @@
-import type { InternalRouteDefinition, NavigateOptions } from "../types.js";
+import type {
+  InternalRouteDefinition,
+  NavigateOptions,
+  OnNavigateCallback,
+} from "../types.js";
 import { matchRoutes } from "./matchRoutes.js";
 import { executeLoaders, createLoaderRequest } from "./loaderCache.js";
 
@@ -72,6 +76,7 @@ export function getServerSnapshot(): null {
  */
 export function setupNavigationInterception(
   routes: InternalRouteDefinition[],
+  onNavigate?: OnNavigateCallback,
 ): () => void {
   if (!hasNavigation()) {
     return () => {};
@@ -86,6 +91,14 @@ export function setupNavigationInterception(
     // Check if the URL matches any of our routes
     const url = new URL(event.destination.url);
     const matched = matchRoutes(routes, url.pathname);
+
+    // Call onNavigate callback if provided (regardless of route match)
+    if (onNavigate) {
+      onNavigate(event, matched);
+      if (event.defaultPrevented) {
+        return; // Do not intercept, allow browser default
+      }
+    }
 
     if (matched) {
       // Abort initial load's loaders if this is the first navigation

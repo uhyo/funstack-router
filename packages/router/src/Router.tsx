@@ -10,6 +10,7 @@ import { RouteContext } from "./context/RouteContext.js";
 import {
   type NavigateOptions,
   type MatchedRouteWithData,
+  type OnNavigateCallback,
   internalRoutes,
 } from "./types.js";
 import { matchRoutes } from "./core/matchRoutes.js";
@@ -26,9 +27,20 @@ import type { RouteDefinition } from "./route.js";
 
 export type RouterProps = {
   routes: RouteDefinition[];
+  /**
+   * Callback invoked before navigation is intercepted.
+   * Call `event.preventDefault()` to prevent the router from handling this navigation.
+   *
+   * @param event - The NavigateEvent from the Navigation API
+   * @param matched - Array of matched routes, or null if no routes matched
+   */
+  onNavigate?: OnNavigateCallback;
 };
 
-export function Router({ routes: inputRoutes }: RouterProps): ReactNode {
+export function Router({
+  routes: inputRoutes,
+  onNavigate,
+}: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
   const currentEntry = useSyncExternalStore(
@@ -39,8 +51,8 @@ export function Router({ routes: inputRoutes }: RouterProps): ReactNode {
 
   // Set up navigation interception
   useEffect(() => {
-    return setupNavigationInterception(routes);
-  }, [routes]);
+    return setupNavigationInterception(routes, onNavigate);
+  }, [routes, onNavigate]);
 
   // Navigate function for programmatic navigation
   const navigate = useCallback(

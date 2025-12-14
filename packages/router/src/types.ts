@@ -74,3 +74,15 @@ export type Location = {
   search: string;
   hash: string;
 };
+
+/**
+ * Callback invoked before navigation is intercepted.
+ * Call `event.preventDefault()` to prevent the router from handling this navigation.
+ *
+ * @param event - The NavigateEvent from the Navigation API
+ * @param matched - Array of matched routes, or null if no routes matched
+ */
+export type OnNavigateCallback = (
+  event: NavigateEvent,
+  matched: readonly MatchedRoute[] | null,
+) => void;

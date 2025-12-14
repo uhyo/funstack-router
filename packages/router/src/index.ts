@@ -19,6 +19,7 @@ export type {
   MatchedRouteWithData,
   NavigateOptions,
   Location,
+  OnNavigateCallback,
 } from "./types.js";
 
 export type { LoaderArgs, RouteDefinition } from "./route.js";
