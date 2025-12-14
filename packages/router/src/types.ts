@@ -16,13 +16,11 @@ export type LoaderArgs = {
  * Route definition for the router.
  * When a loader is defined, the component receives the loader result as a `data` prop.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RouteDefinition<TData = unknown> = {
   /** Path pattern to match (e.g., "users/:id") */
   path: string;
   /** Child routes for nested routing */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  children?: RouteDefinition<any>[];
+  children?: RouteDefinition<unknown>[];
 } & (
   | {
       /** Loader function that fetches data for this route */
@@ -43,8 +41,7 @@ export type RouteDefinition<TData = unknown> = {
  */
 export type MatchedRoute = {
   /** The original route definition */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  route: RouteDefinition<any>;
+  route: RouteDefinition<unknown>;
   /** Extracted path parameters */
   params: Record<string, string>;
   /** The matched pathname segment */

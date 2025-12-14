@@ -17,8 +17,7 @@ const loaderCache = new Map<string, unknown>();
  */
 function getOrCreateLoaderResult(
   entryId: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  route: RouteDefinition<any>,
+  route: RouteDefinition<unknown>,
   args: LoaderArgs,
 ): unknown | undefined {
   if (!route.loader) {
