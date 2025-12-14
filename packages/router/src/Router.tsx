@@ -59,10 +59,10 @@ export function Router({ routes, children }: RouterProps): ReactNode {
       return (children: ReactNode) => children;
     }
 
+    const url = new URL(currentUrl);
     const currentEntryId = currentEntry.id;
     // Match current URL against routes and execute loaders
     const matchedRoutesWithData = (() => {
-      const url = new URL(currentUrl);
       const matched = matchRoutes(routes, url.pathname);
       if (!matched) return null;
 
@@ -72,7 +72,7 @@ export function Router({ routes, children }: RouterProps): ReactNode {
       return executeLoaders(matched, currentEntryId, request, signal);
     })();
 
-    const routerContextValue = { currentEntry, navigate };
+    const routerContextValue = { currentEntry, url, navigate };
 
     return (children: ReactNode) => (
       <RouterContext.Provider value={routerContextValue}>

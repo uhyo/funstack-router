@@ -18,20 +18,11 @@ export function useSearchParams(): [URLSearchParams, SetSearchParams] {
     throw new Error("useSearchParams must be used within a Router");
   }
 
-  const searchParams = useMemo(() => {
-    if (!context.currentEntry.url) {
-      return new URLSearchParams();
-    }
-    const url = new URL(context.currentEntry.url);
-    return url.searchParams;
-  }, [context.currentEntry.url]);
+  const searchParams = context.url.searchParams;
 
   const setSearchParams = useCallback<SetSearchParams>(
     (params) => {
-      const currentUrl = context.currentEntry.url;
-      if (!currentUrl) return;
-
-      const url = new URL(currentUrl);
+      const url = new URL(context.url);
 
       let newParams: URLSearchParams;
       if (typeof params === "function") {

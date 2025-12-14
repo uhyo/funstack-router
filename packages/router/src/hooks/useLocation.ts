@@ -12,16 +12,13 @@ export function useLocation(): Location {
     throw new Error("useLocation must be used within a Router");
   }
 
-  return useMemo(() => {
-    if (!context.currentEntry.url) {
-      return { pathname: "/", search: "", hash: "" };
-    }
+  const { url } = context;
 
-    const url = new URL(context.currentEntry.url);
+  return useMemo(() => {
     return {
       pathname: url.pathname,
       search: url.search,
       hash: url.hash,
     };
-  }, [context.currentEntry.url]);
+  }, [url]);
 }
