@@ -19,7 +19,7 @@ import {
   getServerSnapshot,
   setupNavigationInterception,
   performNavigation,
-  getCurrentAbortSignal,
+  getIdleAbortSignal,
 } from "./core/navigation.js";
 import { executeLoaders, createLoaderRequest } from "./core/loaderCache.js";
 
@@ -57,7 +57,7 @@ export function Router({ routes, children }: RouterProps): ReactNode {
 
     // Execute loaders (results are cached by URL pathname)
     const request = createLoaderRequest(url);
-    const signal = getCurrentAbortSignal();
+    const signal = getIdleAbortSignal();
     return executeLoaders(matched, url.pathname, request, signal);
   }, [currentUrl, routes]);
 

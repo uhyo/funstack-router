@@ -3,39 +3,27 @@ import { matchRoutes } from "./matchRoutes.js";
 import { executeLoaders, createLoaderRequest } from "./loaderCache.js";
 
 /**
- * Fallback AbortController for initial page load (no NavigateEvent).
- * Aborted when the first real navigation occurs.
+ * Fallback AbortController for data loading initialized outside of a navigation event.
+ * Aborted when the next navigation occurs.
+ *
+ * To save resources, this controller is created only when needed.
  */
-let initialLoadController: AbortController | null = new AbortController();
-
-/**
- * Current abort signal from the active NavigateEvent.
- * null during initial page load (before first navigation).
- */
-let currentNavigationSignal: AbortSignal | null = null;
+let idleController: AbortController | null = null;
 
 /**
  * Get the current abort signal for loader cancellation.
  */
-export function getCurrentAbortSignal(): AbortSignal {
-  // During navigation: use the NavigateEvent's signal
-  if (currentNavigationSignal) {
-    return currentNavigationSignal;
-  }
-  // Initial load: use fallback controller
-  if (!initialLoadController) {
-    initialLoadController = new AbortController();
-  }
-  return initialLoadController.signal;
+export function getIdleAbortSignal(): AbortSignal {
+  idleController ??= new AbortController();
+  return idleController.signal;
 }
 
 /**
  * Reset navigation state. Used for testing.
  */
 export function resetNavigationState(): void {
-  initialLoadController?.abort();
-  initialLoadController = new AbortController();
-  currentNavigationSignal = null;
+  idleController?.abort();
+  idleController = null;
 }
 
 /**
@@ -101,14 +89,10 @@ export function setupNavigationInterception(
 
     if (matched) {
       // Abort initial load's loaders if this is the first navigation
-      if (initialLoadController) {
-        initialLoadController.abort();
-        initialLoadController = null;
+      if (idleController) {
+        idleController.abort();
+        idleController = null;
       }
-
-      // Use the NavigateEvent's signal directly -
-      // browser will abort it automatically on new navigation
-      currentNavigationSignal = event.signal;
 
       const request = createLoaderRequest(url);
 
