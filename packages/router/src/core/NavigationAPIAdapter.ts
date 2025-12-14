@@ -24,13 +24,6 @@ export function resetNavigationState(): void {
 }
 
 /**
- * Check if Navigation API is available.
- */
-function hasNavigation(): boolean {
-  return typeof navigation !== "undefined";
-}
-
-/**
  * Adapter that uses the Navigation API for full SPA functionality.
  */
 export class NavigationAPIAdapter implements RouterAdapter {
@@ -39,9 +32,6 @@ export class NavigationAPIAdapter implements RouterAdapter {
   private cachedEntryId: string | null = null;
 
   getSnapshot(): LocationEntry | null {
-    if (!hasNavigation()) {
-      return null;
-    }
     const entry = navigation.currentEntry;
     if (!entry?.url) {
       return null;
@@ -67,21 +57,16 @@ export class NavigationAPIAdapter implements RouterAdapter {
   }
 
   subscribe(callback: () => void): () => void {
-    if (!hasNavigation()) {
-      return () => {};
-    }
-    navigation.addEventListener("currententrychange", callback);
+    const controller = new AbortController();
+    navigation.addEventListener("currententrychange", callback, {
+      signal: controller.signal,
+    });
     return () => {
-      if (hasNavigation()) {
-        navigation.removeEventListener("currententrychange", callback);
-      }
+      controller.abort();
     };
   }
 
   navigate(to: string, options?: NavigateOptions): void {
-    if (!hasNavigation()) {
-      return;
-    }
     navigation.navigate(to, {
       history: options?.replace ? "replace" : "push",
       state: options?.state,
@@ -92,10 +77,6 @@ export class NavigationAPIAdapter implements RouterAdapter {
     routes: InternalRouteDefinition[],
     onNavigate?: OnNavigateCallback,
   ): (() => void) | undefined {
-    if (!hasNavigation()) {
-      return undefined;
-    }
-
     const handleNavigate = (event: NavigateEvent) => {
       // Only intercept same-origin navigations
       if (!event.canIntercept || event.hashChange) {
@@ -149,11 +130,12 @@ export class NavigationAPIAdapter implements RouterAdapter {
       }
     };
 
-    navigation.addEventListener("navigate", handleNavigate);
+    const controller = new AbortController();
+    navigation.addEventListener("navigate", handleNavigate, {
+      signal: controller.signal,
+    });
     return () => {
-      if (hasNavigation()) {
-        navigation.removeEventListener("navigate", handleNavigate);
-      }
+      controller.abort();
     };
   }
 
