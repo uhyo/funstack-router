@@ -20,6 +20,9 @@ export type {
   NavigateOptions,
   Location,
   OnNavigateCallback,
+  FallbackMode,
 } from "./types.js";
+
+export type { LocationEntry } from "./core/RouterAdapter.js";
 
 export type { LoaderArgs, RouteDefinition } from "./route.js";
