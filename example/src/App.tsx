@@ -1,19 +1,35 @@
+import { use, Suspense } from "react";
 import {
   Router,
   Outlet,
   useLocation,
-  useParams,
   useSearchParams,
   useNavigate,
-  type RouteDefinition,
+  route,
 } from "@funstack/router";
 
-// Sample user data
-const users = [
+// Types
+type User = { id: string; name: string; role: string };
+
+// Sample user data (simulating a database)
+const users: User[] = [
   { id: "1", name: "Alice", role: "Admin" },
   { id: "2", name: "Bob", role: "User" },
   { id: "3", name: "Charlie", role: "User" },
 ];
+
+// Simulated async data fetching (would be API calls in real app)
+async function fetchUsers(): Promise<User[]> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  return users;
+}
+
+async function fetchUser(id: string): Promise<User | null> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  return users.find((u) => u.id === id) || null;
+}
 
 // Layout component with navigation
 function Layout() {
@@ -56,16 +72,27 @@ function Home() {
           <a href="/about">Basic navigation</a> (native &lt;a&gt; tag)
         </li>
         <li>
-          <a href="/users">Nested routes</a>
+          <a href="/users">Data loaders with Suspense</a> - async data fetching
         </li>
         <li>
-          <a href="/users/1">Route parameters</a>
+          <a href="/users/1">Route parameters with loaders</a>
         </li>
         <li>
           <a href="/search?q=hello&page=1">Search parameters</a>
         </li>
         <li>
           See About page for <code>useNavigate()</code> hook demo
+        </li>
+      </ul>
+      <h2>Data Loader Features:</h2>
+      <ul>
+        <li>
+          Loaders execute before component renders (parallel with navigation)
+        </li>
+        <li>Results are cached - instant back/forward navigation</li>
+        <li>Components receive loader result as a prop</li>
+        <li>
+          For async loaders, use React's <code>use()</code> hook with Suspense
         </li>
       </ul>
     </div>
@@ -87,13 +114,18 @@ function About() {
   );
 }
 
-// Users list page
-function Users() {
+// Users list page - receives Promise from loader, uses React's use() to suspend
+function Users({ data }: { data: Promise<User[]> }) {
+  const userList = use(data);
+
   return (
     <div>
       <h1>Users</h1>
+      <p style={{ color: "#666", fontSize: "0.9rem" }}>
+        (Data loaded via async loader with Suspense)
+      </p>
       <div>
-        {users.map((user) => (
+        {userList.map((user) => (
           <div key={user.id} className="user-card">
             <strong>{user.name}</strong> - {user.role}
             <br />
@@ -105,17 +137,16 @@ function Users() {
   );
 }
 
-// User detail page
-function UserDetail() {
-  const { id } = useParams<{ id: string }>();
+// User detail page - receives Promise from loader
+function UserDetail({ data }: { data: Promise<User | null> }) {
+  const user = use(data);
   const navigate = useNavigate();
-  const user = users.find((u) => u.id === id);
 
   if (!user) {
     return (
       <div>
         <h1>User Not Found</h1>
-        <p>No user with ID "{id}" exists.</p>
+        <p>The requested user does not exist.</p>
         <button onClick={() => navigate("/users")}>Back to Users</button>
       </div>
     );
@@ -124,6 +155,9 @@ function UserDetail() {
   return (
     <div>
       <h1>{user.name}</h1>
+      <p style={{ color: "#666", fontSize: "0.9rem" }}>
+        (Data loaded via async loader with Suspense)
+      </p>
       <p>
         <strong>ID:</strong> {user.id}
       </p>
@@ -194,21 +228,44 @@ function NotFound() {
   );
 }
 
-// Route configuration
-const routes: RouteDefinition[] = [
-  {
+// Route configuration using route() helper for type safety
+const routes = [
+  route({
     path: "/",
     component: Layout,
     children: [
-      { path: "", component: Home },
-      { path: "about", component: About },
-      { path: "users", component: Users },
-      { path: "users/:id", component: UserDetail },
-      { path: "search", component: Search },
+      route({ path: "", component: Home }),
+      route({ path: "about", component: About }),
+      // Async loader - component receives Promise and uses use() to suspend
+      route({
+        path: "users",
+        component: Users,
+        loader: () => fetchUsers(),
+      }),
+      // Async loader with params
+      route({
+        path: "users/:id",
+        component: UserDetail,
+        loader: ({ params }) => fetchUser(params.id),
+      }),
+      route({ path: "search", component: Search }),
     ],
-  },
+  }),
 ];
 
+// Loading fallback for Suspense
+function LoadingSpinner() {
+  return (
+    <div style={{ padding: "2rem", textAlign: "center" }}>
+      <p>Loading...</p>
+    </div>
+  );
+}
+
 export function App() {
-  return <Router routes={routes} />;
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <Router routes={routes} />
+    </Suspense>
+  );
 }
