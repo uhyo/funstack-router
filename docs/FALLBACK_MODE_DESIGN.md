@@ -97,148 +97,275 @@ type FallbackMode =
 
 ## Implementation Design
 
-### 1. Detection
+### Core Principle: Interface-Based Abstraction
+
+Instead of scattering `if (isStaticMode)` checks throughout the codebase, we introduce a `RouterAdapter` interface that abstracts all navigation-related operations. Two implementations exist:
+
+1. **`NavigationAPIAdapter`** - Uses the real Navigation API
+2. **`StaticAdapter`** - Provides static/read-only behavior for fallback mode
+
+This keeps the Router component and hooks clean, with mode-specific logic encapsulated in the adapters.
+
+### 1. RouterAdapter Interface
 
 ```typescript
-// In core/navigation.ts (existing)
-export function hasNavigation(): boolean {
-  return typeof window !== "undefined" && "navigation" in window;
-}
-```
+// New: core/RouterAdapter.ts
 
-### 2. Static Snapshot
-
-Create a static "entry-like" object from `window.location`:
-
-```typescript
-// New: core/staticSnapshot.ts
-export type StaticLocationSnapshot = {
+/**
+ * Represents the current location state.
+ * Abstracts NavigationHistoryEntry for static mode compatibility.
+ */
+export type LocationEntry = {
   url: URL;
-  key: string; // Fixed key for static mode
+  key: string;
+  state: unknown;
 };
 
-export function getStaticSnapshot(): StaticLocationSnapshot | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
+/**
+ * Interface for navigation adapters.
+ * Implementations handle mode-specific navigation behavior.
+ */
+export interface RouterAdapter {
+  /**
+   * Get the current location entry.
+   * Returns null during SSR or if unavailable.
+   */
+  getSnapshot(): LocationEntry | null;
 
-  return {
-    url: new URL(window.location.href),
-    key: "__static__",
-  };
+  /**
+   * Subscribe to location changes.
+   * Returns an unsubscribe function.
+   */
+  subscribe(callback: () => void): () => void;
+
+  /**
+   * Perform programmatic navigation.
+   */
+  navigate(to: string, options?: NavigateOptions): void;
+
+  /**
+   * Set up navigation interception for route matching.
+   * Returns a cleanup function, or undefined if not supported.
+   */
+  setupInterception(
+    routes: RouteDefinition[],
+    onNavigate?: NavigateEventHandler,
+  ): (() => void) | undefined;
 }
 ```
 
-### 3. Router Changes
+### 2. NavigationAPIAdapter Implementation
+
+```typescript
+// New: core/NavigationAPIAdapter.ts
+
+export class NavigationAPIAdapter implements RouterAdapter {
+  getSnapshot(): LocationEntry | null {
+    if (typeof window === "undefined" || !("navigation" in window)) {
+      return null;
+    }
+    const entry = window.navigation.currentEntry;
+    if (!entry?.url) return null;
+
+    return {
+      url: new URL(entry.url),
+      key: entry.key,
+      state: entry.getState(),
+    };
+  }
+
+  subscribe(callback: () => void): () => void {
+    if (typeof window === "undefined" || !("navigation" in window)) {
+      return () => {};
+    }
+    window.navigation.addEventListener("currententrychange", callback);
+    return () => {
+      window.navigation.removeEventListener("currententrychange", callback);
+    };
+  }
+
+  navigate(to: string, options?: NavigateOptions): void {
+    window.navigation.navigate(to, {
+      history: options?.replace ? "replace" : "push",
+      state: options?.state,
+    });
+  }
+
+  setupInterception(
+    routes: RouteDefinition[],
+    onNavigate?: NavigateEventHandler,
+  ): (() => void) | undefined {
+    // Existing setupNavigationInterception logic
+    const handler = (event: NavigateEvent) => {
+      if (!event.canIntercept || event.hashChange) return;
+
+      const url = new URL(event.destination.url);
+      const matched = matchRoutes(routes, url.pathname);
+
+      if (onNavigate) {
+        onNavigate(event, matched);
+        if (event.defaultPrevented) return;
+      }
+
+      if (matched) {
+        event.intercept({
+          handler: async () => {
+            await executeLoaders(matched, url);
+          },
+        });
+      }
+    };
+
+    window.navigation.addEventListener("navigate", handler);
+    return () => window.navigation.removeEventListener("navigate", handler);
+  }
+}
+```
+
+### 3. StaticAdapter Implementation
+
+```typescript
+// New: core/StaticAdapter.ts
+
+export class StaticAdapter implements RouterAdapter {
+  private cachedSnapshot: LocationEntry | null = null;
+
+  getSnapshot(): LocationEntry | null {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    // Cache the snapshot - it never changes in static mode
+    if (!this.cachedSnapshot) {
+      this.cachedSnapshot = {
+        url: new URL(window.location.href),
+        key: "__static__",
+        state: undefined,
+      };
+    }
+    return this.cachedSnapshot;
+  }
+
+  subscribe(_callback: () => void): () => void {
+    // Static mode never fires location change events
+    return () => {};
+  }
+
+  navigate(to: string, _options?: NavigateOptions): void {
+    console.warn(
+      "FUNSTACK Router: navigate() called in static fallback mode. " +
+        "Navigation API is not available in this browser. " +
+        "Links will cause full page loads.",
+    );
+    // Optionally: window.location.href = to;
+  }
+
+  setupInterception(
+    _routes: RouteDefinition[],
+    _onNavigate?: NavigateEventHandler,
+  ): (() => void) | undefined {
+    // No interception in static mode - links cause full page loads
+    return undefined;
+  }
+}
+```
+
+### 4. Adapter Factory
+
+```typescript
+// New: core/createAdapter.ts
+
+export function createAdapter(fallback: FallbackMode): RouterAdapter | null {
+  // Try Navigation API first
+  if (typeof window !== "undefined" && "navigation" in window) {
+    return new NavigationAPIAdapter();
+  }
+
+  // Fall back to static mode if enabled
+  if (fallback === "static") {
+    return new StaticAdapter();
+  }
+
+  // No adapter available
+  return null;
+}
+```
+
+### 5. Router Component (Simplified)
+
+With the adapter abstraction, the Router component becomes much cleaner:
 
 ```typescript
 // In Router.tsx
 function Router({ routes, onNavigate, fallback = "none" }: RouterProps) {
-  // Try Navigation API first
-  const currentEntry = useSyncExternalStore(
-    subscribeToNavigation,
-    getNavigationSnapshot,
-    () => null
+  // Create adapter once based on browser capabilities and fallback setting
+  const adapter = useMemo(() => createAdapter(fallback), [fallback]);
+
+  // Subscribe to location changes via adapter
+  const locationEntry = useSyncExternalStore(
+    useCallback(
+      (callback) => adapter?.subscribe(callback) ?? (() => {}),
+      [adapter],
+    ),
+    () => adapter?.getSnapshot() ?? null,
+    () => null, // SSR snapshot
   );
 
-  // Determine the effective URL and mode
-  const { url, isStaticMode } = useMemo(() => {
-    if (currentEntry !== null) {
-      // Navigation API available - normal mode
-      return {
-        url: new URL(currentEntry.url!),
-        isStaticMode: false
-      };
-    }
-
-    if (fallback === "static") {
-      // Fallback enabled - use static snapshot
-      const snapshot = getStaticSnapshot();
-      if (snapshot) {
-        return {
-          url: snapshot.url,
-          isStaticMode: true
-        };
-      }
-    }
-
-    // No fallback or SSR
-    return { url: null, isStaticMode: false };
-  }, [currentEntry, fallback]);
-
-  // Early return if no URL available
-  if (url === null) {
+  // Early return if no location available
+  if (!locationEntry) {
     return null;
   }
 
-  // Route matching - same for both modes
+  const { url } = locationEntry;
+
+  // Route matching
   const matchedRoutes = useMemo(
     () => matchRoutes(routes, url.pathname),
-    [routes, url.pathname]
+    [routes, url.pathname],
   );
 
   if (!matchedRoutes) {
     return null;
   }
 
-  // Setup navigation interception - only in Navigation API mode
+  // Setup navigation interception via adapter
   useEffect(() => {
-    if (isStaticMode) {
-      return;  // No interception in static mode
-    }
-    return setupNavigationInterception(routes, onNavigate);
-  }, [routes, onNavigate, isStaticMode]);
+    return adapter?.setupInterception(routes, onNavigate);
+  }, [adapter, routes, onNavigate]);
 
-  // Create navigate function - different behavior per mode
-  const navigate = useCallback((to: string, options?: NavigateOptions) => {
-    if (isStaticMode) {
-      // Option 1: No-op with console warning
-      console.warn(
-        "FUNSTACK Router: navigate() called in static fallback mode. " +
-        "Navigation API is not available in this browser."
-      );
-      return;
+  // Navigate function from adapter
+  const navigate = useCallback(
+    (to: string, options?: NavigateOptions) => {
+      adapter?.navigate(to, options);
+    },
+    [adapter],
+  );
 
-      // Option 2: Full page navigation (alternative)
-      // window.location.href = to;
-    }
-    performNavigation(to, options);
-  }, [isStaticMode]);
-
-  // Render routes (same for both modes)
+  // Render routes
   return (
-    <RouterContext.Provider value={{ currentEntry, url, navigate }}>
+    <RouterContext.Provider value={{ locationEntry, url, navigate }}>
       <RouteRenderer matchedRoutes={matchedRoutes} index={0} />
     </RouterContext.Provider>
   );
 }
 ```
 
-### 4. Context Changes
+### 6. Context Changes
 
-The `RouterContext` needs to handle the case where `currentEntry` is `null` in static mode:
+The context now uses the abstract `LocationEntry` type:
 
 ```typescript
-// Current RouterContext type
-type RouterContextValue = {
-  currentEntry: NavigationHistoryEntry; // Problem: null in static mode
-  url: URL;
-  navigate: NavigateFunction;
-};
-
 // Updated RouterContext type
 type RouterContextValue = {
-  currentEntry: NavigationHistoryEntry | null; // Allow null for static mode
+  locationEntry: LocationEntry;
   url: URL;
   navigate: NavigateFunction;
 };
 ```
 
-### 5. Hook Behavior in Static Mode
+### 7. Hook Behavior
 
-#### `useLocation()`
-
-Works normally - reads from `url` in context:
+Hooks remain simple since they just read from context:
 
 ```typescript
 function useLocation() {
@@ -249,76 +376,66 @@ function useLocation() {
     hash: url.hash,
   };
 }
-```
 
-#### `useParams()`
-
-Works normally - reads from `RouteContext`:
-
-```typescript
 function useParams() {
   const { params } = useRouteContext();
   return params;
 }
-```
 
-#### `useNavigate()`
-
-Returns a function that warns/no-ops in static mode:
-
-```typescript
 function useNavigate() {
   const { navigate } = useRouterContext();
-  return navigate; // Already handles static mode
+  return navigate; // Adapter handles mode-specific behavior
 }
 ```
 
-#### `useSearchParams()`
+### 8. Data Loaders
 
-Read works, write warns in static mode:
+Data loaders use `LocationEntry.key` for caching, which works uniformly:
 
 ```typescript
-function useSearchParams() {
-  const { url, navigate } = useRouterContext();
-
-  const setSearchParams = useCallback(
-    (
-      params: URLSearchParams | ((prev: URLSearchParams) => URLSearchParams),
-    ) => {
-      // This will warn in static mode via navigate()
-      const newParams =
-        typeof params === "function"
-          ? params(new URLSearchParams(url.search))
-          : params;
-      navigate(`${url.pathname}?${newParams.toString()}`);
-    },
-    [url, navigate],
-  );
-
-  return [new URLSearchParams(url.search), setSearchParams] as const;
+function getCacheKey(entry: LocationEntry, routePath: string): string {
+  return `${entry.key}:${routePath}`;
 }
 ```
 
-### 6. Data Loaders in Static Mode
+### Architecture Diagram
 
-Data loaders work identically in static mode:
-
-1. Routes are matched against current URL
-2. Loaders are executed
-3. Data is passed to components
-4. Components render with data
-
-The only difference is the cache key strategy, since there's no `NavigationHistoryEntry.key`:
-
-```typescript
-function getCacheKey(
-  entry: NavigationHistoryEntry | null,
-  routePath: string,
-): string {
-  const entryKey = entry?.key ?? "__static__";
-  return `${entryKey}:${routePath}`;
-}
 ```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Router Component                         │
+│                                                                   │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │                    RouterAdapter                         │   │
+│   │                     (interface)                          │   │
+│   │                                                          │   │
+│   │  getSnapshot(): LocationEntry | null                     │   │
+│   │  subscribe(callback): () => void                         │   │
+│   │  navigate(to, options): void                             │   │
+│   │  setupInterception(routes, onNavigate): (() => void)?    │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                              │                                    │
+│              ┌───────────────┴───────────────┐                   │
+│              │                               │                    │
+│              ▼                               ▼                    │
+│   ┌─────────────────────┐       ┌─────────────────────┐         │
+│   │ NavigationAPIAdapter │       │    StaticAdapter    │         │
+│   │                      │       │                     │         │
+│   │ • Uses Navigation    │       │ • Reads location    │         │
+│   │   API events         │       │   once              │         │
+│   │ • Intercepts links   │       │ • No subscription   │         │
+│   │ • SPA navigation     │       │ • navigate() warns  │         │
+│   └─────────────────────┘       └─────────────────────┘         │
+│                                                                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Benefits of This Approach
+
+1. **Single responsibility**: Each adapter handles one mode completely
+2. **No scattered conditionals**: Router/hooks don't check `isStaticMode`
+3. **Testable**: Adapters can be tested in isolation
+4. **Extensible**: Easy to add new adapters (e.g., History API fallback in the future)
+5. **Type-safe**: `LocationEntry` provides a consistent interface
 
 ## Flow Diagrams
 
@@ -480,33 +597,41 @@ type FallbackMode =
 
 ## Implementation Phases
 
-### Phase 1: Core Static Fallback
+### Phase 1: RouterAdapter Interface & Refactor
 
-- [ ] Add `fallback` prop to Router
-- [ ] Implement `getStaticSnapshot()`
-- [ ] Update Router to use static snapshot when appropriate
-- [ ] Update `RouterContext` type to allow null `currentEntry`
-- [ ] Skip navigation interception setup in static mode
+- [ ] Define `LocationEntry` type in `core/RouterAdapter.ts`
+- [ ] Define `RouterAdapter` interface
+- [ ] Implement `NavigationAPIAdapter` class
+- [ ] Refactor existing `core/navigation.ts` functions into the adapter
+- [ ] Update Router to use adapter pattern
+- [ ] Update `RouterContext` to use `LocationEntry` instead of `NavigationHistoryEntry`
 
-### Phase 2: Hook Updates
+### Phase 2: Static Adapter
 
-- [ ] Ensure `useLocation()` works in static mode
-- [ ] Ensure `useParams()` works in static mode
-- [ ] Update `useNavigate()` to warn in static mode
-- [ ] Update `useSearchParams()` write to warn in static mode
+- [ ] Implement `StaticAdapter` class
+- [ ] Implement `createAdapter()` factory function
+- [ ] Add `fallback` prop to Router props
+- [ ] Wire up adapter selection based on `fallback` prop
 
-### Phase 3: Testing & Documentation
+### Phase 3: Testing
 
-- [ ] Add unit tests for static fallback
-- [ ] Add integration tests
+- [ ] Add unit tests for `NavigationAPIAdapter`
+- [ ] Add unit tests for `StaticAdapter`
+- [ ] Add integration tests for Router with `fallback="static"`
+- [ ] Verify existing tests still pass (no regression)
+
+### Phase 4: Documentation
+
 - [ ] Update README with fallback documentation
 - [ ] Add example showing fallback usage
+- [ ] Document the adapter architecture for contributors
 
 ### Future Enhancements (Out of Scope)
 
 - `fallback="static-reload"` option for navigate()
 - Console hint about polyfills
 - SSR hydration considerations
+- History API adapter (if ever needed)
 
 ## Migration Guide
 
