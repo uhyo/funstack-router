@@ -1,6 +1,7 @@
 import type { RouterAdapter } from "./RouterAdapter.js";
 import { NavigationAPIAdapter } from "./NavigationAPIAdapter.js";
 import { StaticAdapter } from "./StaticAdapter.js";
+import { NullAdapter } from "./NullAdapter.js";
 import type { FallbackMode } from "../types.js";
 
 /**
@@ -15,9 +16,9 @@ function hasNavigation(): boolean {
  * and the specified fallback mode.
  *
  * @param fallback - The fallback mode to use when Navigation API is unavailable
- * @returns A RouterAdapter instance, or null if no adapter is available
+ * @returns A RouterAdapter instance
  */
-export function createAdapter(fallback: FallbackMode): RouterAdapter | null {
+export function createAdapter(fallback: FallbackMode): RouterAdapter {
   // Try Navigation API first
   if (hasNavigation()) {
     return new NavigationAPIAdapter();
@@ -29,5 +30,5 @@ export function createAdapter(fallback: FallbackMode): RouterAdapter | null {
   }
 
   // No adapter available (fallback="none" or default)
-  return null;
+  return new NullAdapter();
 }

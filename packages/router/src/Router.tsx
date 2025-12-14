@@ -50,23 +50,20 @@ export function Router({
 
   // Subscribe to location changes via adapter
   const locationEntry = useSyncExternalStore(
-    useCallback(
-      (callback) => adapter?.subscribe(callback) ?? (() => {}),
-      [adapter],
-    ),
-    () => adapter?.getSnapshot() ?? null,
-    () => adapter?.getServerSnapshot() ?? null,
+    useCallback((callback) => adapter.subscribe(callback), [adapter]),
+    () => adapter.getSnapshot(),
+    () => adapter.getServerSnapshot(),
   );
 
   // Set up navigation interception via adapter
   useEffect(() => {
-    return adapter?.setupInterception(routes, onNavigate);
+    return adapter.setupInterception(routes, onNavigate);
   }, [adapter, routes, onNavigate]);
 
   // Navigate function from adapter
   const navigate = useCallback(
     (to: string, options?: NavigateOptions) => {
-      adapter?.navigate(to, options);
+      adapter.navigate(to, options);
     },
     [adapter],
   );
@@ -87,8 +84,7 @@ export function Router({
 
       // Execute loaders (results are cached by location entry key)
       const request = createLoaderRequest(url);
-      const signal =
-        adapter?.getIdleAbortSignal() ?? new AbortController().signal;
+      const signal = adapter.getIdleAbortSignal();
       return executeLoaders(matched, key, request, signal);
     })();
 
