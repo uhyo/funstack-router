@@ -76,6 +76,14 @@ export type Location = {
 };
 
 /**
+ * Fallback mode for when Navigation API is unavailable.
+ *
+ * - "none": Default behavior - render nothing when Navigation API is unavailable
+ * - "static": Render matched routes without navigation capabilities (MPA behavior)
+ */
+export type FallbackMode = "none" | "static";
+
+/**
  * Callback invoked before navigation is intercepted.
  * Call `event.preventDefault()` to prevent the router from handling this navigation.
  *

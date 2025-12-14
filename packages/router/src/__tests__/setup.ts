@@ -1,5 +1,6 @@
 import { vi } from "vitest";
-import { resetNavigationState } from "../core/navigation.js";
+import { resetNavigationState } from "../core/NavigationAPIAdapter.js";
+import { resetRouterCache } from "../Router.js";
 
 // Mock Navigation API for testing
 export function createMockNavigation(initialUrl = "http://localhost/") {
@@ -185,12 +186,20 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
 // Setup global navigation mock
 export function setupNavigationMock(initialUrl = "http://localhost/") {
   const mockNav = createMockNavigation(initialUrl);
+  // Set on both globalThis and window for compatibility
   (globalThis as Record<string, unknown>).navigation = mockNav;
+  if (typeof window !== "undefined") {
+    (window as unknown as Record<string, unknown>).navigation = mockNav;
+  }
   return mockNav;
 }
 
 // Cleanup
 export function cleanupNavigationMock() {
   delete (globalThis as Record<string, unknown>).navigation;
+  if (typeof window !== "undefined") {
+    delete (window as unknown as Record<string, unknown>).navigation;
+  }
   resetNavigationState();
+  resetRouterCache();
 }

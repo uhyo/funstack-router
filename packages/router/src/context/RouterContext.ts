@@ -1,9 +1,10 @@
 import { createContext } from "react";
 import type { NavigateOptions } from "../types.js";
+import type { LocationEntry } from "../core/RouterAdapter.js";
 
 export type RouterContextValue = {
-  /** Current navigation entry */
-  currentEntry: NavigationHistoryEntry;
+  /** Current location entry */
+  locationEntry: LocationEntry;
   /** Current URL */
   url: URL;
   /** Navigate to a new URL */

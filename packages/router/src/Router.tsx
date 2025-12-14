@@ -11,19 +11,17 @@ import {
   type NavigateOptions,
   type MatchedRouteWithData,
   type OnNavigateCallback,
+  type FallbackMode,
   internalRoutes,
 } from "./types.js";
 import { matchRoutes } from "./core/matchRoutes.js";
 import {
-  subscribeToNavigation,
-  getNavigationSnapshot,
-  getServerSnapshot,
-  setupNavigationInterception,
-  performNavigation,
   getIdleAbortSignal,
-} from "./core/navigation.js";
+  hasNavigation,
+} from "./core/NavigationAPIAdapter.js";
 import { executeLoaders, createLoaderRequest } from "./core/loaderCache.js";
 import type { RouteDefinition } from "./route.js";
+import type { LocationEntry } from "./core/RouterAdapter.js";
 
 export type RouterProps = {
   routes: RouteDefinition[];
@@ -35,12 +33,99 @@ export type RouterProps = {
    * @param matched - Array of matched routes, or null if no routes matched
    */
   onNavigate?: OnNavigateCallback;
+  /**
+   * Fallback mode for when Navigation API is unavailable.
+   *
+   * - "none" (default): Render nothing when Navigation API is unavailable
+   * - "static": Render matched routes without navigation capabilities (MPA behavior)
+   */
+  fallback?: FallbackMode;
 };
+
+// Module-level fallback mode - set by Router component
+let currentFallbackMode: FallbackMode = "none";
+
+// Internal static entry type
+interface StaticEntry {
+  url: string;
+  id: string;
+  getState(): unknown;
+  __static: true;
+}
+
+// Module-level cache for static entry
+let staticEntry: StaticEntry | null = null;
+
+// Subscribe to Navigation API's currententrychange event
+function subscribeToNavigation(callback: () => void): () => void {
+  if (hasNavigation()) {
+    navigation.addEventListener("currententrychange", callback);
+    return () => {
+      // Guard against navigation being undefined during cleanup
+      if (hasNavigation()) {
+        navigation.removeEventListener("currententrychange", callback);
+      }
+    };
+  }
+  // In static/none mode, no subscription needed
+  return () => {};
+}
+
+// Get current navigation entry snapshot
+function getNavigationSnapshot(): NavigationHistoryEntry | StaticEntry | null {
+  if (hasNavigation()) {
+    return navigation.currentEntry;
+  }
+
+  // Static fallback mode
+  if (currentFallbackMode === "static" && typeof window !== "undefined") {
+    if (!staticEntry) {
+      staticEntry = {
+        url: window.location.href,
+        id: "__static__",
+        getState: () => undefined,
+        __static: true,
+      };
+    }
+    return staticEntry;
+  }
+
+  return null;
+}
+
+// Server snapshot - Navigation API not available on server
+function getServerSnapshot(): null {
+  return null;
+}
+
+// Convert entry to LocationEntry
+function toLocationEntry(
+  entry: NavigationHistoryEntry | StaticEntry,
+): LocationEntry {
+  // entry.url is string for StaticEntry, string | null for NavigationHistoryEntry
+  // At this point we know entry.url is valid because we checked earlier
+  const urlString = entry.url as string;
+  return {
+    url: new URL(urlString),
+    key: entry.id,
+    state: entry.getState(),
+  };
+}
+
+// Reset module-level caches (for testing)
+export function resetRouterCache(): void {
+  staticEntry = null;
+  currentFallbackMode = "none";
+}
 
 export function Router({
   routes: inputRoutes,
   onNavigate,
+  fallback = "none",
 }: RouterProps): ReactNode {
+  // Set the fallback mode for the module-level functions
+  currentFallbackMode = fallback;
+
   const routes = internalRoutes(inputRoutes);
 
   const currentEntry = useSyncExternalStore(
@@ -49,43 +134,97 @@ export function Router({
     getServerSnapshot,
   );
 
-  // Set up navigation interception
+  // Set up navigation interception (only in Navigation API mode)
   useEffect(() => {
-    return setupNavigationInterception(routes, onNavigate);
+    if (!hasNavigation()) {
+      return;
+    }
+
+    const handleNavigate = (event: NavigateEvent) => {
+      if (!event.canIntercept || event.hashChange) {
+        return;
+      }
+
+      const url = new URL(event.destination.url);
+      const matched = matchRoutes(routes, url.pathname);
+
+      if (onNavigate) {
+        onNavigate(event, matched);
+        if (event.defaultPrevented) {
+          return;
+        }
+      }
+
+      if (matched) {
+        event.intercept({
+          handler: async () => {
+            const request = createLoaderRequest(url);
+            const navCurrentEntry = navigation.currentEntry;
+            if (!navCurrentEntry) {
+              throw new Error(
+                "Navigation currentEntry is null during navigation interception",
+              );
+            }
+
+            const results = executeLoaders(
+              matched,
+              navCurrentEntry.id,
+              request,
+              event.signal,
+            );
+
+            await Promise.all(results.map((r) => r.data));
+          },
+        });
+      }
+    };
+
+    navigation.addEventListener("navigate", handleNavigate);
+    return () => {
+      // Guard against navigation being undefined during cleanup
+      if (hasNavigation()) {
+        navigation.removeEventListener("navigate", handleNavigate);
+      }
+    };
   }, [routes, onNavigate]);
 
-  // Navigate function for programmatic navigation
+  // Navigate function
   const navigate = useCallback(
-    (to: string, options?: NavigateOptions) => performNavigation(to, options),
-    [],
+    (to: string, options?: NavigateOptions) => {
+      if (hasNavigation()) {
+        navigation.navigate(to, {
+          history: options?.replace ? "replace" : "push",
+          state: options?.state,
+        });
+      } else if (fallback === "static") {
+        console.warn(
+          "FUNSTACK Router: navigate() called in static fallback mode. " +
+            "Navigation API is not available in this browser. " +
+            `Attempted to navigate to: ${to}`,
+        );
+      }
+    },
+    [fallback],
   );
 
   return useMemo(() => {
     if (currentEntry === null) {
-      // This happens either when Navigation API is unavailable,
-      // or the current document is not fully active.
-      return null;
-    }
-    const currentUrl = currentEntry.url;
-    if (currentUrl === null) {
-      // This means currentEntry is not in this document, which is impossible
       return null;
     }
 
-    const url = new URL(currentUrl);
-    const currentEntryId = currentEntry.id;
-    // Match current URL against routes and execute loaders
+    const locationEntry = toLocationEntry(currentEntry);
+    const { url, key: entryKey } = locationEntry;
+
     const matchedRoutesWithData = (() => {
       const matched = matchRoutes(routes, url.pathname);
       if (!matched) return null;
 
-      // Execute loaders (results are cached by navigation entry id)
       const request = createLoaderRequest(url);
       const signal = getIdleAbortSignal();
-      return executeLoaders(matched, currentEntryId, request, signal);
+      return executeLoaders(matched, entryKey, request, signal);
     })();
 
-    const routerContextValue = { currentEntry, url, navigate };
+    const routerContextValue = { locationEntry, url, navigate };
 
     return (
       <RouterContext.Provider value={routerContextValue}>
@@ -102,9 +241,6 @@ type RouteRendererProps = {
   index: number;
 };
 
-/**
- * Recursively render matched routes with proper context.
- */
 function RouteRenderer({
   matchedRoutes,
   index,
@@ -115,7 +251,6 @@ function RouteRenderer({
   const { route, params, pathname, data } = match;
   const Component = route.component;
 
-  // Create outlet for child routes
   const outlet =
     index < matchedRoutes.length - 1 ? (
       <RouteRenderer matchedRoutes={matchedRoutes} index={index + 1} />
@@ -126,13 +261,9 @@ function RouteRenderer({
     [params, pathname, outlet],
   );
 
-  // Render component with or without data prop based on loader presence
   const renderComponent = () => {
     if (!Component) return outlet;
 
-    // When loader exists, data is defined and component expects data prop
-    // When loader doesn't exist, data is undefined and component doesn't expect data prop
-    // TypeScript can't narrow this union, so we use runtime check with type assertion
     if (route.loader) {
       const ComponentWithData = Component as React.ComponentType<{
         data: unknown;
