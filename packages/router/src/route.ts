@@ -3,6 +3,25 @@ import type { ComponentType } from "react";
 const routeDefinitionSymbol = Symbol();
 
 /**
+ * Extracts parameter names from a path pattern.
+ * E.g., "/users/:id/posts/:postId" -> "id" | "postId"
+ */
+type ExtractParams<T extends string> =
+  T extends `${string}:${infer Param}/${infer Rest}`
+    ? Param | ExtractParams<`/${Rest}`>
+    : T extends `${string}:${infer Param}`
+      ? Param
+      : never;
+
+/**
+ * Creates a params object type from a path pattern.
+ * E.g., "/users/:id" -> { id: string }
+ */
+export type PathParams<T extends string> = [ExtractParams<T>] extends [never]
+  ? Record<string, never>
+  : { [K in ExtractParams<T>]: string };
+
+/**
  * Arguments passed to loader functions.
  */
 export type LoaderArgs = {
@@ -36,21 +55,23 @@ export type RouteDefinition =
 
 /**
  * Route definition with loader - infers TData from loader return type.
+ * TPath is used to infer params type from the path pattern.
  */
-type RouteWithLoader<TData> = {
-  path: string;
+type RouteWithLoader<TPath extends string, TData> = {
+  path: TPath;
   loader: (args: LoaderArgs) => TData;
-  component: ComponentType<{ data: TData }>;
+  component: ComponentType<{ data: TData; params: PathParams<TPath> }>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   children?: RouteDefinition[];
 };
 
 /**
  * Route definition without loader.
+ * TPath is used to infer params type from the path pattern.
  */
-type RouteWithoutLoader = {
-  path: string;
-  component?: ComponentType;
+type RouteWithoutLoader<TPath extends string> = {
+  path: TPath;
+  component?: ComponentType<{ params: PathParams<TPath> }>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   children?: RouteDefinition[];
 };
@@ -59,7 +80,8 @@ type RouteWithoutLoader = {
  * Helper function for creating type-safe route definitions.
  *
  * When a loader is provided, TypeScript infers the return type and ensures
- * the component accepts a `data` prop of that type.
+ * the component accepts a `data` prop of that type. Components always receive
+ * a `params` prop with types inferred from the path pattern.
  *
  * @example
  * ```typescript
@@ -70,22 +92,24 @@ type RouteWithoutLoader = {
  *     const res = await fetch(`/api/users/${params.userId}`, { signal });
  *     return res.json() as Promise<User>;
  *   },
- *   component: UserDetail, // Must accept { data: Promise<User> }
+ *   component: UserDetail, // Must accept { data: Promise<User>, params: { userId: string } }
  * });
  *
  * // Route without loader
  * route({
  *   path: "about",
- *   component: AboutPage, // No data prop required
+ *   component: AboutPage, // Must accept { params: {} }
  * });
  * ```
  */
-export function route<TData>(
-  definition: RouteWithLoader<TData>,
+export function route<TPath extends string, TData>(
+  definition: RouteWithLoader<TPath, TData>,
 ): OpaqueRouteDefinition;
-export function route(definition: RouteWithoutLoader): OpaqueRouteDefinition;
-export function route<TData>(
-  definition: RouteWithLoader<TData> | RouteWithoutLoader,
+export function route<TPath extends string>(
+  definition: RouteWithoutLoader<TPath>,
+): OpaqueRouteDefinition;
+export function route<TPath extends string, TData>(
+  definition: RouteWithLoader<TPath, TData> | RouteWithoutLoader<TPath>,
 ): OpaqueRouteDefinition {
-  return definition as OpaqueRouteDefinition;
+  return definition as unknown as OpaqueRouteDefinition;
 }

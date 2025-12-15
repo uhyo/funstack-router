@@ -130,6 +130,7 @@ function RouteRenderer({
   );
 
   // Render component with or without data prop based on loader presence
+  // Always pass params prop to components
   const renderComponent = () => {
     if (!Component) return outlet;
 
@@ -139,11 +140,14 @@ function RouteRenderer({
     if (route.loader) {
       const ComponentWithData = Component as React.ComponentType<{
         data: unknown;
+        params: Record<string, string>;
       }>;
-      return <ComponentWithData data={data} />;
+      return <ComponentWithData data={data} params={params} />;
     }
-    const ComponentWithoutData = Component as React.ComponentType;
-    return <ComponentWithoutData />;
+    const ComponentWithoutData = Component as React.ComponentType<{
+      params: Record<string, string>;
+    }>;
+    return <ComponentWithoutData params={params} />;
   };
 
   return (

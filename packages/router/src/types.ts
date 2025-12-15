@@ -20,7 +20,10 @@ export type InternalRouteDefinition = {
   /** Data loader function for this route */
   loader?: (args: LoaderArgs) => unknown;
   /** Component to render when this route matches */
-  component?: ComponentType<{ data?: unknown }>;
+  component?: ComponentType<{
+    data?: unknown;
+    params?: Record<string, string>;
+  }>;
 };
 
 /**

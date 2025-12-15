@@ -25,4 +25,4 @@ export type {
 
 export type { LocationEntry } from "./core/RouterAdapter.js";
 
-export type { LoaderArgs, RouteDefinition } from "./route.js";
+export type { LoaderArgs, RouteDefinition, PathParams } from "./route.js";
