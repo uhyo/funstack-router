@@ -1,8 +1,4 @@
-import { useNavigate } from "@funstack/router";
-
 export function HomePage() {
-  const navigate = useNavigate();
-
   return (
     <div className="page home-page">
       <section className="hero">
@@ -18,24 +14,10 @@ export function HomePage() {
           </a>
         </p>
         <div className="hero-buttons">
-          <a
-            href="/funstack-router/getting-started"
-            className="button primary"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/funstack-router/getting-started");
-            }}
-          >
+          <a href="/funstack-router/getting-started" className="button primary">
             Get Started
           </a>
-          <a
-            href="/funstack-router/api"
-            className="button secondary"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/funstack-router/api");
-            }}
-          >
+          <a href="/funstack-router/api" className="button secondary">
             API Reference
           </a>
         </div>
