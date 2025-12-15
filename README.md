@@ -46,7 +46,7 @@ pnpm test
 ## Quick Start
 
 ```tsx
-import { Router, Outlet, useParams } from "@funstack/router";
+import { Router, Outlet } from "@funstack/router";
 import type { RouteDefinition } from "@funstack/router";
 
 function Layout() {
@@ -70,9 +70,8 @@ function Users() {
   return <h1>Users</h1>;
 }
 
-function UserDetail() {
-  const { id } = useParams<{ id: string }>();
-  return <h1>User {id}</h1>;
+function UserDetail({ params }: { params: { id: string } }) {
+  return <h1>User {params.id}</h1>;
 }
 
 const routes: RouteDefinition[] = [
@@ -104,10 +103,11 @@ The root component that provides routing context.
 <Router routes={routes} />
 ```
 
-| Prop       | Type                | Description                                 |
-| ---------- | ------------------- | ------------------------------------------- |
-| `routes`   | `RouteDefinition[]` | Array of route definitions                  |
-| `children` | `ReactNode`         | Optional children rendered alongside routes |
+| Prop         | Type                 | Description                                                          |
+| ------------ | -------------------- | -------------------------------------------------------------------- |
+| `routes`     | `RouteDefinition[]`  | Array of route definitions                                           |
+| `onNavigate` | `OnNavigateCallback` | Optional callback invoked before navigation is intercepted           |
+| `fallback`   | `FallbackMode`       | Fallback mode when Navigation API is unavailable (default: `"none"`) |
 
 #### `<Outlet>`
 
@@ -151,7 +151,7 @@ const location = useLocation();
 
 #### `useParams()`
 
-Returns the current route's path parameters.
+Returns the current route's path parameters. Note that route components also receive `params` as a prop, so this hook is mainly useful for non-route components that need access to params.
 
 ```tsx
 // Route: /users/:id
@@ -182,10 +182,31 @@ setSearchParams((prev) => {
 
 #### `RouteDefinition`
 
+Route components receive a `params` prop with the matched path parameters. Use the `route()` helper for type-safe route definitions:
+
+```typescript
+import { route } from "@funstack/router";
+
+// Route without loader - component receives params prop
+route({
+  path: "users/:id",
+  component: UserDetail, // receives { params: { id: string } }
+});
+
+// Route with loader - component receives both data and params props
+route({
+  path: "users/:id",
+  loader: async ({ params }) => fetchUser(params.id),
+  component: UserDetail, // receives { data: Promise<User>, params: { id: string } }
+});
+```
+
+You can also define routes as plain objects (without type inference):
+
 ```typescript
 type RouteDefinition = {
   path: string;
-  component?: React.ComponentType;
+  component?: React.ComponentType<{ params: Record<string, string> }>;
   children?: RouteDefinition[];
 };
 ```
