@@ -18,18 +18,26 @@ export function HomePage() {
           </a>
         </p>
         <div className="hero-buttons">
-          <button
+          <a
+            href="/funstack-router/getting-started"
             className="button primary"
-            onClick={() => navigate("/funstack-router/getting-started")}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/funstack-router/getting-started");
+            }}
           >
             Get Started
-          </button>
-          <button
+          </a>
+          <a
+            href="/funstack-router/api"
             className="button secondary"
-            onClick={() => navigate("/funstack-router/api")}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/funstack-router/api");
+            }}
           >
             API Reference
-          </button>
+          </a>
         </div>
       </section>
 
