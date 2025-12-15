@@ -25,7 +25,7 @@
           window.history.replaceState(
             null,
             "",
-            l.pathname.slice(0, -1) + decoded + l.hash,
+            l.pathname.slice(0, -1) + "/" + decoded + l.hash,
           );
         }
       })(window.location);
