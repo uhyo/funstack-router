@@ -24,6 +24,19 @@
   --header-height: 64px;
 }
 
+[data-theme="dark"] {
+  --color-bg: #0f0f1a;
+  --color-bg-secondary: #1a1a2e;
+  --color-bg-code: #0a0a12;
+  --color-text: #e8e8f0;
+  --color-text-secondary: #a0a0b8;
+  --color-text-code: #e0e0e0;
+  --color-primary: #818cf8;
+  --color-primary-dark: #6366f1;
+  --color-border: #2a2a40;
+  --color-link: #818cf8;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -138,6 +151,28 @@ code {
 .github-link:hover {
   background: var(--color-border);
   text-decoration: none;
+}
+
+.theme-toggle {
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--color-bg-secondary);
+  border: none;
+  cursor: pointer;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--color-border);
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Main Content */
