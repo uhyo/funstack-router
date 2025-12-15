@@ -50,21 +50,26 @@ function App() {
 
       <section>
         <h2>Dynamic Routes with Params</h2>
-        <p>Handle dynamic URL segments with parameters:</p>
+        <p>
+          Handle dynamic URL segments with parameters. Components receive params
+          via props:
+        </p>
         <pre className="code-block">
-          <code>{`import { route, useParams } from "@funstack/router";
+          <code>{`import { route } from "@funstack/router";
 
-function UserProfile() {
-  const { userId } = useParams();
-  return <h1>Viewing user: {userId}</h1>;
+function UserProfile({ params }: { params: { userId: string } }) {
+  return <h1>Viewing user: {params.userId}</h1>;
 }
 
-function PostDetail() {
-  const { userId, postId } = useParams();
+function PostDetail({
+  params,
+}: {
+  params: { userId: string; postId: string };
+}) {
   return (
     <div>
-      <h1>Post {postId}</h1>
-      <p>By user {userId}</p>
+      <h1>Post {params.postId}</h1>
+      <p>By user {params.userId}</p>
     </div>
   );
 }
@@ -86,7 +91,7 @@ const routes = [
         <h2>Nested Routes</h2>
         <p>Create complex layouts with nested routing:</p>
         <pre className="code-block">
-          <code>{`import { route, Outlet, useParams } from "@funstack/router";
+          <code>{`import { route, Outlet } from "@funstack/router";
 
 function Dashboard() {
   return (
@@ -127,7 +132,10 @@ const dashboardRoutes = route({
 
       <section>
         <h2>Data Loading</h2>
-        <p>Fetch data before rendering with loaders:</p>
+        <p>
+          Fetch data before rendering with loaders. Components receive both{" "}
+          <code>data</code> and <code>params</code> props:
+        </p>
         <pre className="code-block">
           <code>{`import { route } from "@funstack/router";
 
@@ -135,29 +143,37 @@ interface Post {
   id: number;
   title: string;
   body: string;
+  userId: number;
 }
 
-interface PostListData {
-  posts: Post[];
-}
-
-function PostList({ data }: { data: PostListData }) {
+// Example with params: fetch a specific user's posts
+function UserPosts({
+  data,
+  params,
+}: {
+  data: Post[];
+  params: { userId: string };
+}) {
   return (
-    <ul>
-      {data.posts.map((post) => (
-        <li key={post.id}>{post.title}</li>
-      ))}
-    </ul>
+    <div>
+      <h2>Posts by user {params.userId}</h2>
+      <ul>
+        {data.map((post) => (
+          <li key={post.id}>{post.title}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
-const postsRoute = route({
-  path: "/posts",
-  component: PostList,
-  loader: async (): Promise<PostListData> => {
-    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
-    const posts = await response.json();
-    return { posts: posts.slice(0, 10) };
+const userPostsRoute = route({
+  path: "/users/:userId/posts",
+  component: UserPosts,
+  loader: async ({ params }): Promise<Post[]> => {
+    const response = await fetch(
+      \`https://jsonplaceholder.typicode.com/posts?userId=\${params.userId}\`
+    );
+    return response.json();
   },
 });`}</code>
         </pre>

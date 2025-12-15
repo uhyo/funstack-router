@@ -133,15 +133,24 @@ function MyComponent() {
           <h3>
             <code>useParams()</code>
           </h3>
-          <p>Returns the route parameters as an object.</p>
+          <p>
+            Returns the route parameters as an object. This is an alternative to
+            receiving params via props—use whichever style you prefer.
+          </p>
           <pre className="code-block">
             <code>{`import { useParams } from "@funstack/router";
 
 // For route: /users/:userId/posts/:postId
 
 function PostPage() {
-  const params = useParams();
+  const params = useParams<{ userId: string; postId: string }>();
 
+  console.log(params.userId);  // "123"
+  console.log(params.postId);  // "456"
+}
+
+// Alternatively, receive params via props (recommended):
+function PostPage({ params }: { params: { userId: string; postId: string } }) {
   console.log(params.userId);  // "123"
   console.log(params.postId);  // "456"
 }`}</code>
@@ -179,11 +188,29 @@ function SearchPage() {
             <code>route()</code>
           </h3>
           <p>
-            Helper function to define routes with proper typing. Returns the
-            route definition object.
+            Helper function to define routes with proper typing. The component
+            always receives a <code>params</code> prop with types inferred from
+            the path pattern. When a <code>loader</code> is defined, the
+            component also receives a <code>data</code> prop.
           </p>
           <pre className="code-block">
             <code>{`import { route } from "@funstack/router";
+
+// Route without loader - component receives params prop
+function ProfileTab({ params }: { params: { userId: string } }) {
+  return <div>Profile for user {params.userId}</div>;
+}
+
+// Route with loader - component receives both data and params props
+function UserPage({
+  data,
+  params,
+}: {
+  data: User;
+  params: { userId: string };
+}) {
+  return <h1>{data.name} (ID: {params.userId})</h1>;
+}
 
 const myRoute = route({
   path: "/users/:userId",
@@ -225,7 +252,10 @@ const myRoute = route({
                 <td>
                   <code>ComponentType</code>
                 </td>
-                <td>React component to render</td>
+                <td>
+                  React component to render. Receives <code>params</code> prop
+                  (and <code>data</code> prop if loader is defined)
+                </td>
               </tr>
               <tr>
                 <td>
@@ -255,15 +285,49 @@ const myRoute = route({
 
         <article className="api-item">
           <h3>
+            <code>PathParams&lt;T&gt;</code>
+          </h3>
+          <p>
+            Utility type that extracts parameter types from a path pattern
+            string.
+          </p>
+          <pre className="code-block">
+            <code>{`import type { PathParams } from "@funstack/router";
+
+// PathParams<"/users/:userId"> = { userId: string }
+// PathParams<"/users/:userId/posts/:postId"> = { userId: string; postId: string }
+// PathParams<"/about"> = Record<string, never>
+
+type MyParams = PathParams<"/users/:userId">;
+// { userId: string }`}</code>
+          </pre>
+        </article>
+
+        <article className="api-item">
+          <h3>
             <code>RouteDefinition</code>
           </h3>
+          <p>
+            When using the <code>route()</code> helper, component types are
+            inferred automatically. Components always receive a{" "}
+            <code>params</code> prop, and receive a <code>data</code> prop when
+            a loader is defined.
+          </p>
           <pre className="code-block">
-            <code>{`interface RouteDefinition<T = unknown> {
-  path: string;
-  component: ComponentType<{ data: T }>;
-  loader?: (args: LoaderArgs) => Promise<T>;
-  children?: RouteDefinition[];
-}`}</code>
+            <code>{`// With loader: component receives { data: T; params: PathParams<Path> }
+// Without loader: component receives { params: PathParams<Path> }
+
+// Example:
+route({
+  path: "/users/:userId",
+  component: UserPage,  // { params: { userId: string } }
+});
+
+route({
+  path: "/users/:userId",
+  component: UserPage,  // { data: User; params: { userId: string } }
+  loader: () => fetchUser(),
+});`}</code>
           </pre>
         </article>
 
@@ -275,6 +339,7 @@ const myRoute = route({
             <code>{`interface LoaderArgs {
   params: Record<string, string>;
   request: Request;
+  signal: AbortSignal;
 }`}</code>
           </pre>
         </article>

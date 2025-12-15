@@ -85,13 +85,14 @@ function App() {
         <h2>Route Parameters</h2>
         <p>
           Define dynamic segments in your paths using the <code>:param</code>{" "}
-          syntax:
+          syntax. Route components receive parameters via the{" "}
+          <code>params</code> prop, which is fully typed based on the path
+          pattern:
         </p>
         <pre className="code-block">
-          <code>{`import { route, useParams } from "@funstack/router";
+          <code>{`import { route } from "@funstack/router";
 
-function UserProfile() {
-  const params = useParams();
+function UserProfile({ params }: { params: { userId: string } }) {
   return <h1>User: {params.userId}</h1>;
 }
 
@@ -101,6 +102,18 @@ const routes = [
     component: UserProfile,
   }),
 ];`}</code>
+        </pre>
+        <p>
+          Alternatively, you can use the <code>useParams</code> hook to access
+          parameters:
+        </p>
+        <pre className="code-block">
+          <code>{`import { useParams } from "@funstack/router";
+
+function UserProfile() {
+  const params = useParams<{ userId: string }>();
+  return <h1>User: {params.userId}</h1>;
+}`}</code>
         </pre>
       </section>
 
@@ -128,7 +141,8 @@ function MyComponent() {
         <h2>Data Loading</h2>
         <p>
           Use the <code>loader</code> option to fetch data before rendering a
-          route:
+          route. The component receives both <code>data</code> (from the loader)
+          and <code>params</code> (from the URL) as props:
         </p>
         <pre className="code-block">
           <code>{`import { route } from "@funstack/router";
@@ -138,6 +152,21 @@ interface User {
   name: string;
 }
 
+function UserProfile({
+  data,
+  params,
+}: {
+  data: User;
+  params: { userId: string };
+}) {
+  return (
+    <div>
+      <h1>{data.name}</h1>
+      <p>User ID: {params.userId}</p>
+    </div>
+  );
+}
+
 const userRoute = route({
   path: "/users/:userId",
   component: UserProfile,
@@ -145,11 +174,7 @@ const userRoute = route({
     const response = await fetch(\`/api/users/\${params.userId}\`);
     return response.json() as Promise<User>;
   },
-});
-
-function UserProfile({ data }: { data: User }) {
-  return <h1>{data.name}</h1>;
-}`}</code>
+});`}</code>
         </pre>
       </section>
     </div>
