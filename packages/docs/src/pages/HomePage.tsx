@@ -54,19 +54,6 @@ export function HomePage() {
               components render.
             </p>
           </div>
-          <div className="feature-card">
-            <h3>Type Safe</h3>
-            <p>
-              Written in TypeScript with full type safety for routes, params,
-              and navigation.
-            </p>
-          </div>
-          <div className="feature-card">
-            <h3>Lightweight</h3>
-            <p>
-              Minimal bundle size with zero external dependencies beyond React.
-            </p>
-          </div>
         </div>
       </section>
 
