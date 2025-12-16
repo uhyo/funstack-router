@@ -206,8 +206,10 @@ const page = searchParams.get("page");
 ```typescript
 // Main router context
 type RouterContextValue = {
-  // Current navigation state
-  currentEntry: NavigationHistoryEntry;
+  // Current location entry (abstracted for fallback mode compatibility)
+  locationEntry: LocationEntry;
+  // Current URL
+  url: URL;
   // Navigation function
   navigate: (to: string, options?: NavigateOptions) => void;
 };
@@ -278,6 +280,8 @@ src/
 ├── index.ts                 # Public exports
 ├── Router.tsx               # <Router> provider component
 ├── Outlet.tsx               # <Outlet> component
+├── route.ts                 # Route definition helper with type inference
+├── types.ts                 # Shared type definitions
 ├── hooks/
 │   ├── useNavigate.ts
 │   ├── useLocation.ts
@@ -286,10 +290,14 @@ src/
 ├── context/
 │   ├── RouterContext.ts     # Main router context
 │   └── RouteContext.ts      # Route matching context
-├── core/
-│   ├── matchRoutes.ts       # Route matching logic
-│   └── pathPattern.ts       # Path pattern parsing
-└── types.ts                 # Shared type definitions
+└── core/
+    ├── matchRoutes.ts       # Route matching logic
+    ├── loaderCache.ts       # Loader result caching
+    ├── RouterAdapter.ts     # Adapter interface for navigation modes
+    ├── NavigationAPIAdapter.ts  # Navigation API implementation
+    ├── StaticAdapter.ts     # Fallback static mode implementation
+    ├── NullAdapter.ts       # Null adapter (no-op)
+    └── createAdapter.ts     # Adapter factory
 ```
 
 ## Browser Support
@@ -298,19 +306,15 @@ The Navigation API is supported in:
 
 - Chrome 102+
 - Edge 102+
+- Safari 26.2+
 - Opera 88+
 
-For unsupported browsers (Firefox, Safari), a polyfill or fallback strategy will be needed. Options:
+Firefox does not yet support the Navigation API.
 
-1. Use the `navigation-api-polyfill` package
-2. Provide a History API fallback mode
-3. Require polyfill as peer dependency
-
-**Initial implementation will target Navigation API-supporting browsers only.**
+For unsupported browsers, use the `fallback="static"` option on the Router component, which renders matched routes without SPA navigation capabilities (links cause full page loads).
 
 ## Future Considerations
 
-- **Data loading**: Route-based data fetching (loaders)
 - **Pending UI**: Navigation state for loading indicators
 - **View Transitions**: Integration with View Transitions API
 - **Scroll restoration**: Automatic scroll position management

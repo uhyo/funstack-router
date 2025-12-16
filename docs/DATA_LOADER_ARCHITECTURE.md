@@ -13,19 +13,19 @@ The router passes whatever the loader returns (Promise or value) to the componen
 ### Route Definition
 
 ```typescript
-type RouteDefinition<TData = unknown> = {
-  path: string;
+type RouteDefinition<TPath extends string = string, TData = unknown> = {
+  path: TPath;
   children?: RouteDefinition[];
 } & (
   | {
-      // Route with loader - component receives data prop
+      // Route with loader - component receives data and params props
       loader: (args: LoaderArgs) => TData;
-      component: ComponentType<{ data: TData }>;
+      component: ComponentType<{ data: TData; params: PathParams<TPath> }>;
     }
   | {
-      // Route without loader - component receives no data prop
+      // Route without loader - component receives params prop only
       loader?: never;
-      component?: ComponentType;
+      component?: ComponentType<{ params: PathParams<TPath> }>;
     }
 );
 
@@ -38,25 +38,25 @@ type LoaderArgs = {
 
 ### Route Definition Helper
 
-Using `RouteDefinition[]` directly loses type inference for each route's `TData`. A helper function preserves the inferred types:
+Using `RouteDefinition[]` directly loses type inference for each route's `TData` and params. A helper function preserves the inferred types:
 
 ```typescript
-// Helper for routes with loader - infers TData from loader return type
-function route<TData>(definition: {
-  path: string;
+// Helper for routes with loader - infers TData from loader return type, params from path
+function route<TPath extends string, TData>(definition: {
+  path: TPath;
   loader: (args: LoaderArgs) => TData;
-  component: ComponentType<{ data: TData }>;
+  component: ComponentType<{ data: TData; params: PathParams<TPath> }>;
   children?: RouteDefinition[];
-}): RouteDefinition<TData> {
+}): RouteDefinition<TPath, TData> {
   return definition;
 }
 
-// Helper for routes without loader
-function route(definition: {
-  path: string;
-  component?: ComponentType;
+// Helper for routes without loader - infers params from path
+function route<TPath extends string>(definition: {
+  path: TPath;
+  component?: ComponentType<{ params: PathParams<TPath> }>;
   children?: RouteDefinition[];
-}): RouteDefinition {
+}): RouteDefinition<TPath> {
   return definition;
 }
 ```
@@ -72,45 +72,50 @@ const routes = [
       const res = await fetch(`/api/users/${params.userId}`, { signal });
       return res.json() as User;
     },
-    // ✅ TypeScript knows component must accept { data: Promise<User> }
+    // ✅ TypeScript knows component must accept { data: Promise<User>, params: { userId: string } }
   }),
   route({
     path: "settings",
     component: SettingsPage,
     loader: () => getSettingsFromLocalStorage(),
-    // ✅ TypeScript infers TData from loader return type
+    // ✅ TypeScript infers TData from loader return type, params from path
   }),
   route({
     path: "about",
     component: AboutPage,
-    // ✅ No loader, no data prop required
+    // ✅ No loader, component receives { params: {} }
   }),
 ];
 ```
 
-Without the helper, all routes would have `TData = unknown`, breaking type safety between loader and component.
+Without the helper, all routes would have `TData = unknown` and `params = Record<string, string>`, breaking type safety between loader and component.
 
 ### Component Access
 
-Components receive the loader result directly as a `data` prop:
+Components receive the loader result directly as a `data` prop, along with a `params` prop containing the matched path parameters:
 
 ```typescript
-// Async loader - component receives Promise
-function UserDetail({ data }: { data: Promise<User> }) {
+// Async loader - component receives Promise and params
+function UserDetail({ data, params }: { data: Promise<User>; params: { userId: string } }) {
   const user = use(data); // Suspends until resolved
-  return <div>{user.name}</div>;
+  return <div>{user.name} (ID: {params.userId})</div>;
 }
 
-// Sync loader - component receives value directly
-function SettingsPage({ data }: { data: Settings }) {
+// Sync loader - component receives value and params directly
+function SettingsPage({ data, params }: { data: Settings; params: {} }) {
   return <div>{data.theme}</div>;
+}
+
+// No loader - component receives only params
+function AboutPage({ params }: { params: {} }) {
+  return <div>About</div>;
 }
 ```
 
 **Advantages of props over hooks**:
 
 1. Explicit dependency - component signature shows what it receives
-2. Better TypeScript inference - prop type tied to loader's return type
+2. Better TypeScript inference - prop types tied to loader's return type and path pattern
 3. No context lookup overhead
 4. Simpler implementation
 5. Flexible - works with both sync and async loaders
@@ -139,10 +144,20 @@ function App() {
   );
 }
 
-// Component receives Promise, uses `use()` to suspend
-function UserDetail({ data }: { data: Promise<User> }) {
+// Component receives Promise and params, uses `use()` to suspend
+function UserDetail({
+  data,
+  params,
+}: {
+  data: Promise<User>;
+  params: { userId: string };
+}) {
   const user = use(data);
-  return <div>{user.name}</div>;
+  return (
+    <div>
+      {user.name} (ID: {params.userId})
+    </div>
+  );
 }
 ```
 
@@ -157,7 +172,7 @@ const routes: RouteDefinition[] = [
 ];
 
 // No Suspense needed for sync loaders
-function SettingsPage({ data }: { data: Settings }) {
+function SettingsPage({ data, params }: { data: Settings; params: {} }) {
   return <div>{data.theme}</div>;
 }
 ```
@@ -227,12 +242,18 @@ type MatchedRouteWithData = MatchedRoute & {
 type LoaderFunction<TData = unknown> = (args: LoaderArgs) => TData;
 
 // Component prop type (when loader is defined)
-type RouteComponentProps<TData = unknown> = {
+type RouteComponentProps<TPath extends string, TData = unknown> = {
   data: TData;
+  params: PathParams<TPath>;
+};
+
+// Component prop type (when loader is not defined)
+type RouteComponentPropsNoLoader<TPath extends string> = {
+  params: PathParams<TPath>;
 };
 ```
 
-Note: RouteContext remains unchanged - it doesn't need to store the data since it's passed directly as a prop.
+Note: RouteContext remains unchanged - it doesn't need to store the data since it's passed directly as a prop. Params are also passed as props for consistency and type safety.
 
 ### 3. Loader Execution Strategy
 
@@ -279,8 +300,12 @@ function RouteRenderer({
   return (
     <RouteContext.Provider value={routeContextValue}>
       {Component ? (
-        // Pass data as prop if loader exists
-        data !== undefined ? <Component data={data} /> : <Component />
+        // Always pass params, pass data only if loader exists
+        route.loader ? (
+          <Component data={data} params={params} />
+        ) : (
+          <Component params={params} />
+        )
       ) : (
         outlet
       )}
@@ -488,18 +513,23 @@ const data = useLoaderData(); // Returns resolved data
 
 ### FUNSTACK Router (This Design)
 
-FUNSTACK passes loader result as a prop, component handles it:
+FUNSTACK passes loader result and params as props, component handles them:
 
 ```typescript
-// FUNSTACK - async loader, component receives Promise
-function UserDetail({ data }: { data: Promise<User> }) {
+// FUNSTACK - async loader, component receives Promise and params
+function UserDetail({ data, params }: { data: Promise<User>; params: { userId: string } }) {
   const user = use(data); // Component chooses when to suspend
-  return <div>{user.name}</div>;
+  return <div>{user.name} (ID: {params.userId})</div>;
 }
 
-// FUNSTACK - sync loader, component receives value directly
-function SettingsPage({ data }: { data: Settings }) {
+// FUNSTACK - sync loader, component receives value and params directly
+function SettingsPage({ data, params }: { data: Settings; params: {} }) {
   return <div>{data.theme}</div>;
+}
+
+// FUNSTACK - no loader, component receives only params
+function AboutPage({ params }: { params: {} }) {
+  return <div>About</div>;
 }
 ```
 
@@ -517,7 +547,8 @@ function SettingsPage({ data }: { data: Settings }) {
 The data loader feature adds:
 
 1. `loader` property on route definitions (can return Promise or value)
-2. `data` prop passed to route components
-3. Loader result caching to prevent duplicate execution
+2. `data` prop passed to route components (when loader is defined)
+3. `params` prop passed to all route components (with types inferred from path pattern)
+4. Loader result caching to prevent duplicate execution
 
-Components receive loader results as props and handle Promises with React's `use()` hook when needed, giving maximum flexibility while keeping the router simple.
+Components receive loader results and params as props and handle Promises with React's `use()` hook when needed, giving maximum flexibility while keeping the router simple.
