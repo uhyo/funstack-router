@@ -27,11 +27,11 @@ Navigation API is supported in:
 
 - Chrome 102+ (March 2022)
 - Edge 102+ (June 2022)
+- Firefox 147+ (July 2025)
 - Opera 88+ (June 2022)
 
 **Not supported in**:
 
-- Firefox (under consideration)
 - Safari (no public signal)
 
 ## Design Goals

@@ -306,10 +306,9 @@ The Navigation API is supported in:
 
 - Chrome 102+
 - Edge 102+
+- Firefox 147+
 - Safari 26.2+
 - Opera 88+
-
-Firefox does not yet support the Navigation API.
 
 For unsupported browsers, use the `fallback="static"` option on the Router component, which renders matched routes without SPA navigation capabilities (links cause full page loads).
 

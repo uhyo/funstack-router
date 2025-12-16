@@ -246,10 +246,9 @@ The Navigation API is supported in:
 
 - Chrome 102+
 - Edge 102+
+- Firefox 147+
 - Safari 26.2+
 - Opera 88+
-
-Firefox does not yet support the Navigation API. For Firefox, consider using a polyfill.
 
 ## License
 
