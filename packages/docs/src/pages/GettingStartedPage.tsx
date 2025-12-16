@@ -26,9 +26,8 @@ yarn add @funstack/router`}</code>
           >
             Navigation API
           </a>{" "}
-          which is supported in Chrome 102+, Edge 102+, Safari 26.2+, and Opera
-          88+. Firefox does not yet support the Navigation API; for Firefox,
-          consider using a polyfill.
+          which is supported in Chrome 102+, Edge 102+, Firefox 147+, Safari
+          26.2+, and Opera 88+.
         </p>
       </section>
 
