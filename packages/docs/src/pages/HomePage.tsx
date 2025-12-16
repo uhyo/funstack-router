@@ -20,6 +20,12 @@ export function HomePage() {
           alt="FUNSTACK Router"
           className="hero-image"
         />
+        <p>
+          FUNSTACK Router is in a <strong>PoC stage</strong> and is not yet
+          recommended for production use. It aims to provide a picture of a
+          modern routing solution for React applications by leveraging the
+          latest web APIs.
+        </p>
         <div className="hero-buttons">
           <a href="/funstack-router/getting-started" className="button primary">
             Get Started
