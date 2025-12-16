@@ -37,7 +37,7 @@ export function Layout() {
             ))}
           </nav>
           <a
-            href="https://github.com/user/funstack-router"
+            href="https://github.com/uhyo/funstack-router"
             className="github-link"
             target="_blank"
             rel="noopener noreferrer"
