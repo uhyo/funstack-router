@@ -1,4 +1,5 @@
-import { Outlet, useLocation, useNavigate } from "@funstack/router";
+import { useState } from "react";
+import { Outlet, useLocation } from "@funstack/router";
 
 const navItems = [
   { path: "/funstack-router/", label: "Home" },
@@ -9,33 +10,27 @@ const navItems = [
 
 export function Layout() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const isActive = (path: string) =>
+    location.pathname === path ||
+    (path === "/funstack-router/" && location.pathname === "/funstack-router");
+
+  const closeMenu = () => setIsMenuOpen(false);
 
   return (
     <div className="layout">
       <header className="header">
         <div className="header-content">
           <h1 className="logo">
-            <a
-              href="/funstack-router/"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/funstack-router/");
-              }}
-            >
-              FUNSTACK Router
-            </a>
+            <a href="/funstack-router/">FUNSTACK Router</a>
           </h1>
           <nav className="nav">
             {navItems.map((item) => (
               <a
                 key={item.path}
                 href={item.path}
-                className={`nav-link ${location.pathname === item.path || (item.path === "/funstack-router/" && location.pathname === "/funstack-router") ? "active" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(item.path);
-                }}
+                className={`nav-link ${isActive(item.path) ? "active" : ""}`}
               >
                 {item.label}
               </a>
@@ -49,7 +44,28 @@ export function Layout() {
           >
             GitHub
           </a>
+          <button
+            className="hamburger"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {isMenuOpen ? "✕" : "☰"}
+          </button>
         </div>
+        {isMenuOpen && (
+          <nav className="mobile-nav">
+            {navItems.map((item) => (
+              <a
+                key={item.path}
+                href={item.path}
+                className={`mobile-nav-link ${isActive(item.path) ? "active" : ""}`}
+                onClick={closeMenu}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        )}
       </header>
       <main className="main">
         <Outlet />

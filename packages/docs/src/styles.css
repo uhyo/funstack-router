@@ -155,6 +155,22 @@ code {
   text-decoration: none;
 }
 
+/* Hamburger Button - hidden on desktop */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--color-text);
+}
+
+/* Mobile Navigation - hidden on desktop */
+.mobile-nav {
+  display: none;
+}
+
 /* Main Content */
 .main {
   flex: 1;
@@ -402,6 +418,45 @@ code {
 
   .nav {
     display: none;
+  }
+
+  .github-link {
+    display: none;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  .mobile-nav {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+    padding: 8px 16px 16px;
+  }
+
+  .mobile-nav-link {
+    padding: 12px 16px;
+    border-radius: 6px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+
+  .mobile-nav-link:hover {
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .mobile-nav-link.active {
+    background: var(--color-primary);
+    color: white;
+  }
+
+  .mobile-nav-link.active:hover {
+    background: var(--color-primary-dark);
   }
 
   .hero h1 {
