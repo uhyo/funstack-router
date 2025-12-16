@@ -244,17 +244,24 @@ function ProductList() {
 
       <section>
         <h2>Navigation Callback</h2>
-        <p>React to navigation events:</p>
+        <p>
+          React to navigation events. The callback receives the{" "}
+          <code>NavigateEvent</code> from the Navigation API and the matched
+          routes:
+        </p>
         <pre className="code-block">
-          <code>{`import { Router, route, type Location } from "@funstack/router";
+          <code>{`import { Router, route, type OnNavigateCallback } from "@funstack/router";
 
 function App() {
-  const handleNavigate = (location: Location) => {
+  const handleNavigate: OnNavigateCallback = (event) => {
     // Track page views
+    const url = new URL(event.destination.url);
     analytics.track("page_view", {
-      path: location.pathname,
-      search: location.search,
+      path: url.pathname,
+      search: url.search,
     });
+
+    // You can call event.preventDefault() to cancel the navigation
   };
 
   return (
