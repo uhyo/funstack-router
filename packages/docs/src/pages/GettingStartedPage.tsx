@@ -151,16 +151,31 @@ interface User {
   name: string;
 }
 
-function UserProfile({
+function UserProfilePage({
   data,
   params,
 }: {
-  data: User;
+  data: Promise<User>;
+  params: { userId: string };
+}) {
+  const user = use(data);
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UserProfile user={user} params={params} />
+    </Suspense>
+  );
+}
+
+function UserProfile({
+  user,
+  params,
+}: {
+  user: User;
   params: { userId: string };
 }) {
   return (
     <div>
-      <h1>{data.name}</h1>
+      <h1>{user.name}</h1>
       <p>User ID: {params.userId}</p>
     </div>
   );
@@ -168,10 +183,10 @@ function UserProfile({
 
 const userRoute = route({
   path: "/users/:userId",
-  component: UserProfile,
-  loader: async ({ params }) => {
+  component: UserProfilePage,
+  loader: async ({ params }): Promise<User> => {
     const response = await fetch(\`/api/users/\${params.userId}\`);
-    return response.json() as Promise<User>;
+    return response.json();
   },
 });`}</code>
         </pre>

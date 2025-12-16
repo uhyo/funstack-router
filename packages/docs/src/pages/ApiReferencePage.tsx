@@ -262,9 +262,11 @@ const myRoute = route({
                   <code>loader</code>
                 </td>
                 <td>
-                  <code>(args: LoaderArgs) =&gt; Promise&lt;T&gt;</code>
+                  <code>(args: LoaderArgs) =&gt; T</code>
                 </td>
-                <td>Async function to load data</td>
+                <td>
+                  Function to load data. May be synchronous or asynchronous
+                </td>
               </tr>
               <tr>
                 <td>

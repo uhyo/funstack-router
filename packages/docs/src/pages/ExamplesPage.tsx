@@ -133,11 +133,14 @@ const dashboardRoutes = route({
       <section>
         <h2>Data Loading</h2>
         <p>
-          Fetch data before rendering with loaders. Components receive both{" "}
-          <code>data</code> and <code>params</code> props:
+          Load data with loaders. When a loader returns a Promise, the component
+          receives that Promise and uses React's <code>use</code> hook to unwrap
+          it. Use <code>&lt;Suspense&gt;</code> within your pages or layouts to
+          handle loading states.
         </p>
         <pre className="code-block">
-          <code>{`import { route } from "@funstack/router";
+          <code>{`import { use, Suspense } from "react";
+import { route } from "@funstack/router";
 
 interface Post {
   id: number;
@@ -146,23 +149,37 @@ interface Post {
   userId: number;
 }
 
-// Example with params: fetch a specific user's posts
-function UserPosts({
+// When the loader returns a Promise, the component receives that Promise.
+// Use React's \`use\` hook to unwrap the Promise.
+function UserPostsContent({
   data,
   params,
 }: {
-  data: Post[];
+  data: Promise<Post[]>;
   params: { userId: string };
 }) {
+  const posts = use(data);
   return (
     <div>
       <h2>Posts by user {params.userId}</h2>
       <ul>
-        {data.map((post) => (
+        {posts.map((post) => (
           <li key={post.id}>{post.title}</li>
         ))}
       </ul>
     </div>
+  );
+}
+
+// Wrap the content with Suspense at the page level
+function UserPosts(props: {
+  data: Promise<Post[]>;
+  params: { userId: string };
+}) {
+  return (
+    <Suspense fallback={<div>Loading posts...</div>}>
+      <UserPostsContent {...props} />
+    </Suspense>
   );
 }
 
@@ -238,9 +255,6 @@ function App() {
       path: location.pathname,
       search: location.search,
     });
-
-    // Scroll to top on navigation
-    window.scrollTo(0, 0);
   };
 
   return (
