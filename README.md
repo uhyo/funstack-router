@@ -1,5 +1,7 @@
 # FUNSTACK Router
 
+![FUNSTACK Router](docs/FUNSTACK_Router_Hero_small.png)
+
 A modern React router built on the [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API).
 
 > **Warning**

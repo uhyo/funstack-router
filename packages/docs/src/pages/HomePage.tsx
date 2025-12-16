@@ -13,6 +13,11 @@ export function HomePage() {
             Navigation API
           </a>
         </p>
+        <img
+          src="/funstack-router/FUNSTACK_Router_Hero_small.png"
+          alt="FUNSTACK Router"
+          className="hero-image"
+        />
         <div className="hero-buttons">
           <a href="/funstack-router/getting-started" className="button primary">
             Get Started

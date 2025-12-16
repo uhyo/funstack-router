@@ -233,6 +233,13 @@ code {
   margin-bottom: 32px;
 }
 
+.hero-image {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 32px;
+  border-radius: 8px;
+}
+
 .hero-buttons {
   display: flex;
   gap: 16px;
