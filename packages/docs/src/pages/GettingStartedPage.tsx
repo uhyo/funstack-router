@@ -1,3 +1,5 @@
+import { CodeBlock } from "../components/CodeBlock";
+
 export function GettingStartedPage() {
   return (
     <div className="page docs-page">
@@ -6,13 +8,11 @@ export function GettingStartedPage() {
       <section>
         <h2>Installation</h2>
         <p>Install the package using your preferred package manager:</p>
-        <pre className="code-block">
-          <code>{`npm install @funstack/router
+        <CodeBlock language="bash">{`npm install @funstack/router
 # or
 pnpm add @funstack/router
 # or
-yarn add @funstack/router`}</code>
-        </pre>
+yarn add @funstack/router`}</CodeBlock>
       </section>
 
       <section>
@@ -37,8 +37,7 @@ yarn add @funstack/router`}</code>
           Create your routes using the <code>route</code> helper function and
           render them with the <code>Router</code> component:
         </p>
-        <pre className="code-block">
-          <code>{`import { Router, route, Outlet } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { Router, route, Outlet } from "@funstack/router";
 
 // Define your page components
 function Home() {
@@ -76,8 +75,7 @@ const routes = [
 // Render the router
 function App() {
   return <Router routes={routes} />;
-}`}</code>
-        </pre>
+}`}</CodeBlock>
       </section>
 
       <section>
@@ -88,8 +86,7 @@ function App() {
           <code>params</code> prop, which is fully typed based on the path
           pattern:
         </p>
-        <pre className="code-block">
-          <code>{`import { route } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
 function UserProfile({ params }: { params: { userId: string } }) {
   return <h1>User: {params.userId}</h1>;
@@ -100,20 +97,17 @@ const routes = [
     path: "/users/:userId",
     component: UserProfile,
   }),
-];`}</code>
-        </pre>
+];`}</CodeBlock>
         <p>
           Alternatively, you can use the <code>useParams</code> hook to access
           parameters:
         </p>
-        <pre className="code-block">
-          <code>{`import { useParams } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { useParams } from "@funstack/router";
 
 function UserProfile() {
   const params = useParams<{ userId: string }>();
   return <h1>User: {params.userId}</h1>;
-}`}</code>
-        </pre>
+}`}</CodeBlock>
       </section>
 
       <section>
@@ -121,8 +115,7 @@ function UserProfile() {
         <p>
           Use the <code>useNavigate</code> hook for programmatic navigation:
         </p>
-        <pre className="code-block">
-          <code>{`import { useNavigate } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { useNavigate } from "@funstack/router";
 
 function MyComponent() {
   const navigate = useNavigate();
@@ -132,8 +125,7 @@ function MyComponent() {
   };
 
   return <button onClick={handleClick}>Go to About</button>;
-}`}</code>
-        </pre>
+}`}</CodeBlock>
       </section>
 
       <section>
@@ -143,8 +135,7 @@ function MyComponent() {
           route. The component receives both <code>data</code> (from the loader)
           and <code>params</code> (from the URL) as props:
         </p>
-        <pre className="code-block">
-          <code>{`import { route } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
 interface User {
   id: string;
@@ -188,8 +179,7 @@ const userRoute = route({
     const response = await fetch(\`/api/users/\${params.userId}\`);
     return response.json();
   },
-});`}</code>
-        </pre>
+});`}</CodeBlock>
       </section>
     </div>
   );

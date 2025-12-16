@@ -1,3 +1,5 @@
+import { CodeBlock } from "../components/CodeBlock";
+
 export function ApiReferencePage() {
   return (
     <div className="page docs-page api-page">
@@ -18,16 +20,14 @@ export function ApiReferencePage() {
             <code>{"<Router>"}</code>
           </h3>
           <p>The main router component that provides routing context.</p>
-          <pre className="code-block">
-            <code>{`import { Router } from "@funstack/router";
+          <CodeBlock language="tsx">{`import { Router } from "@funstack/router";
 
 <Router
   routes={routes}
   onNavigate={(location) => {
     console.log("Navigated to:", location.pathname);
   }}
-/>`}</code>
-          </pre>
+/>`}</CodeBlock>
           <h4>Props</h4>
           <table className="props-table">
             <thead>
@@ -68,8 +68,7 @@ export function ApiReferencePage() {
             Renders the child route's component. Used in parent routes for
             nested layouts.
           </p>
-          <pre className="code-block">
-            <code>{`import { Outlet } from "@funstack/router";
+          <CodeBlock language="tsx">{`import { Outlet } from "@funstack/router";
 
 function Layout() {
   return (
@@ -80,8 +79,7 @@ function Layout() {
       </main>
     </div>
   );
-}`}</code>
-          </pre>
+}`}</CodeBlock>
         </article>
       </section>
 
@@ -93,8 +91,7 @@ function Layout() {
             <code>useNavigate()</code>
           </h3>
           <p>Returns a function to programmatically navigate.</p>
-          <pre className="code-block">
-            <code>{`import { useNavigate } from "@funstack/router";
+          <CodeBlock language="tsx">{`import { useNavigate } from "@funstack/router";
 
 function MyComponent() {
   const navigate = useNavigate();
@@ -107,8 +104,7 @@ function MyComponent() {
     replace: true,  // Replace current history entry
     state: { from: "home" },  // Pass state data
   });
-}`}</code>
-          </pre>
+}`}</CodeBlock>
         </article>
 
         <article className="api-item">
@@ -116,8 +112,7 @@ function MyComponent() {
             <code>useLocation()</code>
           </h3>
           <p>Returns the current location object.</p>
-          <pre className="code-block">
-            <code>{`import { useLocation } from "@funstack/router";
+          <CodeBlock language="tsx">{`import { useLocation } from "@funstack/router";
 
 function MyComponent() {
   const location = useLocation();
@@ -125,8 +120,7 @@ function MyComponent() {
   console.log(location.pathname);  // "/users/123"
   console.log(location.search);    // "?tab=profile"
   console.log(location.hash);      // "#section"
-}`}</code>
-          </pre>
+}`}</CodeBlock>
         </article>
 
         <article className="api-item">
@@ -137,8 +131,7 @@ function MyComponent() {
             Returns the route parameters as an object. This is an alternative to
             receiving params via props—use whichever style you prefer.
           </p>
-          <pre className="code-block">
-            <code>{`import { useParams } from "@funstack/router";
+          <CodeBlock language="tsx">{`import { useParams } from "@funstack/router";
 
 // For route: /users/:userId/posts/:postId
 
@@ -153,8 +146,7 @@ function PostPage() {
 function PostPage({ params }: { params: { userId: string; postId: string } }) {
   console.log(params.userId);  // "123"
   console.log(params.postId);  // "456"
-}`}</code>
-          </pre>
+}`}</CodeBlock>
         </article>
 
         <article className="api-item">
@@ -164,8 +156,7 @@ function PostPage({ params }: { params: { userId: string; postId: string } }) {
           <p>
             Returns a tuple of the current search params and a setter function.
           </p>
-          <pre className="code-block">
-            <code>{`import { useSearchParams } from "@funstack/router";
+          <CodeBlock language="tsx">{`import { useSearchParams } from "@funstack/router";
 
 function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -175,8 +166,7 @@ function SearchPage() {
   const handleSearch = (newQuery: string) => {
     setSearchParams({ q: newQuery });
   };
-}`}</code>
-          </pre>
+}`}</CodeBlock>
         </article>
       </section>
 
@@ -193,8 +183,7 @@ function SearchPage() {
             the path pattern. When a <code>loader</code> is defined, the
             component also receives a <code>data</code> prop.
           </p>
-          <pre className="code-block">
-            <code>{`import { route } from "@funstack/router";
+          <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
 // Route without loader - component receives params prop
 function ProfileTab({ params }: { params: { userId: string } }) {
@@ -222,8 +211,7 @@ const myRoute = route({
     route({ path: "/profile", component: ProfileTab }),
     route({ path: "/settings", component: SettingsTab }),
   ],
-});`}</code>
-          </pre>
+});`}</CodeBlock>
           <h4>Options</h4>
           <table className="props-table">
             <thead>
@@ -293,16 +281,14 @@ const myRoute = route({
             Utility type that extracts parameter types from a path pattern
             string.
           </p>
-          <pre className="code-block">
-            <code>{`import type { PathParams } from "@funstack/router";
+          <CodeBlock language="tsx">{`import type { PathParams } from "@funstack/router";
 
 // PathParams<"/users/:userId"> = { userId: string }
 // PathParams<"/users/:userId/posts/:postId"> = { userId: string; postId: string }
 // PathParams<"/about"> = Record<string, never>
 
 type MyParams = PathParams<"/users/:userId">;
-// { userId: string }`}</code>
-          </pre>
+// { userId: string }`}</CodeBlock>
         </article>
 
         <article className="api-item">
@@ -315,8 +301,7 @@ type MyParams = PathParams<"/users/:userId">;
             <code>params</code> prop, and receive a <code>data</code> prop when
             a loader is defined.
           </p>
-          <pre className="code-block">
-            <code>{`// With loader: component receives { data: T; params: PathParams<Path> }
+          <CodeBlock language="tsx">{`// With loader: component receives { data: T; params: PathParams<Path> }
 // Without loader: component receives { params: PathParams<Path> }
 
 // Example:
@@ -329,46 +314,39 @@ route({
   path: "/users/:userId",
   component: UserPage,  // { data: User; params: { userId: string } }
   loader: () => fetchUser(),
-});`}</code>
-          </pre>
+});`}</CodeBlock>
         </article>
 
         <article className="api-item">
           <h3>
             <code>LoaderArgs</code>
           </h3>
-          <pre className="code-block">
-            <code>{`interface LoaderArgs {
+          <CodeBlock language="typescript">{`interface LoaderArgs {
   params: Record<string, string>;
   request: Request;
   signal: AbortSignal;
-}`}</code>
-          </pre>
+}`}</CodeBlock>
         </article>
 
         <article className="api-item">
           <h3>
             <code>Location</code>
           </h3>
-          <pre className="code-block">
-            <code>{`interface Location {
+          <CodeBlock language="typescript">{`interface Location {
   pathname: string;
   search: string;
   hash: string;
-}`}</code>
-          </pre>
+}`}</CodeBlock>
         </article>
 
         <article className="api-item">
           <h3>
             <code>NavigateOptions</code>
           </h3>
-          <pre className="code-block">
-            <code>{`interface NavigateOptions {
+          <CodeBlock language="typescript">{`interface NavigateOptions {
   replace?: boolean;
   state?: unknown;
-}`}</code>
-          </pre>
+}`}</CodeBlock>
         </article>
       </section>
     </div>

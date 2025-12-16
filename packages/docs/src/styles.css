@@ -325,6 +325,11 @@ code {
   font-size: 0.875rem;
   line-height: 1.7;
   white-space: pre;
+  display: block;
+}
+
+.code-block code > div {
+  white-space: pre;
 }
 
 /* API Page */

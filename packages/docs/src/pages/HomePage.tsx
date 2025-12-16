@@ -1,3 +1,5 @@
+import { CodeBlock } from "../components/CodeBlock";
+
 export function HomePage() {
   return (
     <div className="page home-page">
@@ -64,11 +66,8 @@ export function HomePage() {
 
       <section className="quick-start">
         <h2>Quick Start</h2>
-        <pre className="code-block">
-          <code>{`npm install @funstack/router`}</code>
-        </pre>
-        <pre className="code-block">
-          <code>{`import { Router, route } from "@funstack/router";
+        <CodeBlock language="bash">{`npm install @funstack/router`}</CodeBlock>
+        <CodeBlock language="tsx">{`import { Router, route } from "@funstack/router";
 
 const routes = [
   route({
@@ -83,8 +82,7 @@ const routes = [
 
 function App() {
   return <Router routes={routes} />;
-}`}</code>
-        </pre>
+}`}</CodeBlock>
       </section>
     </div>
   );

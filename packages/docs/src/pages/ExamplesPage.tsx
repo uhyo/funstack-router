@@ -1,3 +1,5 @@
+import { CodeBlock } from "../components/CodeBlock";
+
 export function ExamplesPage() {
   return (
     <div className="page docs-page">
@@ -6,8 +8,7 @@ export function ExamplesPage() {
       <section>
         <h2>Basic Routing</h2>
         <p>A simple example with home and about pages:</p>
-        <pre className="code-block">
-          <code>{`import { Router, route, Outlet, useNavigate } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { Router, route, Outlet, useNavigate } from "@funstack/router";
 
 function Home() {
   return <h1>Home Page</h1>;
@@ -44,8 +45,7 @@ const routes = [
 
 function App() {
   return <Router routes={routes} />;
-}`}</code>
-        </pre>
+}`}</CodeBlock>
       </section>
 
       <section>
@@ -54,8 +54,7 @@ function App() {
           Handle dynamic URL segments with parameters. Components receive params
           via props:
         </p>
-        <pre className="code-block">
-          <code>{`import { route } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
 function UserProfile({ params }: { params: { userId: string } }) {
   return <h1>Viewing user: {params.userId}</h1>;
@@ -83,15 +82,13 @@ const routes = [
     path: "/users/:userId/posts/:postId",
     component: PostDetail,
   }),
-];`}</code>
-        </pre>
+];`}</CodeBlock>
       </section>
 
       <section>
         <h2>Nested Routes</h2>
         <p>Create complex layouts with nested routing:</p>
-        <pre className="code-block">
-          <code>{`import { route, Outlet } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { route, Outlet } from "@funstack/router";
 
 function Dashboard() {
   return (
@@ -126,8 +123,7 @@ const dashboardRoutes = route({
     route({ path: "/settings", component: DashboardSettings }),
     route({ path: "/profile", component: DashboardProfile }),
   ],
-});`}</code>
-        </pre>
+});`}</CodeBlock>
       </section>
 
       <section>
@@ -138,8 +134,7 @@ const dashboardRoutes = route({
           it. Use <code>&lt;Suspense&gt;</code> within your pages or layouts to
           handle loading states.
         </p>
-        <pre className="code-block">
-          <code>{`import { use, Suspense } from "react";
+        <CodeBlock language="tsx">{`import { use, Suspense } from "react";
 import { route } from "@funstack/router";
 
 interface Post {
@@ -192,15 +187,13 @@ const userPostsRoute = route({
     );
     return response.json();
   },
-});`}</code>
-        </pre>
+});`}</CodeBlock>
       </section>
 
       <section>
         <h2>Search Parameters</h2>
         <p>Work with URL query parameters:</p>
-        <pre className="code-block">
-          <code>{`import { useSearchParams } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { useSearchParams } from "@funstack/router";
 
 function ProductList() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -238,8 +231,7 @@ function ProductList() {
       <p>Showing {category} products, sorted by {sortBy}</p>
     </div>
   );
-}`}</code>
-        </pre>
+}`}</CodeBlock>
       </section>
 
       <section>
@@ -249,8 +241,7 @@ function ProductList() {
           <code>NavigateEvent</code> from the Navigation API and the matched
           routes:
         </p>
-        <pre className="code-block">
-          <code>{`import { Router, route, type OnNavigateCallback } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { Router, route, type OnNavigateCallback } from "@funstack/router";
 
 function App() {
   const handleNavigate: OnNavigateCallback = (event) => {
@@ -270,8 +261,7 @@ function App() {
       onNavigate={handleNavigate}
     />
   );
-}`}</code>
-        </pre>
+}`}</CodeBlock>
       </section>
     </div>
   );
