@@ -92,19 +92,36 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     navigate: vi.fn(
       (url: string, options?: { state?: unknown; history?: string }) => {
         const newUrl = new URL(url, currentEntry.url).href;
-        const newEntry = new MockNavigationHistoryEntry(
-          newUrl,
-          entries.length,
-          options?.state,
-        );
 
         if (options?.history !== "replace") {
+          // When pushing a new entry, dispose all entries after current position
+          // This mimics browser behavior when navigating forward from a back state
+          const currentIndex = entries.indexOf(currentEntry);
+          while (entries.length > currentIndex + 1) {
+            const disposedEntry = entries.pop()!;
+            disposedEntry.__dispose();
+          }
+
+          const newEntry = new MockNavigationHistoryEntry(
+            newUrl,
+            entries.length,
+            options?.state,
+          );
           entries.push(newEntry);
+          currentEntry = newEntry;
         } else {
-          entries[entries.length - 1] = newEntry;
+          const currentIndex = entries.indexOf(currentEntry);
+          const newEntry = new MockNavigationHistoryEntry(
+            newUrl,
+            currentIndex,
+            options?.state,
+          );
+          newEntry.key = currentEntry.key; // Replace keeps the same key
+          newEntry.id = currentEntry.id; // Replace keeps the same id
+          entries[currentIndex] = newEntry;
+          currentEntry = newEntry;
         }
 
-        currentEntry = newEntry;
         mockNavigation.currentEntry = currentEntry;
 
         // Dispatch currententrychange event
@@ -155,6 +172,13 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
         event,
         proceed: () => {
           if (!event.defaultPrevented) {
+            // Dispose entries after current position (browser behavior)
+            const currentIndex = entries.indexOf(currentEntry);
+            while (entries.length > currentIndex + 1) {
+              const disposedEntry = entries.pop()!;
+              disposedEntry.__dispose();
+            }
+
             const newEntry = new MockNavigationHistoryEntry(
               newUrl,
               entries.length,

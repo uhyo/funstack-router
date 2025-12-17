@@ -414,7 +414,7 @@ describe("Data Loader", () => {
   });
 
   describe("dispose event", () => {
-    it("clears loader cache when entry is disposed", () => {
+    it("clears loader cache when entry is disposed by navigating from back state", () => {
       mockNavigation = setupNavigationMock("http://localhost/page1");
 
       const loaderSpy = vi.fn(({ params }: LoaderArgs) => ({
@@ -459,16 +459,8 @@ describe("Data Loader", () => {
       expect(loaderSpy).toHaveBeenCalledTimes(3);
       expect(screen.getByText("Page: page1")).toBeInTheDocument();
 
-      // Now dispose entries at index 1 and 2 (simulating what happens when
-      // navigating forward from a back state - the "future" entries get disposed)
-      act(() => {
-        // Dispose entry at index 2 first (page3)
-        mockNavigation.__disposeEntry(2);
-        // Then dispose entry at index 1 (page2)
-        mockNavigation.__disposeEntry(1);
-      });
-
-      // Navigate to page2 again (creates new entry)
+      // Navigate to page2 again - this automatically disposes entries 1 and 2
+      // (browser behavior: navigating forward from a back state disposes "future" entries)
       act(() => {
         mockNavigation.__simulateNavigation("http://localhost/page2");
       });
@@ -513,16 +505,19 @@ describe("Data Loader", () => {
       });
       expect(loaderSpy).toHaveBeenCalledTimes(2); // Still cached
 
-      // Dispose only page2's entry (index 1)
+      // Navigate to page3 - this disposes page2's entry (index 1), but not page1's
       act(() => {
-        mockNavigation.__disposeEntry(1);
+        mockNavigation.__simulateNavigation("http://localhost/page3");
+      });
+      expect(loaderSpy).toHaveBeenCalledTimes(3);
+
+      // Traverse back to page1
+      act(() => {
+        mockNavigation.__simulateTraversal(0);
       });
 
-      // page1's cache should still be intact - re-render without new loader call
-      rerender(<Router routes={routes} />);
-
-      // Loader should NOT be called again for page1 (its cache is still valid)
-      expect(loaderSpy).toHaveBeenCalledTimes(2);
+      // page1's cache should still be intact - loader should NOT be called again
+      expect(loaderSpy).toHaveBeenCalledTimes(3);
       expect(screen.getByText("Page: page1")).toBeInTheDocument();
     });
   });
