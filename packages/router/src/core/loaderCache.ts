@@ -68,3 +68,16 @@ export function executeLoaders(
 export function clearLoaderCache(): void {
   loaderCache.clear();
 }
+
+/**
+ * Clear loader cache entries for a specific navigation entry.
+ * Called when a NavigationHistoryEntry is disposed (removed from history stack).
+ */
+export function clearLoaderCacheForEntry(entryId: string): void {
+  const prefix = `${entryId}:`;
+  for (const key of loaderCache.keys()) {
+    if (key.startsWith(prefix)) {
+      loaderCache.delete(key);
+    }
+  }
+}

@@ -7,7 +7,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
   const entries: MockNavigationHistoryEntry[] = [];
   const listeners = new Map<string, Set<(event: Event) => void>>();
 
-  class MockNavigationHistoryEntry {
+  class MockNavigationHistoryEntry extends EventTarget {
     url: string;
     key: string;
     id: string;
@@ -16,6 +16,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     #state: unknown;
 
     constructor(url: string, index: number, state?: unknown) {
+      super();
       this.url = url;
       this.key = `key-${index}`;
       this.id = `id-${index}`;
@@ -25,6 +26,14 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
 
     getState() {
       return this.#state;
+    }
+
+    /**
+     * Dispatch a dispose event on this entry.
+     * Used for testing dispose event handling.
+     */
+    __dispose() {
+      this.dispatchEvent(new Event("dispose"));
     }
   }
 
@@ -83,19 +92,36 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     navigate: vi.fn(
       (url: string, options?: { state?: unknown; history?: string }) => {
         const newUrl = new URL(url, currentEntry.url).href;
-        const newEntry = new MockNavigationHistoryEntry(
-          newUrl,
-          entries.length,
-          options?.state,
-        );
 
         if (options?.history !== "replace") {
+          // When pushing a new entry, dispose all entries after current position
+          // This mimics browser behavior when navigating forward from a back state
+          const currentIndex = entries.indexOf(currentEntry);
+          while (entries.length > currentIndex + 1) {
+            const disposedEntry = entries.pop()!;
+            disposedEntry.__dispose();
+          }
+
+          const newEntry = new MockNavigationHistoryEntry(
+            newUrl,
+            entries.length,
+            options?.state,
+          );
           entries.push(newEntry);
+          currentEntry = newEntry;
         } else {
-          entries[entries.length - 1] = newEntry;
+          const currentIndex = entries.indexOf(currentEntry);
+          const newEntry = new MockNavigationHistoryEntry(
+            newUrl,
+            currentIndex,
+            options?.state,
+          );
+          newEntry.key = currentEntry.key; // Replace keeps the same key
+          newEntry.id = currentEntry.id; // Replace keeps the same id
+          entries[currentIndex] = newEntry;
+          currentEntry = newEntry;
         }
 
-        currentEntry = newEntry;
         mockNavigation.currentEntry = currentEntry;
 
         // Dispatch currententrychange event
@@ -146,6 +172,13 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
         event,
         proceed: () => {
           if (!event.defaultPrevented) {
+            // Dispose entries after current position (browser behavior)
+            const currentIndex = entries.indexOf(currentEntry);
+            while (entries.length > currentIndex + 1) {
+              const disposedEntry = entries.pop()!;
+              disposedEntry.__dispose();
+            }
+
             const newEntry = new MockNavigationHistoryEntry(
               newUrl,
               entries.length,
@@ -176,6 +209,26 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     // Test helper to get listeners
     __getListeners(type: string) {
       return listeners.get(type);
+    },
+
+    // Test helper to simulate disposing an entry (e.g., when navigating forward from a back state)
+    __disposeEntry(entryIndex: number) {
+      if (entryIndex < 0 || entryIndex >= entries.length) {
+        throw new Error(`Invalid entry index: ${entryIndex}`);
+      }
+      const entry = entries[entryIndex];
+      entry.__dispose();
+      // Remove from entries array (simulates browser behavior)
+      entries.splice(entryIndex, 1);
+      // Update indices of remaining entries
+      entries.forEach((e, i) => {
+        e.index = i;
+      });
+    },
+
+    // Test helper to get an entry by index
+    __getEntry(entryIndex: number) {
+      return entries[entryIndex];
     },
   };
 
