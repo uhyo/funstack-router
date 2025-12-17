@@ -17,35 +17,35 @@ This document describes the design for a navigation prevention API in FUNSTACK R
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Navigation Event Flow                        │
+│                     Navigation Event Flow                       │
 ├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  User Action (click link, call navigate(), back/forward)         │
-│                           │                                      │
-│                           ▼                                      │
-│              Navigation API fires "navigate" event               │
-│                           │                                      │
-│                           ▼                                      │
-│         NavigationAPIAdapter.setupInterception()                 │
-│                           │                                      │
-│                           ▼                                      │
-│              Call onNavigate(event, matched)?                    │
-│                           │                                      │
+│                                                                 │
+│  User Action (click link, call navigate(), back/forward)        │
+│                           │                                     │
+│                           ▼                                     │
+│              Navigation API fires "navigate" event              │
+│                           │                                     │
+│                           ▼                                     │
+│         NavigationAPIAdapter.setupInterception()                │
+│                           │                                     │
+│                           ▼                                     │
+│              Call onNavigate(event, matched)?                   │
+│                           │                                     │
 │              ┌────────────┴────────────┐                        │
 │              │                         │                        │
 │              ▼                         ▼                        │
-│     event.preventDefault()      No preventDefault                │
+│     event.preventDefault()      No preventDefault               │
 │     called by user              │                               │
 │              │                         ▼                        │
-│              ▼                  event.intercept() called         │
-│     Browser handles              by router                       │
+│              ▼                  event.intercept() called        │
+│     Browser handles              by router                      │
 │     navigation (full                   │                        │
 │     page load)                         ▼                        │
-│                                 Execute loaders                  │
+│                                 Execute loaders                 │
 │                                        │                        │
 │                                        ▼                        │
-│                                 Render new route                 │
-│                                                                  │
+│                                 Render new route                │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -162,21 +162,21 @@ For the initial implementation, we will focus on the **hook-based `useBlocker` A
 │                        Blocker Architecture                           │
 ├───────────────────────────────────────────────────────────────────────┤
 │                                                                       │
-│  ┌─────────────┐    ┌──────────────────┐    ┌─────────────────────┐  │
-│  │ Component A │    │  BlockerContext  │    │ NavigationAPIAdapter│  │
-│  │             │    │                  │    │                     │  │
-│  │ useBlocker()├───►│  blockers: Map   │◄───┤ setupInterception() │  │
-│  │             │    │                  │    │                     │  │
-│  └─────────────┘    │  - register()    │    │ On navigate event:  │  │
-│                     │  - unregister()  │    │  1. Check blockers  │  │
-│  ┌─────────────┐    │  - checkAll()    │    │  2. If blocked:     │  │
-│  │ Component B │    │                  │    │     - Store pending │  │
-│  │             │    │  pendingNav:     │    │     - Update state  │  │
-│  │ useBlocker()├───►│  - destination   │    │  3. If not blocked: │  │
-│  │             │    │  - proceed()     │    │     - Continue nav  │  │
-│  └─────────────┘    │  - reset()       │    │                     │  │
-│                     │                  │    │                     │  │
-│                     └──────────────────┘    └─────────────────────┘  │
+│  ┌─────────────┐    ┌──────────────────┐    ┌─────────────────────┐   │
+│  │ Component A │    │  BlockerContext  │    │ NavigationAPIAdapter│   │
+│  │             │    │                  │    │                     │   │
+│  │ useBlocker()├───►│  blockers: Map   │◄───┤ setupInterception() │   │
+│  │             │    │                  │    │                     │   │
+│  └─────────────┘    │  - register()    │    │ On navigate event:  │   │
+│                     │  - unregister()  │    │  1. Check blockers  │   │
+│  ┌─────────────┐    │  - checkAll()    │    │  2. If blocked:     │   │
+│  │ Component B │    │                  │    │     - Store pending │   │
+│  │             │    │  pendingNav:     │    │     - Update state  │   │
+│  │ useBlocker()├───►│  - destination   │    │  3. If not blocked: │   │
+│  │             │    │  - proceed()     │    │     - Continue nav  │   │
+│  └─────────────┘    │  - reset()       │    │                     │   │
+│                     │                  │    │                     │   │
+│                     └──────────────────┘    └─────────────────────┘   │
 │                                                                       │
 └───────────────────────────────────────────────────────────────────────┘
 ```
