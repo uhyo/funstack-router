@@ -10,7 +10,7 @@ import type {
  * All methods are no-ops that return safe default values.
  */
 export class NullAdapter implements RouterAdapter {
-  private idleController: AbortController | null = null;
+  #idleController: AbortController | null = null;
 
   getSnapshot(): LocationEntry | null {
     return null;
@@ -39,7 +39,7 @@ export class NullAdapter implements RouterAdapter {
   }
 
   getIdleAbortSignal(): AbortSignal {
-    this.idleController ??= new AbortController();
-    return this.idleController.signal;
+    this.#idleController ??= new AbortController();
+    return this.#idleController.signal;
   }
 }
