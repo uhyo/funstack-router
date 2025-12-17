@@ -7,7 +7,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
   const entries: MockNavigationHistoryEntry[] = [];
   const listeners = new Map<string, Set<(event: Event) => void>>();
 
-  class MockNavigationHistoryEntry {
+  class MockNavigationHistoryEntry extends EventTarget {
     url: string;
     key: string;
     id: string;
@@ -16,6 +16,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     #state: unknown;
 
     constructor(url: string, index: number, state?: unknown) {
+      super();
       this.url = url;
       this.key = `key-${index}`;
       this.id = `id-${index}`;
@@ -25,6 +26,14 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
 
     getState() {
       return this.#state;
+    }
+
+    /**
+     * Dispatch a dispose event on this entry.
+     * Used for testing dispose event handling.
+     */
+    __dispose() {
+      this.dispatchEvent(new Event("dispose"));
     }
   }
 
@@ -176,6 +185,26 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     // Test helper to get listeners
     __getListeners(type: string) {
       return listeners.get(type);
+    },
+
+    // Test helper to simulate disposing an entry (e.g., when navigating forward from a back state)
+    __disposeEntry(entryIndex: number) {
+      if (entryIndex < 0 || entryIndex >= entries.length) {
+        throw new Error(`Invalid entry index: ${entryIndex}`);
+      }
+      const entry = entries[entryIndex];
+      entry.__dispose();
+      // Remove from entries array (simulates browser behavior)
+      entries.splice(entryIndex, 1);
+      // Update indices of remaining entries
+      entries.forEach((e, i) => {
+        e.index = i;
+      });
+    },
+
+    // Test helper to get an entry by index
+    __getEntry(entryIndex: number) {
+      return entries[entryIndex];
     },
   };
 

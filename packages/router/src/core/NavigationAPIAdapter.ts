@@ -5,7 +5,11 @@ import type {
   OnNavigateCallback,
 } from "../types.js";
 import { matchRoutes } from "./matchRoutes.js";
-import { executeLoaders, createLoaderRequest } from "./loaderCache.js";
+import {
+  executeLoaders,
+  createLoaderRequest,
+  clearLoaderCacheForEntry,
+} from "./loaderCache.js";
 
 /**
  * Fallback AbortController for data loading initialized outside of a navigation event.
@@ -61,9 +65,48 @@ export class NavigationAPIAdapter implements RouterAdapter {
     navigation.addEventListener("currententrychange", callback, {
       signal: controller.signal,
     });
+
+    // Subscribe to dispose events on all existing entries
+    this.subscribeToDisposeEvents(controller.signal);
+
+    // When current entry changes, subscribe to any new entries' dispose events
+    navigation.addEventListener(
+      "currententrychange",
+      () => this.subscribeToDisposeEvents(controller.signal),
+      { signal: controller.signal },
+    );
+
     return () => {
       controller.abort();
     };
+  }
+
+  /**
+   * Track which entries we've subscribed to dispose events for.
+   */
+  private subscribedEntryIds = new Set<string>();
+
+  /**
+   * Subscribe to dispose events on all navigation entries.
+   * When an entry is disposed, its cached loader results are cleared.
+   */
+  private subscribeToDisposeEvents(signal: AbortSignal): void {
+    for (const entry of navigation.entries()) {
+      if (this.subscribedEntryIds.has(entry.id)) {
+        continue;
+      }
+      this.subscribedEntryIds.add(entry.id);
+
+      const entryId = entry.id;
+      entry.addEventListener(
+        "dispose",
+        () => {
+          clearLoaderCacheForEntry(entryId);
+          this.subscribedEntryIds.delete(entryId);
+        },
+        { signal },
+      );
+    }
   }
 
   navigate(to: string, options?: NavigateOptions): void {

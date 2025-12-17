@@ -412,4 +412,118 @@ describe("Data Loader", () => {
       expect(aboutRoute.loader).toBeUndefined();
     });
   });
+
+  describe("dispose event", () => {
+    it("clears loader cache when entry is disposed", () => {
+      mockNavigation = setupNavigationMock("http://localhost/page1");
+
+      const loaderSpy = vi.fn(({ params }: LoaderArgs) => ({
+        page: params.page,
+      }));
+
+      function Page({ data }: { data: { page: string } }) {
+        return <div>Page: {data.page}</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/:page",
+          component: Page,
+          loader: loaderSpy,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(loaderSpy).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Page: page1")).toBeInTheDocument();
+
+      // Navigate to page2 (creates entry at index 1)
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/page2");
+      });
+      expect(loaderSpy).toHaveBeenCalledTimes(2);
+      expect(screen.getByText("Page: page2")).toBeInTheDocument();
+
+      // Navigate to page3 (creates entry at index 2)
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/page3");
+      });
+      expect(loaderSpy).toHaveBeenCalledTimes(3);
+      expect(screen.getByText("Page: page3")).toBeInTheDocument();
+
+      // Traverse back to page1 (entry index 0)
+      act(() => {
+        mockNavigation.__simulateTraversal(0);
+      });
+      // Loader should NOT be called again (cache hit)
+      expect(loaderSpy).toHaveBeenCalledTimes(3);
+      expect(screen.getByText("Page: page1")).toBeInTheDocument();
+
+      // Now dispose entries at index 1 and 2 (simulating what happens when
+      // navigating forward from a back state - the "future" entries get disposed)
+      act(() => {
+        // Dispose entry at index 2 first (page3)
+        mockNavigation.__disposeEntry(2);
+        // Then dispose entry at index 1 (page2)
+        mockNavigation.__disposeEntry(1);
+      });
+
+      // Navigate to page2 again (creates new entry)
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/page2");
+      });
+
+      // Loader SHOULD be called again because the old entry was disposed
+      // and its cache was cleared
+      expect(loaderSpy).toHaveBeenCalledTimes(4);
+      expect(screen.getByText("Page: page2")).toBeInTheDocument();
+    });
+
+    it("does not affect cache of other entries when one is disposed", () => {
+      mockNavigation = setupNavigationMock("http://localhost/page1");
+
+      const loaderSpy = vi.fn(({ params }: LoaderArgs) => ({
+        page: params.page,
+      }));
+
+      function Page({ data }: { data: { page: string } }) {
+        return <div>Page: {data.page}</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/:page",
+          component: Page,
+          loader: loaderSpy,
+        }),
+      ];
+
+      const { rerender } = render(<Router routes={routes} />);
+      expect(loaderSpy).toHaveBeenCalledTimes(1);
+
+      // Navigate to page2
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/page2");
+      });
+      expect(loaderSpy).toHaveBeenCalledTimes(2);
+
+      // Traverse back to page1
+      act(() => {
+        mockNavigation.__simulateTraversal(0);
+      });
+      expect(loaderSpy).toHaveBeenCalledTimes(2); // Still cached
+
+      // Dispose only page2's entry (index 1)
+      act(() => {
+        mockNavigation.__disposeEntry(1);
+      });
+
+      // page1's cache should still be intact - re-render without new loader call
+      rerender(<Router routes={routes} />);
+
+      // Loader should NOT be called again for page1 (its cache is still valid)
+      expect(loaderSpy).toHaveBeenCalledTimes(2);
+      expect(screen.getByText("Page: page1")).toBeInTheDocument();
+    });
+  });
 });

@@ -1,13 +1,23 @@
 // Navigation API type definitions
 // https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API
 
-interface NavigationHistoryEntry {
+interface NavigationHistoryEntry extends EventTarget {
   readonly url: string | null;
   readonly key: string;
   readonly id: string;
   readonly index: number;
   readonly sameDocument: boolean;
   getState(): unknown;
+  addEventListener(
+    type: "dispose",
+    listener: (event: Event) => void,
+    options?: AddEventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: "dispose",
+    listener: (event: Event) => void,
+    options?: EventListenerOptions,
+  ): void;
 }
 
 interface NavigationDestination {
