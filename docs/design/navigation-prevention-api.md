@@ -147,22 +147,11 @@ const routes = [
 
 **Limitation**: This approach ties blocking logic to route definitions, making it harder to access component state (like form dirty state).
 
-### Option C: Combined Approach (Recommended)
+### Decision: Hook-based API (Option A)
 
-Provide both `useBlocker` hook for component-level control and support route-level guards for static blocking logic.
+For the initial implementation, we will focus on the **hook-based `useBlocker` API** only. Route-level `beforeLeave` guards (Option B) may be added in a future iteration if there's demand.
 
-```typescript
-// 1. Hook for component-level blocking (most common)
-function useBlocker(blocker: BlockerFunction | boolean): BlockerState;
-
-// 2. Route-level guard for static blocking
-interface RouteDefinition {
-  path: string;
-  component: ComponentType;
-  beforeLeave?: BeforeLeaveGuard;
-  // ...
-}
-```
+**Rationale**: The hook-based approach covers the majority of use cases and provides the most flexibility for accessing component state. Route-level guards can be added later without breaking changes.
 
 ## Detailed Design: `useBlocker` Hook
 
@@ -211,12 +200,16 @@ interface BlockerContextValue {
   register: (id: BlockerId, blocker: BlockerFunction) => void;
   unregister: (id: BlockerId) => void;
 
-  // Check all blockers
+  // Check all blockers (excludes bypassed blockers)
   checkAll: (args: {
     currentLocation: URL;
     nextLocation: URL;
     navigationType: NavigationType;
   }) => BlockerId | null; // Returns blocking blocker's ID, or null if none
+
+  // Bypass management (for proceed() to skip specific blockers)
+  addBypassedBlocker: (id: BlockerId) => void;
+  clearBypassedBlockers: () => void;
 
   // Pending navigation state
   pendingNavigation: PendingNavigation | null;
@@ -290,9 +283,10 @@ const handleNavigate = (event: NavigateEvent) => {
     blockerContext.setPendingNavigation({
       destination: nextUrl,
       navigationType: event.navigationType,
-      proceed: () => {
+      proceed: (bypassBlockerId: BlockerId) => {
         blockerContext.setPendingNavigation(null);
-        // Retry navigation without blocker check
+        // Retry navigation, re-checking other blockers (excluding the one that proceeded)
+        blockerContext.addBypassedBlocker(bypassBlockerId);
         navigation.navigate(nextUrl.href, {
           history: event.navigationType === "replace" ? "replace" : "push",
         });
@@ -317,19 +311,33 @@ When multiple components register blockers, all should be checked. If any return
 
 ```typescript
 // Order of checking: first registered that returns true wins
+// Bypassed blockers (from previous proceed() calls) are skipped
 checkAll(args) {
   for (const [id, blocker] of this.blockers) {
+    if (this.bypassedBlockers.has(id)) {
+      continue; // Skip blockers that have already called proceed()
+    }
     if (blocker(args)) {
       return id; // This blocker is blocking
     }
   }
+  // Clear bypassed blockers after successful navigation
+  this.bypassedBlockers.clear();
   return null;
 }
 ```
 
-**Question**: Should all blocking blockers be notified, or just the first one?
+**Behavior**: Only the first blocking blocker shows UI. When that blocker calls `proceed()`, navigation is retried and **other blockers are re-checked**. This allows each blocker to show its confirmation UI in sequence if multiple blockers are active.
 
-**Recommendation**: Only the first blocking blocker should show UI. If multiple blockers need to show UI simultaneously, that's a UX anti-pattern.
+**Example with two blockers**:
+
+1. User clicks link to navigate away
+2. Blocker A (form dirty) blocks → shows "Save changes?" dialog
+3. User clicks "Leave without saving" → Blocker A calls `proceed()`
+4. Navigation retries, Blocker A is bypassed
+5. Blocker B (upload in progress) blocks → shows "Cancel upload?" dialog
+6. User clicks "Yes, leave" → Blocker B calls `proceed()`
+7. Navigation retries, both blockers bypassed, navigation completes
 
 ### 2. External Navigation (Page Unload)
 
@@ -564,25 +572,19 @@ router.on("beforeNavigate", (event) => {
 2. Integration tests with mock Navigation API
 3. Edge case tests (multiple blockers, unmount, etc.)
 
+## Design Decisions
+
+1. **Route-level `beforeLeave` guards**: Deferred to future iteration. The hook-based API covers most use cases.
+
+2. **`proceed()` re-checks other blockers**: Yes. When `proceed()` is called, the navigation is retried and other blockers are re-checked (excluding the blocker that called `proceed()`). This allows sequential confirmation dialogs when multiple blockers are active.
+
+3. **`usePrompt` convenience hook**: Deferred to future iteration. Can be added as a simple wrapper around `useBlocker` without breaking changes.
+
 ## Open Questions
 
-1. **Should we support route-level `beforeLeave` guards?**
-   - Pro: Useful for static blocking logic
-   - Con: Adds complexity, most use cases need component state
-
-2. **Should `proceed()` re-check other blockers?**
-   - Current design: No, proceed bypasses all blockers
-   - Alternative: Only bypass the calling blocker
-
-3. **What happens if `proceed()` is called multiple times?**
+1. **What happens if `proceed()` is called multiple times?**
    - Current design: Subsequent calls are no-ops
    - Should we throw an error?
-
-4. **Should we provide a `usePrompt` convenience hook?**
-   ```typescript
-   // Simpler API for the common case
-   usePrompt("You have unsaved changes", isDirty);
-   ```
 
 ## References
 
