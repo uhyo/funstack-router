@@ -11,8 +11,8 @@ import type {
  * Links will cause full page loads (MPA behavior).
  */
 export class StaticAdapter implements RouterAdapter {
-  private cachedSnapshot: LocationEntry | null = null;
-  private idleController: AbortController | null = null;
+  #cachedSnapshot: LocationEntry | null = null;
+  #idleController: AbortController | null = null;
 
   getSnapshot(): LocationEntry | null {
     if (typeof window === "undefined") {
@@ -20,14 +20,14 @@ export class StaticAdapter implements RouterAdapter {
     }
 
     // Cache the snapshot - it never changes in static mode
-    if (!this.cachedSnapshot) {
-      this.cachedSnapshot = {
+    if (!this.#cachedSnapshot) {
+      this.#cachedSnapshot = {
         url: new URL(window.location.href),
         key: "__static__",
         state: undefined,
       };
     }
-    return this.cachedSnapshot;
+    return this.#cachedSnapshot;
   }
 
   getServerSnapshot(): LocationEntry | null {
@@ -59,7 +59,7 @@ export class StaticAdapter implements RouterAdapter {
   }
 
   getIdleAbortSignal(): AbortSignal {
-    this.idleController ??= new AbortController();
-    return this.idleController.signal;
+    this.#idleController ??= new AbortController();
+    return this.#idleController.signal;
   }
 }

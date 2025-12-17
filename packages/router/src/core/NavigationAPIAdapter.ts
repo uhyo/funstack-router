@@ -32,8 +32,8 @@ export function resetNavigationState(): void {
  */
 export class NavigationAPIAdapter implements RouterAdapter {
   // Cache the snapshot to ensure referential stability for useSyncExternalStore
-  private cachedSnapshot: LocationEntry | null = null;
-  private cachedEntryId: string | null = null;
+  #cachedSnapshot: LocationEntry | null = null;
+  #cachedEntryId: string | null = null;
 
   getSnapshot(): LocationEntry | null {
     const entry = navigation.currentEntry;
@@ -42,18 +42,18 @@ export class NavigationAPIAdapter implements RouterAdapter {
     }
 
     // Return cached snapshot if entry hasn't changed
-    if (this.cachedEntryId === entry.id && this.cachedSnapshot) {
-      return this.cachedSnapshot;
+    if (this.#cachedEntryId === entry.id && this.#cachedSnapshot) {
+      return this.#cachedSnapshot;
     }
 
     // Create new snapshot and cache it
-    this.cachedEntryId = entry.id;
-    this.cachedSnapshot = {
+    this.#cachedEntryId = entry.id;
+    this.#cachedSnapshot = {
       url: new URL(entry.url),
       key: entry.id,
       state: entry.getState(),
     };
-    return this.cachedSnapshot;
+    return this.#cachedSnapshot;
   }
 
   getServerSnapshot(): LocationEntry | null {
@@ -67,12 +67,12 @@ export class NavigationAPIAdapter implements RouterAdapter {
     });
 
     // Subscribe to dispose events on all existing entries
-    this.subscribeToDisposeEvents(controller.signal);
+    this.#subscribeToDisposeEvents(controller.signal);
 
     // When current entry changes, subscribe to any new entries' dispose events
     navigation.addEventListener(
       "currententrychange",
-      () => this.subscribeToDisposeEvents(controller.signal),
+      () => this.#subscribeToDisposeEvents(controller.signal),
       { signal: controller.signal },
     );
 
@@ -84,25 +84,25 @@ export class NavigationAPIAdapter implements RouterAdapter {
   /**
    * Track which entries we've subscribed to dispose events for.
    */
-  private subscribedEntryIds = new Set<string>();
+  #subscribedEntryIds = new Set<string>();
 
   /**
    * Subscribe to dispose events on all navigation entries.
    * When an entry is disposed, its cached loader results are cleared.
    */
-  private subscribeToDisposeEvents(signal: AbortSignal): void {
+  #subscribeToDisposeEvents(signal: AbortSignal): void {
     for (const entry of navigation.entries()) {
-      if (this.subscribedEntryIds.has(entry.id)) {
+      if (this.#subscribedEntryIds.has(entry.id)) {
         continue;
       }
-      this.subscribedEntryIds.add(entry.id);
+      this.#subscribedEntryIds.add(entry.id);
 
       const entryId = entry.id;
       entry.addEventListener(
         "dispose",
         () => {
           clearLoaderCacheForEntry(entryId);
-          this.subscribedEntryIds.delete(entryId);
+          this.#subscribedEntryIds.delete(entryId);
         },
         { signal },
       );
