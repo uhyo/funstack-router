@@ -122,7 +122,8 @@ export class NavigationAPIAdapter implements RouterAdapter {
   ): (() => void) | undefined {
     const handleNavigate = (event: NavigateEvent) => {
       // Only intercept same-origin navigations
-      if (!event.canIntercept || event.hashChange) {
+      if (!event.canIntercept) {
+        onNavigate?.(event, []);
         return;
       }
 
@@ -138,39 +139,49 @@ export class NavigationAPIAdapter implements RouterAdapter {
         }
       }
 
-      if (matched) {
-        // Abort initial load's loaders if this is the first navigation
-        if (idleController) {
-          idleController.abort();
-          idleController = null;
-        }
-
-        event.intercept({
-          handler: async () => {
-            const request = createLoaderRequest(url);
-
-            // Note: in response to `currententrychange` event, <Router> should already
-            // have dispatched data loaders and the results should be cached.
-            // Here we run executeLoader to retrieve cached results.
-            const currentEntry = navigation.currentEntry;
-            if (!currentEntry) {
-              throw new Error(
-                "Navigation currentEntry is null during navigation interception",
-              );
-            }
-
-            const results = executeLoaders(
-              matched,
-              currentEntry.id,
-              request,
-              event.signal,
-            );
-
-            // Delay navigation until async loaders complete
-            await Promise.all(results.map((r) => r.data));
-          },
-        });
+      // hash change navigations are not intercepted.
+      // Also do not intercept if it is a download request.
+      if (event.hashChange || event.downloadRequest !== null) {
+        return;
       }
+
+      if (!matched) {
+        return;
+      }
+
+      // Route match, so intercept
+
+      // Abort initial load's loaders if this is the first navigation
+      if (idleController) {
+        idleController.abort();
+        idleController = null;
+      }
+
+      event.intercept({
+        handler: async () => {
+          const request = createLoaderRequest(url);
+
+          // Note: in response to `currententrychange` event, <Router> should already
+          // have dispatched data loaders and the results should be cached.
+          // Here we run executeLoader to retrieve cached results.
+          const currentEntry = navigation.currentEntry;
+          if (!currentEntry) {
+            throw new Error(
+              "Navigation currentEntry is null during navigation interception",
+            );
+          }
+
+          const results = executeLoaders(
+            matched,
+            currentEntry.id,
+            request,
+            event.signal,
+          );
+
+          // Delay navigation until async loaders complete
+          await Promise.all(results.map((r) => r.data));
+        },
+      });
     };
 
     const controller = new AbortController();
