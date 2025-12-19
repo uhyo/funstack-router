@@ -494,19 +494,27 @@ export interface BlockerFunctionArgs {
 
 export type BlockerFunction = (args: BlockerFunctionArgs) => boolean;
 
-export interface BlockerState {
-  /** Current state of the blocker */
-  state: "idle" | "blocked";
-
-  /** Proceed with the blocked navigation */
-  proceed: () => void;
-
-  /** Cancel the blocked navigation and stay on current page */
-  reset: () => void;
-
-  /** The destination URL when blocked, null when idle */
-  location: URL | null;
-}
+export type BlockerState =
+  | {
+      /** Blocker is idle, no navigation is being blocked */
+      state: "idle";
+      /** No-op when idle */
+      proceed: () => void;
+      /** No-op when idle */
+      reset: () => void;
+      /** Always null when idle */
+      location: null;
+    }
+  | {
+      /** Blocker is actively blocking a navigation */
+      state: "blocked";
+      /** Proceed with the blocked navigation */
+      proceed: () => void;
+      /** Cancel the blocked navigation and stay on current page */
+      reset: () => void;
+      /** The destination URL being blocked */
+      location: URL;
+    };
 ```
 
 ## Alternative Designs Considered
@@ -580,11 +588,9 @@ router.on("beforeNavigate", (event) => {
 
 3. **`usePrompt` convenience hook**: Deferred to future iteration. Can be added as a simple wrapper around `useBlocker` without breaking changes.
 
-## Open Questions
+4. **`proceed()` called multiple times**: Subsequent calls are no-ops but emit a warning via `console.warn()`. This helps developers catch bugs without breaking the application.
 
-1. **What happens if `proceed()` is called multiple times?**
-   - Current design: Subsequent calls are no-ops
-   - Should we throw an error?
+5. **`BlockerState` as discriminated union**: The type is a discriminated union on `state`, so when `state === "blocked"`, TypeScript knows `location` is `URL` (not `null`). This provides better type safety when handling blocked state.
 
 ## References
 
