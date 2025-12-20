@@ -7,7 +7,7 @@ import type {
 
 /**
  * Cache for loader results.
- * Key format: `${entryId}:${routePath}`
+ * Key format: `${entryId}:${matchIndex}`
  */
 const loaderCache = new Map<string, unknown>();
 
@@ -17,6 +17,7 @@ const loaderCache = new Map<string, unknown>();
  */
 function getOrCreateLoaderResult(
   entryId: string,
+  matchIndex: number,
   route: InternalRouteDefinition,
   args: LoaderArgs,
 ): unknown | undefined {
@@ -24,7 +25,7 @@ function getOrCreateLoaderResult(
     return undefined;
   }
 
-  const cacheKey = `${entryId}:${route.path}`;
+  const cacheKey = `${entryId}:${matchIndex}`;
 
   if (!loaderCache.has(cacheKey)) {
     loaderCache.set(cacheKey, route.loader(args));
@@ -52,10 +53,10 @@ export function executeLoaders(
   request: Request,
   signal: AbortSignal,
 ): MatchedRouteWithData[] {
-  return matchedRoutes.map((match) => {
+  return matchedRoutes.map((match, index) => {
     const { route, params } = match;
     const args: LoaderArgs = { params, request, signal };
-    const data = getOrCreateLoaderResult(entryId, route, args);
+    const data = getOrCreateLoaderResult(entryId, index, route, args);
 
     return { ...match, data };
   });
