@@ -181,7 +181,9 @@ function SearchPage() {
             Helper function to define routes with proper typing. The component
             always receives a <code>params</code> prop with types inferred from
             the path pattern. When a <code>loader</code> is defined, the
-            component also receives a <code>data</code> prop.
+            component also receives a <code>data</code> prop. Components also
+            receive <code>state</code>, <code>setState</code>, and{" "}
+            <code>resetState</code> props for navigation state management.
           </p>
           <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
@@ -268,10 +270,147 @@ const myRoute = route({
             </tbody>
           </table>
         </article>
+
+        <article className="api-item">
+          <h3>
+            <code>routeState&lt;TState&gt;()</code>
+          </h3>
+          <p>
+            Curried helper function for defining routes with typed navigation
+            state. Use this when your route component needs to manage state that
+            persists across browser back/forward navigation.
+          </p>
+          <CodeBlock language="tsx">{`import { routeState, type RouteComponentProps } from "@funstack/router";
+
+type PageState = { scrollPosition: number; selectedTab: string };
+
+function UserPage({
+  params,
+  state,
+  setState,
+  resetState,
+}: RouteComponentProps<{ userId: string }, PageState>) {
+  // state is PageState | undefined (undefined on first visit)
+  const scrollPosition = state?.scrollPosition ?? 0;
+  const selectedTab = state?.selectedTab ?? "posts";
+
+  const handleTabChange = (tab: string) => {
+    setState({ scrollPosition, selectedTab: tab });
+  };
+
+  return (
+    <div>
+      <h1>User {params.userId}</h1>
+      <button onClick={() => resetState()}>Clear State</button>
+    </div>
+  );
+}
+
+// Use routeState<TState>() for typed state management
+const userRoute = routeState<PageState>()({
+  path: "/users/:userId",
+  component: UserPage,
+});
+
+// With loader
+const productRoute = routeState<{ filter: string }>()({
+  path: "/products",
+  component: ProductList,
+  loader: async () => fetchProducts(),
+});`}</CodeBlock>
+          <h4>How It Works</h4>
+          <p>
+            Navigation state is stored in the browser's{" "}
+            <a
+              href="https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Navigation API
+            </a>{" "}
+            via <code>navigation.updateCurrentEntry()</code>. This means:
+          </p>
+          <ul>
+            <li>State persists when navigating back/forward in history</li>
+            <li>Each history entry has its own independent state</li>
+            <li>
+              State must be serializable (no functions, Symbols, or DOM nodes)
+            </li>
+          </ul>
+          <h4>Internal Storage</h4>
+          <p>
+            The router stores state internally using a{" "}
+            <code>__routeStates</code> array indexed by route match position.
+            This enables each nested route to maintain independent state:
+          </p>
+          <CodeBlock language="typescript">{`// Internal structure stored in NavigationHistoryEntry
+{
+  __routeStates: [
+    { sidebarOpen: true },    // Layout (index 0)
+    { selectedTab: "posts" }, // UserPage (index 1)
+    { scrollY: 500 },         // PostsPage (index 2)
+  ]
+}`}</CodeBlock>
+        </article>
       </section>
 
       <section id="types">
         <h2>Types</h2>
+
+        <article className="api-item">
+          <h3>
+            <code>RouteComponentProps&lt;TParams, TState&gt;</code>
+          </h3>
+          <p>
+            Props type for route components without a loader. Includes
+            navigation state management props.
+          </p>
+          <CodeBlock language="typescript">{`import type { RouteComponentProps } from "@funstack/router";
+
+type Props = RouteComponentProps<
+  { userId: string },      // TParams - path parameters
+  { scrollPosition: number } // TState - navigation state type
+>;
+
+// Equivalent to:
+type Props = {
+  params: { userId: string };
+  state: { scrollPosition: number } | undefined;
+  setState: (
+    state: { scrollPosition: number } |
+           ((prev: { scrollPosition: number } | undefined) => { scrollPosition: number })
+  ) => void;
+  resetState: () => void;
+};`}</CodeBlock>
+        </article>
+
+        <article className="api-item">
+          <h3>
+            <code>
+              RouteComponentPropsWithData&lt;TParams, TData, TState&gt;
+            </code>
+          </h3>
+          <p>
+            Props type for route components with a loader. Extends{" "}
+            <code>RouteComponentProps</code> with a <code>data</code> prop.
+          </p>
+          <CodeBlock language="typescript">{`import type { RouteComponentPropsWithData } from "@funstack/router";
+
+type Props = RouteComponentPropsWithData<
+  { userId: string },        // TParams - path parameters
+  User,                      // TData - loader return type
+  { selectedTab: string }    // TState - navigation state type
+>;
+
+// Equivalent to:
+type Props = {
+  params: { userId: string };
+  data: User;
+  state: { selectedTab: string } | undefined;
+  setState: (state: ...) => void;
+  resetState: () => void;
+};`}</CodeBlock>
+        </article>
 
         <article className="api-item">
           <h3>
@@ -296,23 +435,25 @@ type MyParams = PathParams<"/users/:userId">;
             <code>RouteDefinition</code>
           </h3>
           <p>
-            When using the <code>route()</code> helper, component types are
-            inferred automatically. Components always receive a{" "}
-            <code>params</code> prop, and receive a <code>data</code> prop when
-            a loader is defined.
+            When using the <code>route()</code> or <code>routeState()</code>{" "}
+            helper, component types are inferred automatically. Components
+            always receive <code>params</code>, <code>state</code>,{" "}
+            <code>setState</code>, and <code>resetState</code> props, and
+            receive a <code>data</code> prop when a loader is defined.
           </p>
-          <CodeBlock language="tsx">{`// With loader: component receives { data: T; params: PathParams<Path> }
-// Without loader: component receives { params: PathParams<Path> }
+          <CodeBlock language="tsx">{`// With loader: component receives { data, params, state, setState, resetState }
+// Without loader: component receives { params, state, setState, resetState }
 
-// Example:
+// Example without state type:
 route({
   path: "/users/:userId",
-  component: UserPage,  // { params: { userId: string } }
+  component: UserPage,  // state is undefined
 });
 
-route({
+// Example with state type:
+routeState<{ tab: string }>()({
   path: "/users/:userId",
-  component: UserPage,  // { data: User; params: { userId: string } }
+  component: UserPage,  // state is { tab: string } | undefined
   loader: () => fetchUser(),
 });`}</CodeBlock>
         </article>

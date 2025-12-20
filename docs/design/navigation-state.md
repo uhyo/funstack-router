@@ -88,7 +88,7 @@ type RouteComponentPropsWithData<
 ### 3. Usage Example
 
 ```typescript
-import { route, type RouteComponentProps } from "@funstack/router";
+import { routeState, type RouteComponentProps } from "@funstack/router";
 
 type UserPageState = {
   scrollPosition: number;
@@ -121,7 +121,7 @@ function UserPage({
 }
 
 // Route definition
-const userRoute = route<UserPageState>()({
+const userRoute = routeState<UserPageState>()({
   path: "users/:userId",
   component: UserPage,
 });
@@ -467,13 +467,13 @@ This is an additive, non-breaking change:
 ### Route Definition
 
 ```typescript
-// With explicit state type
-const myRoute = route<MyState>()({
+// With explicit state type (use routeState)
+const myRoute = routeState<MyState>()({
   path: "/my-path",
   component: MyComponent,
 });
 
-// Without state (backward compatible)
+// Without state (use route)
 const myRoute = route({
   path: "/my-path",
   component: MyComponent,
