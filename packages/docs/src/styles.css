@@ -386,6 +386,75 @@ code {
   color: var(--color-text-secondary);
 }
 
+.api-nav a.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* API Overview Page */
+.api-overview {
+  margin-top: 16px;
+}
+
+.api-overview > p {
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.api-category {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: var(--color-bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+
+.api-category h2 {
+  margin: 0 0 12px;
+  padding: 0;
+  border: none;
+  font-size: 1.25rem;
+}
+
+.api-category h2 a {
+  color: var(--color-text);
+}
+
+.api-category h2 a:hover {
+  color: var(--color-primary);
+}
+
+.api-category > p {
+  margin-bottom: 16px;
+}
+
+.api-category ul {
+  margin: 0;
+  padding-left: 24px;
+  list-style: none;
+}
+
+.api-category li {
+  margin-bottom: 8px;
+  color: var(--color-text-secondary);
+}
+
+.api-category li::before {
+  content: "→";
+  margin-right: 8px;
+  color: var(--color-primary);
+}
+
+.api-category li code {
+  color: var(--color-text);
+}
+
+.page-intro {
+  font-size: 1.1rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 32px;
+}
+
 /* Props Table */
 .props-table {
   width: 100%;

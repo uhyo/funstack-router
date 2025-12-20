@@ -12,9 +12,20 @@ export function Layout() {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const isActive = (path: string) =>
-    location.pathname === path ||
-    (path === "/funstack-router/" && location.pathname === "/funstack-router");
+  const isActive = (path: string) => {
+    // Handle API Reference section (match any /api/* path)
+    if (path === "/funstack-router/api") {
+      return location.pathname.startsWith("/funstack-router/api");
+    }
+    // Handle home path
+    if (path === "/funstack-router/") {
+      return (
+        location.pathname === "/funstack-router/" ||
+        location.pathname === "/funstack-router"
+      );
+    }
+    return location.pathname === path;
+  };
 
   const closeMenu = () => setIsMenuOpen(false);
 

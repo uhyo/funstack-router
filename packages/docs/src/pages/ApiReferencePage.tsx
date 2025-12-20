@@ -1,495 +1,125 @@
-import { CodeBlock } from "../components/CodeBlock";
+import { Outlet, useLocation } from "@funstack/router";
+
+const apiNavItems = [
+  { path: "/funstack-router/api/components", label: "Components" },
+  { path: "/funstack-router/api/hooks", label: "Hooks" },
+  { path: "/funstack-router/api/utilities", label: "Utilities" },
+  { path: "/funstack-router/api/types", label: "Types" },
+];
 
 export function ApiReferencePage() {
+  const location = useLocation();
+  const isIndex = location.pathname === "/funstack-router/api";
+
   return (
     <div className="page docs-page api-page">
       <h1>API Reference</h1>
 
       <nav className="api-nav">
-        <a href="#components">Components</a>
-        <a href="#hooks">Hooks</a>
-        <a href="#utilities">Utilities</a>
-        <a href="#types">Types</a>
+        {apiNavItems.map((item) => (
+          <a
+            key={item.path}
+            href={item.path}
+            className={location.pathname === item.path ? "active" : ""}
+          >
+            {item.label}
+          </a>
+        ))}
       </nav>
 
-      <section id="components">
-        <h2>Components</h2>
-
-        <article className="api-item">
-          <h3>
-            <code>{"<Router>"}</code>
-          </h3>
-          <p>The main router component that provides routing context.</p>
-          <CodeBlock language="tsx">{`import { Router } from "@funstack/router";
-
-<Router
-  routes={routes}
-  onNavigate={(location) => {
-    console.log("Navigated to:", location.pathname);
-  }}
-/>`}</CodeBlock>
-          <h4>Props</h4>
-          <table className="props-table">
-            <thead>
-              <tr>
-                <th>Prop</th>
-                <th>Type</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <code>routes</code>
-                </td>
-                <td>
-                  <code>RouteDefinition[]</code>
-                </td>
-                <td>Array of route definitions</td>
-              </tr>
-              <tr>
-                <td>
-                  <code>onNavigate</code>
-                </td>
-                <td>
-                  <code>OnNavigateCallback</code>
-                </td>
-                <td>Callback fired after navigation completes</td>
-              </tr>
-            </tbody>
-          </table>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>{"<Outlet>"}</code>
-          </h3>
+      {isIndex ? (
+        <div className="api-overview">
           <p>
-            Renders the child route's component. Used in parent routes for
-            nested layouts.
+            Complete API documentation for <code>@funstack/router</code>. Select
+            a category above or browse below.
           </p>
-          <CodeBlock language="tsx">{`import { Outlet } from "@funstack/router";
 
-function Layout() {
-  return (
-    <div>
-      <header>My App</header>
-      <main>
+          <section className="api-category">
+            <h2>
+              <a href="/funstack-router/api/components">Components</a>
+            </h2>
+            <p>
+              Core components for building routing in your React application.
+            </p>
+            <ul>
+              <li>
+                <code>{"<Router>"}</code> — The main router component that
+                provides routing context
+              </li>
+              <li>
+                <code>{"<Outlet>"}</code> — Renders child route components for
+                nested layouts
+              </li>
+            </ul>
+          </section>
+
+          <section className="api-category">
+            <h2>
+              <a href="/funstack-router/api/hooks">Hooks</a>
+            </h2>
+            <p>React hooks for accessing router state and navigation.</p>
+            <ul>
+              <li>
+                <code>useNavigate()</code> — Programmatic navigation
+              </li>
+              <li>
+                <code>useLocation()</code> — Current location object
+              </li>
+              <li>
+                <code>useParams()</code> — Route parameters
+              </li>
+              <li>
+                <code>useSearchParams()</code> — Search query management
+              </li>
+            </ul>
+          </section>
+
+          <section className="api-category">
+            <h2>
+              <a href="/funstack-router/api/utilities">Utilities</a>
+            </h2>
+            <p>Helper functions for defining routes and managing state.</p>
+            <ul>
+              <li>
+                <code>route()</code> — Route definition helper with type
+                inference
+              </li>
+              <li>
+                <code>routeState()</code> — Typed navigation state management
+              </li>
+            </ul>
+          </section>
+
+          <section className="api-category">
+            <h2>
+              <a href="/funstack-router/api/types">Types</a>
+            </h2>
+            <p>TypeScript types and interfaces exported by the router.</p>
+            <ul>
+              <li>
+                <code>RouteComponentProps</code> — Props type for route
+                components
+              </li>
+              <li>
+                <code>RouteComponentPropsWithData</code> — Props type with
+                loader data
+              </li>
+              <li>
+                <code>PathParams</code> — Extract parameters from path patterns
+              </li>
+              <li>
+                <code>RouteDefinition</code> — Route definition type
+              </li>
+              <li>
+                <code>LoaderArgs</code>, <code>Location</code>,{" "}
+                <code>NavigateOptions</code>
+              </li>
+            </ul>
+          </section>
+        </div>
+      ) : (
         <Outlet />
-      </main>
-    </div>
-  );
-}`}</CodeBlock>
-        </article>
-      </section>
-
-      <section id="hooks">
-        <h2>Hooks</h2>
-
-        <article className="api-item">
-          <h3>
-            <code>useNavigate()</code>
-          </h3>
-          <p>Returns a function to programmatically navigate.</p>
-          <CodeBlock language="tsx">{`import { useNavigate } from "@funstack/router";
-
-function MyComponent() {
-  const navigate = useNavigate();
-
-  // Navigate to a path
-  navigate("/about");
-
-  // Navigate with options
-  navigate("/users/123", {
-    replace: true,  // Replace current history entry
-    state: { from: "home" },  // Pass state data
-  });
-}`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>useLocation()</code>
-          </h3>
-          <p>Returns the current location object.</p>
-          <CodeBlock language="tsx">{`import { useLocation } from "@funstack/router";
-
-function MyComponent() {
-  const location = useLocation();
-
-  console.log(location.pathname);  // "/users/123"
-  console.log(location.search);    // "?tab=profile"
-  console.log(location.hash);      // "#section"
-}`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>useParams()</code>
-          </h3>
-          <p>
-            Returns the route parameters as an object. This is an alternative to
-            receiving params via props—use whichever style you prefer.
-          </p>
-          <CodeBlock language="tsx">{`import { useParams } from "@funstack/router";
-
-// For route: /users/:userId/posts/:postId
-
-function PostPage() {
-  const params = useParams<{ userId: string; postId: string }>();
-
-  console.log(params.userId);  // "123"
-  console.log(params.postId);  // "456"
-}
-
-// Alternatively, receive params via props (recommended):
-function PostPage({ params }: { params: { userId: string; postId: string } }) {
-  console.log(params.userId);  // "123"
-  console.log(params.postId);  // "456"
-}`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>useSearchParams()</code>
-          </h3>
-          <p>
-            Returns a tuple of the current search params and a setter function.
-          </p>
-          <CodeBlock language="tsx">{`import { useSearchParams } from "@funstack/router";
-
-function SearchPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const query = searchParams.get("q");
-
-  const handleSearch = (newQuery: string) => {
-    setSearchParams({ q: newQuery });
-  };
-}`}</CodeBlock>
-        </article>
-      </section>
-
-      <section id="utilities">
-        <h2>Utilities</h2>
-
-        <article className="api-item">
-          <h3>
-            <code>route()</code>
-          </h3>
-          <p>
-            Helper function to define routes with proper typing. The component
-            always receives a <code>params</code> prop with types inferred from
-            the path pattern. When a <code>loader</code> is defined, the
-            component also receives a <code>data</code> prop. Components also
-            receive <code>state</code>, <code>setState</code>, and{" "}
-            <code>resetState</code> props for navigation state management.
-          </p>
-          <CodeBlock language="tsx">{`import { route } from "@funstack/router";
-
-// Route without loader - component receives params prop
-function ProfileTab({ params }: { params: { userId: string } }) {
-  return <div>Profile for user {params.userId}</div>;
-}
-
-// Route with loader - component receives both data and params props
-function UserPage({
-  data,
-  params,
-}: {
-  data: User;
-  params: { userId: string };
-}) {
-  return <h1>{data.name} (ID: {params.userId})</h1>;
-}
-
-const myRoute = route({
-  path: "/users/:userId",
-  component: UserPage,
-  loader: async ({ params }) => {
-    return fetchUser(params.userId);
-  },
-  children: [
-    route({ path: "/profile", component: ProfileTab }),
-    route({ path: "/settings", component: SettingsTab }),
-  ],
-});`}</CodeBlock>
-          <h4>Options</h4>
-          <table className="props-table">
-            <thead>
-              <tr>
-                <th>Option</th>
-                <th>Type</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <code>path</code>
-                </td>
-                <td>
-                  <code>string</code>
-                </td>
-                <td>
-                  URL path pattern (supports <code>:param</code> syntax)
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <code>component</code>
-                </td>
-                <td>
-                  <code>ComponentType</code>
-                </td>
-                <td>
-                  React component to render. Receives <code>params</code> prop
-                  (and <code>data</code> prop if loader is defined)
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <code>loader</code>
-                </td>
-                <td>
-                  <code>(args: LoaderArgs) =&gt; T</code>
-                </td>
-                <td>
-                  Function to load data. May be synchronous or asynchronous
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <code>children</code>
-                </td>
-                <td>
-                  <code>RouteDefinition[]</code>
-                </td>
-                <td>Nested child routes</td>
-              </tr>
-            </tbody>
-          </table>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>routeState&lt;TState&gt;()</code>
-          </h3>
-          <p>
-            Curried helper function for defining routes with typed navigation
-            state. Use this when your route component needs to manage state that
-            persists across browser back/forward navigation.
-          </p>
-          <CodeBlock language="tsx">{`import { routeState, type RouteComponentProps } from "@funstack/router";
-
-type PageState = { scrollPosition: number; selectedTab: string };
-
-function UserPage({
-  params,
-  state,
-  setState,
-  resetState,
-}: RouteComponentProps<{ userId: string }, PageState>) {
-  // state is PageState | undefined (undefined on first visit)
-  const scrollPosition = state?.scrollPosition ?? 0;
-  const selectedTab = state?.selectedTab ?? "posts";
-
-  const handleTabChange = (tab: string) => {
-    setState({ scrollPosition, selectedTab: tab });
-  };
-
-  return (
-    <div>
-      <h1>User {params.userId}</h1>
-      <button onClick={() => resetState()}>Clear State</button>
-    </div>
-  );
-}
-
-// Use routeState<TState>() for typed state management
-const userRoute = routeState<PageState>()({
-  path: "/users/:userId",
-  component: UserPage,
-});
-
-// With loader
-const productRoute = routeState<{ filter: string }>()({
-  path: "/products",
-  component: ProductList,
-  loader: async () => fetchProducts(),
-});`}</CodeBlock>
-          <h4>How It Works</h4>
-          <p>
-            Navigation state is stored in the browser's{" "}
-            <a
-              href="https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Navigation API
-            </a>{" "}
-            via <code>navigation.updateCurrentEntry()</code>. This means:
-          </p>
-          <ul>
-            <li>State persists when navigating back/forward in history</li>
-            <li>Each history entry has its own independent state</li>
-            <li>
-              State must be serializable (no functions, Symbols, or DOM nodes)
-            </li>
-          </ul>
-          <h4>Internal Storage</h4>
-          <p>
-            The router stores state internally using a{" "}
-            <code>__routeStates</code> array indexed by route match position.
-            This enables each nested route to maintain independent state:
-          </p>
-          <CodeBlock language="typescript">{`// Internal structure stored in NavigationHistoryEntry
-{
-  __routeStates: [
-    { sidebarOpen: true },    // Layout (index 0)
-    { selectedTab: "posts" }, // UserPage (index 1)
-    { scrollY: 500 },         // PostsPage (index 2)
-  ]
-}`}</CodeBlock>
-        </article>
-      </section>
-
-      <section id="types">
-        <h2>Types</h2>
-
-        <article className="api-item">
-          <h3>
-            <code>RouteComponentProps&lt;TParams, TState&gt;</code>
-          </h3>
-          <p>
-            Props type for route components without a loader. Includes
-            navigation state management props.
-          </p>
-          <CodeBlock language="typescript">{`import type { RouteComponentProps } from "@funstack/router";
-
-type Props = RouteComponentProps<
-  { userId: string },      // TParams - path parameters
-  { scrollPosition: number } // TState - navigation state type
->;
-
-// Equivalent to:
-type Props = {
-  params: { userId: string };
-  state: { scrollPosition: number } | undefined;
-  setState: (
-    state: { scrollPosition: number } |
-           ((prev: { scrollPosition: number } | undefined) => { scrollPosition: number })
-  ) => void;
-  resetState: () => void;
-};`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>
-              RouteComponentPropsWithData&lt;TParams, TData, TState&gt;
-            </code>
-          </h3>
-          <p>
-            Props type for route components with a loader. Extends{" "}
-            <code>RouteComponentProps</code> with a <code>data</code> prop.
-          </p>
-          <CodeBlock language="typescript">{`import type { RouteComponentPropsWithData } from "@funstack/router";
-
-type Props = RouteComponentPropsWithData<
-  { userId: string },        // TParams - path parameters
-  User,                      // TData - loader return type
-  { selectedTab: string }    // TState - navigation state type
->;
-
-// Equivalent to:
-type Props = {
-  params: { userId: string };
-  data: User;
-  state: { selectedTab: string } | undefined;
-  setState: (state: ...) => void;
-  resetState: () => void;
-};`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>PathParams&lt;T&gt;</code>
-          </h3>
-          <p>
-            Utility type that extracts parameter types from a path pattern
-            string.
-          </p>
-          <CodeBlock language="tsx">{`import type { PathParams } from "@funstack/router";
-
-// PathParams<"/users/:userId"> = { userId: string }
-// PathParams<"/users/:userId/posts/:postId"> = { userId: string; postId: string }
-// PathParams<"/about"> = Record<string, never>
-
-type MyParams = PathParams<"/users/:userId">;
-// { userId: string }`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>RouteDefinition</code>
-          </h3>
-          <p>
-            When using the <code>route()</code> or <code>routeState()</code>{" "}
-            helper, component types are inferred automatically. Components
-            always receive <code>params</code>, <code>state</code>,{" "}
-            <code>setState</code>, and <code>resetState</code> props, and
-            receive a <code>data</code> prop when a loader is defined.
-          </p>
-          <CodeBlock language="tsx">{`// With loader: component receives { data, params, state, setState, resetState }
-// Without loader: component receives { params, state, setState, resetState }
-
-// Example without state type:
-route({
-  path: "/users/:userId",
-  component: UserPage,  // state is undefined
-});
-
-// Example with state type:
-routeState<{ tab: string }>()({
-  path: "/users/:userId",
-  component: UserPage,  // state is { tab: string } | undefined
-  loader: () => fetchUser(),
-});`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>LoaderArgs</code>
-          </h3>
-          <CodeBlock language="typescript">{`interface LoaderArgs {
-  params: Record<string, string>;
-  request: Request;
-  signal: AbortSignal;
-}`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>Location</code>
-          </h3>
-          <CodeBlock language="typescript">{`interface Location {
-  pathname: string;
-  search: string;
-  hash: string;
-}`}</CodeBlock>
-        </article>
-
-        <article className="api-item">
-          <h3>
-            <code>NavigateOptions</code>
-          </h3>
-          <CodeBlock language="typescript">{`interface NavigateOptions {
-  replace?: boolean;
-  state?: unknown;
-}`}</CodeBlock>
-        </article>
-      </section>
+      )}
     </div>
   );
 }
