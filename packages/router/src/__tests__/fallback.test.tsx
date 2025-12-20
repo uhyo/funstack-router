@@ -6,6 +6,7 @@ import { useParams } from "../hooks/useParams.js";
 import { useLocation } from "../hooks/useLocation.js";
 import { useNavigate } from "../hooks/useNavigate.js";
 import { route, type RouteDefinition } from "../route.js";
+import { clearLoaderCache } from "../core/loaderCache.js";
 
 // Helper to set up a static window.location without Navigation API
 function setupStaticLocation(url: string) {
@@ -35,6 +36,8 @@ describe("Fallback Mode", () => {
   beforeEach(() => {
     // Ensure Navigation API is not available for fallback tests
     delete (globalThis as Record<string, unknown>).navigation;
+    // Clear loader cache to prevent cross-test interference
+    clearLoaderCache();
   });
 
   afterEach(() => {
