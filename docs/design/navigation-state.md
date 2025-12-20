@@ -60,7 +60,7 @@ const userRoute = route({
 
 ### 2. Component Props Interface
 
-Route components receive `state` and `setState` alongside existing props:
+Route components receive `state`, `setState`, and `resetState` alongside existing props:
 
 ```typescript
 // Without loader
@@ -68,6 +68,7 @@ type RouteComponentProps<TParams extends Record<string, string>, TState> = {
   params: TParams;
   state: TState | undefined;
   setState: (state: TState | ((prev: TState | undefined) => TState)) => void;
+  resetState: () => void;
 };
 
 // With loader
@@ -79,6 +80,7 @@ type RouteComponentPropsWithData<
   params: TParams;
   state: TState | undefined;
   setState: (state: TState | ((prev: TState | undefined) => TState)) => void;
+  resetState: () => void;
   data: TData;
 };
 ```
@@ -198,6 +200,11 @@ function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): ReactNode 
     [locationEntry.state, updateCurrentEntryState]
   );
 
+  // Create stable resetState callback
+  const resetState = useCallback(() => {
+    updateCurrentEntryState(undefined);
+  }, [updateCurrentEntryState]);
+
   // ... outlet creation
 
   const renderComponent = () => {
@@ -205,6 +212,7 @@ function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): ReactNode 
       params,
       state: locationEntry.state,
       setState,
+      resetState,
     };
 
     if (route.loader) {
@@ -269,42 +277,34 @@ function UserPage({ state, setState }: Props) {
 }
 ```
 
-### 6. Hook API (Optional)
+### 6. Reset State
 
-For components that need state access without being the route component:
+A `resetState` function is provided to clear state back to `undefined`:
 
 ```typescript
-// packages/router/src/hooks/useNavigationState.ts
-export function useNavigationState<T>(): [
-  state: T | undefined,
-  setState: (state: T | ((prev: T | undefined) => T)) => void,
-] {
-  const { locationEntry, updateCurrentEntryState } = useContext(RouterContext);
+function UserPage({ state, setState, resetState }: Props) {
+  const handleClear = () => {
+    resetState(); // Sets state to undefined
+  };
 
-  const setState = useCallback(
-    (stateOrUpdater: T | ((prev: T | undefined) => T)) => {
-      const newState =
-        typeof stateOrUpdater === "function"
-          ? (stateOrUpdater as Function)(locationEntry.state)
-          : stateOrUpdater;
-      updateCurrentEntryState(newState);
-    },
-    [locationEntry.state, updateCurrentEntryState],
+  return (
+    <div>
+      <span>Count: {state?.count ?? 0}</span>
+      <button onClick={handleClear}>Reset</button>
+    </div>
   );
-
-  return [locationEntry.state as T | undefined, setState];
 }
 ```
 
-Usage:
+The component props interface includes `resetState`:
 
 ```typescript
-function NestedComponent() {
-  const [state, setState] = useNavigationState<{ count: number }>();
-  return <button onClick={() => setState({ count: (state?.count ?? 0) + 1 })}>
-    Count: {state?.count ?? 0}
-  </button>;
-}
+type RouteComponentProps<TParams extends Record<string, string>, TState> = {
+  params: TParams;
+  state: TState | undefined;
+  setState: (state: TState | ((prev: TState | undefined) => TState)) => void;
+  resetState: () => void;
+};
 ```
 
 ### 7. Considerations
@@ -416,39 +416,36 @@ function MyComponent({
   params,
   state,
   setState,
+  resetState,
   data, // if loader is defined
 }: RouteComponentProps<Params, State>) {
   // ...
 }
 ```
 
-### Hook
+## Design Decisions
 
-```typescript
-const [state, setState] = useNavigationState<MyState>();
-```
-
-## Open Questions
-
-1. **Should `setState` support partial updates?**
+1. **`setState` uses full replacement, not partial updates**
 
    ```typescript
-   // Current: Full replacement
+   // Must spread existing state for partial updates
    setState({ ...state, count: state.count + 1 });
-
-   // Alternative: Partial merge (like React's useState with objects)
-   setState({ count: state.count + 1 }); // merges with existing
    ```
 
-2. **Should we provide a `resetState()` function?**
+   Rationale: Partial merging complicates both implementation and type definitions. Full replacement is explicit and predictable.
+
+2. **Loaders do not have access to state**
+   - Loaders receive `params`, `request`, and `signal` only
+   - State changes do not trigger loader re-execution
+   - This keeps loaders pure and predictable—they only depend on URL
+
+3. **`resetState()` clears state to `undefined`**
 
    ```typescript
-   resetState(); // Sets state to undefined or defaultState
+   resetState(); // Sets state to undefined
    ```
 
-3. **How should state interact with route loaders?**
-   - Should loaders have access to state?
-   - Can loaders set initial state?
+   Useful for clearing accumulated state when the user wants a fresh start.
 
 ## References
 
