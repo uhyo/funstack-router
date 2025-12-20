@@ -1,6 +1,7 @@
 import {
   type ReactNode,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useSyncExternalStore,
@@ -12,6 +13,7 @@ import {
   type MatchedRouteWithData,
   type OnNavigateCallback,
   type FallbackMode,
+  type InternalRouteState,
   internalRoutes,
 } from "./types.js";
 import { matchRoutes } from "./core/matchRoutes.js";
@@ -68,6 +70,14 @@ export function Router({
     [adapter],
   );
 
+  // Update current entry's state without navigation
+  const updateCurrentEntryState = useCallback(
+    (state: unknown) => {
+      adapter.updateCurrentEntryState(state);
+    },
+    [adapter],
+  );
+
   return useMemo(() => {
     if (locationEntry === null) {
       // This happens either when Navigation API is unavailable (and no fallback),
@@ -88,7 +98,12 @@ export function Router({
       return executeLoaders(matched, key, request, signal);
     })();
 
-    const routerContextValue = { locationEntry, url, navigate };
+    const routerContextValue = {
+      locationEntry,
+      url,
+      navigate,
+      updateCurrentEntryState,
+    };
 
     return (
       <RouterContext.Provider value={routerContextValue}>
@@ -97,7 +112,7 @@ export function Router({
         ) : null}
       </RouterContext.Provider>
     );
-  }, [navigate, locationEntry, routes, adapter]);
+  }, [navigate, updateCurrentEntryState, locationEntry, routes, adapter]);
 }
 
 type RouteRendererProps = {
@@ -118,6 +133,46 @@ function RouteRenderer({
   const { route, params, pathname, data } = match;
   const Component = route.component;
 
+  const routerContext = useContext(RouterContext);
+  if (!routerContext) {
+    throw new Error("RouteRenderer must be used within RouterContext");
+  }
+  const { locationEntry, updateCurrentEntryState } = routerContext;
+
+  // Extract this route's state from internal structure
+  const internalState = locationEntry.state as InternalRouteState | undefined;
+  const routeState = internalState?.__routeStates?.[index];
+
+  // Create stable setState callback for this route's slice
+  const setState = useCallback(
+    (stateOrUpdater: unknown | ((prev: unknown) => unknown)) => {
+      const currentStates =
+        (locationEntry.state as InternalRouteState | undefined)
+          ?.__routeStates ?? [];
+      const currentRouteState = currentStates[index];
+
+      const newState =
+        typeof stateOrUpdater === "function"
+          ? (stateOrUpdater as (prev: unknown) => unknown)(currentRouteState)
+          : stateOrUpdater;
+
+      const newStates = [...currentStates];
+      newStates[index] = newState;
+      updateCurrentEntryState({ __routeStates: newStates });
+    },
+    [locationEntry.state, index, updateCurrentEntryState],
+  );
+
+  // Create stable resetState callback
+  const resetState = useCallback(() => {
+    const currentStates =
+      (locationEntry.state as InternalRouteState | undefined)?.__routeStates ??
+      [];
+    const newStates = [...currentStates];
+    newStates[index] = undefined;
+    updateCurrentEntryState({ __routeStates: newStates });
+  }, [locationEntry.state, index, updateCurrentEntryState]);
+
   // Create outlet for child routes
   const outlet =
     index < matchedRoutes.length - 1 ? (
@@ -130,9 +185,15 @@ function RouteRenderer({
   );
 
   // Render component with or without data prop based on loader presence
-  // Always pass params prop to components
+  // Always pass params, state, setState, and resetState props to components
   const renderComponent = () => {
     if (!Component) return outlet;
+
+    const stateProps = {
+      state: routeState,
+      setState,
+      resetState,
+    };
 
     // When loader exists, data is defined and component expects data prop
     // When loader doesn't exist, data is undefined and component doesn't expect data prop
@@ -141,13 +202,19 @@ function RouteRenderer({
       const ComponentWithData = Component as React.ComponentType<{
         data: unknown;
         params: Record<string, string>;
+        state: unknown;
+        setState: (s: unknown | ((prev: unknown) => unknown)) => void;
+        resetState: () => void;
       }>;
-      return <ComponentWithData data={data} params={params} />;
+      return <ComponentWithData data={data} params={params} {...stateProps} />;
     }
     const ComponentWithoutData = Component as React.ComponentType<{
       params: Record<string, string>;
+      state: unknown;
+      setState: (s: unknown | ((prev: unknown) => unknown)) => void;
+      resetState: () => void;
     }>;
-    return <ComponentWithoutData params={params} />;
+    return <ComponentWithoutData params={params} {...stateProps} />;
   };
 
   return (

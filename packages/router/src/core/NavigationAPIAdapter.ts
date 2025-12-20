@@ -197,4 +197,11 @@ export class NavigationAPIAdapter implements RouterAdapter {
     idleController ??= new AbortController();
     return idleController.signal;
   }
+
+  updateCurrentEntryState(state: unknown): void {
+    // Invalidate cached snapshot BEFORE updating, so the subscriber gets fresh state
+    this.#cachedSnapshot = null;
+    navigation.updateCurrentEntry({ state });
+    // Note: updateCurrentEntry fires currententrychange, so subscribers are notified automatically
+  }
 }

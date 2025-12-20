@@ -9,6 +9,8 @@ export type RouterContextValue = {
   url: URL;
   /** Navigate to a new URL */
   navigate: (to: string, options?: NavigateOptions) => void;
+  /** Update current entry's state without navigation */
+  updateCurrentEntryState: (state: unknown) => void;
 };
 
 export const RouterContext = createContext<RouterContextValue | null>(null);

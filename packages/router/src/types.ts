@@ -4,6 +4,14 @@ import type { LoaderArgs, RouteDefinition } from "./route.js";
 const InternalRouteDefinitionSymbol = Symbol();
 
 /**
+ * Internal structure for storing per-route state in NavigationHistoryEntry.
+ * Each route in the matched stack gets its own state slot indexed by match position.
+ */
+export type InternalRouteState = {
+  __routeStates: (unknown | undefined)[];
+};
+
+/**
  * Route definition for the router.
  * When a loader is defined, the component receives the loader result as a `data` prop.
  */
@@ -23,6 +31,9 @@ export type InternalRouteDefinition = {
   component?: ComponentType<{
     data?: unknown;
     params?: Record<string, string>;
+    state?: unknown;
+    setState?: (state: unknown | ((prev: unknown) => unknown)) => void;
+    resetState?: () => void;
   }>;
 };
 

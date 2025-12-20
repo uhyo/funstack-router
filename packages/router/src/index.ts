@@ -10,8 +10,8 @@ export { useLocation } from "./hooks/useLocation.js";
 export { useParams } from "./hooks/useParams.js";
 export { useSearchParams } from "./hooks/useSearchParams.js";
 
-// Route Definition Helper
-export { route } from "./route.js";
+// Route Definition Helpers
+export { route, routeState } from "./route.js";
 
 // Types
 export type {
@@ -25,4 +25,10 @@ export type {
 
 export type { LocationEntry } from "./core/RouterAdapter.js";
 
-export type { LoaderArgs, RouteDefinition, PathParams } from "./route.js";
+export type {
+  LoaderArgs,
+  RouteDefinition,
+  PathParams,
+  RouteComponentProps,
+  RouteComponentPropsWithData,
+} from "./route.js";

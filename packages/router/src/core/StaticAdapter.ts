@@ -62,4 +62,8 @@ export class StaticAdapter implements RouterAdapter {
     this.#idleController ??= new AbortController();
     return this.#idleController.signal;
   }
+
+  updateCurrentEntryState(_state: unknown): void {
+    // No-op in static mode - state updates require Navigation API
+  }
 }

@@ -59,4 +59,10 @@ export interface RouterAdapter {
    * The signal is aborted when a new navigation starts.
    */
   getIdleAbortSignal(): AbortSignal;
+
+  /**
+   * Update the state of the current navigation entry without navigation.
+   * Uses navigation.updateCurrentEntry() internally.
+   */
+  updateCurrentEntryState(state: unknown): void;
 }

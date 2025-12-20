@@ -42,4 +42,8 @@ export class NullAdapter implements RouterAdapter {
     this.#idleController ??= new AbortController();
     return this.#idleController.signal;
   }
+
+  updateCurrentEntryState(_state: unknown): void {
+    // No-op: NullAdapter doesn't support state updates
+  }
 }

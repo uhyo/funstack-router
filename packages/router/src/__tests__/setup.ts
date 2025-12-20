@@ -29,6 +29,14 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     }
 
     /**
+     * Update the state of this entry.
+     * Used internally by updateCurrentEntry mock.
+     */
+    __updateState(state: unknown) {
+      this.#state = state;
+    }
+
+    /**
      * Dispatch a dispose event on this entry.
      * Used for testing dispose event handling.
      */
@@ -133,6 +141,12 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
         };
       },
     ),
+
+    updateCurrentEntry: vi.fn((options: { state: unknown }) => {
+      currentEntry.__updateState(options.state);
+      // Dispatch currententrychange event to notify subscribers
+      dispatchEvent("currententrychange", new Event("currententrychange"));
+    }),
 
     addEventListener: vi.fn(
       (type: string, listener: (event: Event) => void) => {
