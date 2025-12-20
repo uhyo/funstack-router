@@ -178,7 +178,7 @@ class NavigationAPIAdapter implements RouterAdapter {
 
 #### 4.4 RouteRenderer Modification
 
-Update `RouteRenderer` to pass state props:
+Update `RouteRenderer` to pass state props. Each route receives its own isolated state based on match index (see Section 7.1 for details):
 
 ```typescript
 // packages/router/src/Router.tsx
@@ -189,28 +189,39 @@ function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): ReactNode 
 
   const { locationEntry, updateCurrentEntryState } = useContext(RouterContext);
 
-  // Create stable setState callback
+  // Extract this route's state from internal structure
+  const internalState = locationEntry.state as InternalState | undefined;
+  const routeState = internalState?.__routeStates?.[index];
+
+  // Create stable setState callback for this route's slice
   const setState = useCallback(
     (stateOrUpdater: unknown | ((prev: unknown) => unknown)) => {
       const newState = typeof stateOrUpdater === "function"
-        ? stateOrUpdater(locationEntry.state)
+        ? stateOrUpdater(routeState)
         : stateOrUpdater;
-      updateCurrentEntryState(newState);
+
+      const currentStates = internalState?.__routeStates ?? [];
+      const newStates = [...currentStates];
+      newStates[index] = newState;
+      updateCurrentEntryState({ __routeStates: newStates });
     },
-    [locationEntry.state, updateCurrentEntryState]
+    [routeState, internalState, index, updateCurrentEntryState]
   );
 
   // Create stable resetState callback
   const resetState = useCallback(() => {
-    updateCurrentEntryState(undefined);
-  }, [updateCurrentEntryState]);
+    const currentStates = internalState?.__routeStates ?? [];
+    const newStates = [...currentStates];
+    newStates[index] = undefined;
+    updateCurrentEntryState({ __routeStates: newStates });
+  }, [internalState, index, updateCurrentEntryState]);
 
   // ... outlet creation
 
   const renderComponent = () => {
     const baseProps = {
       params,
-      state: locationEntry.state,
+      state: routeState,
       setState,
       resetState,
     };
@@ -309,26 +320,86 @@ type RouteComponentProps<TParams extends Record<string, string>, TState> = {
 
 ### 7. Considerations
 
-#### 7.1 State Conflicts with Nested Routes
+#### 7.1 Per-Route State with Match Index
 
-When multiple nested routes exist, they share the same `NavigationHistoryEntry` state. Options:
+Each route in a nested route stack maintains its own separate state object. This is required for type safety since each route can define a different state type.
 
-**Option A: Single State Object (Recommended)**
-All routes share the same state object. This matches Navigation API behavior.
+**Internal State Structure**
 
-**Option B: Namespaced State**
-Each route gets a namespace within the state:
+The router stores state internally as an array indexed by match position:
 
 ```typescript
-// Internal state structure
+// Internal state stored in NavigationHistoryEntry
 type InternalState = {
-  __routeState: {
-    [routePath: string]: unknown;
-  };
+  __routeStates: (unknown | undefined)[];
 };
+
+// Example: /users/123/posts
+// Match stack: [LayoutRoute (index 0), UserRoute (index 1), PostsRoute (index 2)]
+// Internal state:
+{
+  __routeStates: [
+    { sidebarCollapsed: true }, // LayoutRoute's state
+    { selectedTab: "posts" }, // UserRoute's state
+    { scrollPosition: 100 }, // PostsRoute's state
+  ];
+}
 ```
 
-**Recommendation**: Start with Option A for simplicity. Document that nested routes share state and should coordinate via a shared type or use distinct property names.
+**Implementation in RouteRenderer**
+
+The `RouteRenderer` receives its match index and uses it to read/write the correct state slice:
+
+```typescript
+function RouteRenderer({
+  matchedRoutes,
+  index,
+}: RouteRendererProps): ReactNode {
+  const { locationEntry, updateCurrentEntryState } = useContext(RouterContext);
+
+  // Extract this route's state from the internal structure
+  const internalState = locationEntry.state as InternalState | undefined;
+  const routeState = internalState?.__routeStates?.[index];
+
+  const setState = useCallback(
+    (stateOrUpdater: unknown | ((prev: unknown) => unknown)) => {
+      const newState =
+        typeof stateOrUpdater === "function"
+          ? stateOrUpdater(routeState)
+          : stateOrUpdater;
+
+      // Update only this route's slice
+      const currentStates = internalState?.__routeStates ?? [];
+      const newStates = [...currentStates];
+      newStates[index] = newState;
+
+      updateCurrentEntryState({ __routeStates: newStates });
+    },
+    [routeState, internalState, index, updateCurrentEntryState],
+  );
+
+  const resetState = useCallback(() => {
+    const currentStates = internalState?.__routeStates ?? [];
+    const newStates = [...currentStates];
+    newStates[index] = undefined;
+
+    updateCurrentEntryState({ __routeStates: newStates });
+  }, [internalState, index, updateCurrentEntryState]);
+
+  // ... rest of rendering
+}
+```
+
+**Benefits**
+
+1. **Type Safety**: Each route's state is fully typed independently
+2. **Isolation**: Parent and child routes don't interfere with each other's state
+3. **Predictable**: Match index is stable for a given route in the hierarchy
+
+**Edge Cases**
+
+- When navigating to a different route structure, stale state entries are naturally ignored
+- The `__routeStates` array may have gaps (undefined entries) for routes without state
 
 #### 7.2 Serialization Constraints
 
