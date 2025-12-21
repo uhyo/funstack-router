@@ -7,7 +7,6 @@ export { Outlet } from "./Outlet.js";
 // Hooks
 export { useNavigate } from "./hooks/useNavigate.js";
 export { useLocation } from "./hooks/useLocation.js";
-export { useParams } from "./hooks/useParams.js";
 export { useSearchParams } from "./hooks/useSearchParams.js";
 
 // Route Definition Helpers

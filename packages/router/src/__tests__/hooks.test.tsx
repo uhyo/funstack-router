@@ -3,7 +3,6 @@ import { render, screen, act } from "@testing-library/react";
 import { Router } from "../Router.js";
 import { useNavigate } from "../hooks/useNavigate.js";
 import { useLocation } from "../hooks/useLocation.js";
-import { useParams } from "../hooks/useParams.js";
 import { useSearchParams } from "../hooks/useSearchParams.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
 import type { RouteDefinition } from "../route.js";
@@ -126,49 +125,6 @@ describe("hooks", () => {
 
       expect(() => render(<TestComponent />)).toThrow(
         "useLocation must be used within a Router",
-      );
-    });
-  });
-
-  describe("useParams", () => {
-    it("returns route parameters", () => {
-      mockNavigation = setupNavigationMock("http://localhost/users/42");
-
-      function TestComponent() {
-        const params = useParams<{ id: string }>();
-        return <div>ID: {params.id}</div>;
-      }
-
-      const routes: RouteDefinition[] = [
-        { path: "/users/:id", component: TestComponent },
-      ];
-
-      render(<Router routes={routes} />);
-      expect(screen.getByText("ID: 42")).toBeInTheDocument();
-    });
-
-    it("returns empty object when no params", () => {
-      function TestComponent() {
-        const params = useParams();
-        return <div>Keys: {Object.keys(params).length}</div>;
-      }
-
-      const routes: RouteDefinition[] = [
-        { path: "/", component: TestComponent },
-      ];
-
-      render(<Router routes={routes} />);
-      expect(screen.getByText("Keys: 0")).toBeInTheDocument();
-    });
-
-    it("throws when used outside Router", () => {
-      function TestComponent() {
-        useParams();
-        return null;
-      }
-
-      expect(() => render(<TestComponent />)).toThrow(
-        "useParams must be used within a Router",
       );
     });
   });

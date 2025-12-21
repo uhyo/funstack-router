@@ -47,32 +47,6 @@ function MyComponent() {
 
       <article className="api-item">
         <h3>
-          <code>useParams()</code>
-        </h3>
-        <p>
-          Returns the route parameters as an object. This is an alternative to
-          receiving params via props—use whichever style you prefer.
-        </p>
-        <CodeBlock language="tsx">{`import { useParams } from "@funstack/router";
-
-// For route: /users/:userId/posts/:postId
-
-function PostPage() {
-  const params = useParams<{ userId: string; postId: string }>();
-
-  console.log(params.userId);  // "123"
-  console.log(params.postId);  // "456"
-}
-
-// Alternatively, receive params via props (recommended):
-function PostPage({ params }: { params: { userId: string; postId: string } }) {
-  console.log(params.userId);  // "123"
-  console.log(params.postId);  // "456"
-}`}</CodeBlock>
-      </article>
-
-      <article className="api-item">
-        <h3>
           <code>useSearchParams()</code>
         </h3>
         <p>

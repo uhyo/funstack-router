@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Router } from "../Router.js";
 import { Outlet } from "../Outlet.js";
-import { useParams } from "../hooks/useParams.js";
 import { useLocation } from "../hooks/useLocation.js";
 import { useNavigate } from "../hooks/useNavigate.js";
 import { route, type RouteDefinition } from "../route.js";
@@ -109,16 +108,14 @@ describe("Fallback Mode", () => {
       expect(screen.getByText("About")).toBeInTheDocument();
     });
 
-    it("provides route params via useParams", () => {
+    it("provides route params via props", () => {
       setupStaticLocation("http://localhost/users/123");
 
-      function UserDetail() {
-        const { id } = useParams<{ id: string }>();
-        return <div>User ID: {id}</div>;
-      }
-
-      const routes: RouteDefinition[] = [
-        { path: "/users/:id", component: UserDetail },
+      const routes = [
+        route({
+          path: "/users/:id",
+          component: ({ params }) => <div>User ID: {params.id}</div>,
+        }),
       ];
 
       render(<Router routes={routes} fallback="static" />);
