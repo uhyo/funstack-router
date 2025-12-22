@@ -43,6 +43,6 @@
     "tsdown": "^0.18.0",
     "typescript": "^5.7.0",
     "urlpattern-polyfill": "^10.1.0",
-    "vitest": "^4.0.15"
+    "vitest": "^4.0.16"
   }
 }
