@@ -58,6 +58,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
   // Create a mock NavigateEvent
   const createMockNavigateEvent = (
     destinationUrl: string,
+    eventInfo?: unknown,
   ): NavigateEvent & { defaultPrevented: boolean } => {
     let defaultPrevented = false;
     return {
@@ -77,7 +78,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       signal: new AbortController().signal,
       formData: null,
       downloadRequest: null,
-      info: undefined,
+      info: eventInfo,
       hasUAVisualTransition: false,
       intercept: vi.fn(),
       scroll: vi.fn(),
@@ -97,9 +98,18 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     canGoForward: false,
     transition: null,
 
+    // Store last navigation info for testing
+    __lastNavigateInfo: undefined as unknown,
+
     navigate: vi.fn(
-      (url: string, options?: { state?: unknown; history?: string }) => {
+      (
+        url: string,
+        options?: { state?: unknown; history?: string; info?: unknown },
+      ) => {
         const newUrl = new URL(url, currentEntry.url).href;
+
+        // Store info for testing and dispatch navigate event with info
+        mockNavigation.__lastNavigateInfo = options?.info;
 
         if (options?.history !== "replace") {
           // When pushing a new entry, dispose all entries after current position
@@ -170,12 +180,15 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
 
     // Test helper to simulate navigation with navigate event dispatch
     // This allows testing of onNavigate callback behavior
-    __simulateNavigationWithEvent(url: string): {
+    __simulateNavigationWithEvent(
+      url: string,
+      options?: { info?: unknown },
+    ): {
       event: NavigateEvent & { defaultPrevented: boolean };
       proceed: () => void;
     } {
       const newUrl = new URL(url, currentEntry.url).href;
-      const event = createMockNavigateEvent(newUrl);
+      const event = createMockNavigateEvent(newUrl, options?.info);
 
       // Dispatch navigate event first (allows onNavigate to be called)
       dispatchEvent("navigate", event);

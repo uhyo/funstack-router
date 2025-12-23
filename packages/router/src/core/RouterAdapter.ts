@@ -15,6 +15,8 @@ export type LocationEntry = {
   key: string;
   /** State associated with this entry */
   state: unknown;
+  /** Ephemeral info from current navigation (undefined if not from navigation event) */
+  info: unknown;
 };
 
 /**

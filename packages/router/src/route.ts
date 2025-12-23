@@ -49,6 +49,8 @@ export type RouteComponentProps<
   setState: (state: TState | ((prev: TState | undefined) => TState)) => void;
   /** Reset navigation state to undefined */
   resetState: () => void;
+  /** Ephemeral navigation info (only available during navigation, not persisted) */
+  info: unknown;
 };
 
 /**

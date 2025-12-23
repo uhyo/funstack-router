@@ -34,6 +34,7 @@ export type InternalRouteDefinition = {
     state?: unknown;
     setState?: (state: unknown | ((prev: unknown) => unknown)) => void;
     resetState?: () => void;
+    info?: unknown;
   }>;
 };
 
@@ -78,6 +79,8 @@ export type NavigateOptions = {
   replace?: boolean;
   /** State to associate with the navigation */
   state?: unknown;
+  /** Ephemeral info for this navigation only (not persisted in history) */
+  info?: unknown;
 };
 
 /**

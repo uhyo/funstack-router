@@ -185,7 +185,7 @@ function RouteRenderer({
   );
 
   // Render component with or without data prop based on loader presence
-  // Always pass params, state, setState, and resetState props to components
+  // Always pass params, state, setState, resetState, and info props to components
   const renderComponent = () => {
     if (!Component) return outlet;
 
@@ -194,6 +194,9 @@ function RouteRenderer({
       setState,
       resetState,
     };
+
+    // Ephemeral info from the current navigation
+    const { info } = locationEntry;
 
     // When loader exists, data is defined and component expects data prop
     // When loader doesn't exist, data is undefined and component doesn't expect data prop
@@ -205,16 +208,25 @@ function RouteRenderer({
         state: unknown;
         setState: (s: unknown | ((prev: unknown) => unknown)) => void;
         resetState: () => void;
+        info: unknown;
       }>;
-      return <ComponentWithData data={data} params={params} {...stateProps} />;
+      return (
+        <ComponentWithData
+          data={data}
+          params={params}
+          {...stateProps}
+          info={info}
+        />
+      );
     }
     const ComponentWithoutData = Component as React.ComponentType<{
       params: Record<string, string>;
       state: unknown;
       setState: (s: unknown | ((prev: unknown) => unknown)) => void;
       resetState: () => void;
+      info: unknown;
     }>;
-    return <ComponentWithoutData params={params} {...stateProps} />;
+    return <ComponentWithoutData params={params} {...stateProps} info={info} />;
   };
 
   return (

@@ -34,6 +34,8 @@ export class NavigationAPIAdapter implements RouterAdapter {
   // Cache the snapshot to ensure referential stability for useSyncExternalStore
   #cachedSnapshot: LocationEntry | null = null;
   #cachedEntryId: string | null = null;
+  // Ephemeral info from the current navigation event (not persisted in history)
+  #currentNavigationInfo: unknown = undefined;
 
   getSnapshot(): LocationEntry | null {
     const entry = navigation.currentEntry;
@@ -52,6 +54,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
       url: new URL(entry.url),
       key: entry.id,
       state: entry.getState(),
+      info: this.#currentNavigationInfo,
     };
     return this.#cachedSnapshot;
   }
@@ -113,6 +116,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
     navigation.navigate(to, {
       history: options?.replace ? "replace" : "push",
       state: options?.state,
+      info: options?.info,
     });
   }
 
@@ -121,6 +125,12 @@ export class NavigationAPIAdapter implements RouterAdapter {
     onNavigate?: OnNavigateCallback,
   ): (() => void) | undefined {
     const handleNavigate = (event: NavigateEvent) => {
+      // Capture ephemeral info from the navigate event
+      // This info is only available during this navigation and resets on the next one
+      this.#currentNavigationInfo = event.info;
+      // Invalidate cached snapshot to pick up new info
+      this.#cachedSnapshot = null;
+
       // Only intercept same-origin navigations
       if (!event.canIntercept) {
         onNavigate?.(event, []);
