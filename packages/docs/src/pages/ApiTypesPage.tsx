@@ -32,6 +32,7 @@ type Props = {
            ((prev: { scrollPosition: number } | undefined) => { scrollPosition: number })
   ) => void;
   resetState: () => void;
+  info: unknown; // Ephemeral navigation info
 };`}</CodeBlock>
       </article>
 
@@ -58,6 +59,7 @@ type Props = {
   state: { selectedTab: string } | undefined;
   setState: (state: ...) => void;
   resetState: () => void;
+  info: unknown; // Ephemeral navigation info
 };`}</CodeBlock>
       </article>
 
@@ -86,11 +88,11 @@ type MyParams = PathParams<"/users/:userId">;
           When using the <code>route()</code> or <code>routeState()</code>{" "}
           helper, component types are inferred automatically. Components always
           receive <code>params</code>, <code>state</code>, <code>setState</code>
-          , and <code>resetState</code> props, and receive a <code>data</code>{" "}
-          prop when a loader is defined.
+          , <code>resetState</code>, and <code>info</code> props, and receive a{" "}
+          <code>data</code> prop when a loader is defined.
         </p>
-        <CodeBlock language="tsx">{`// With loader: component receives { data, params, state, setState, resetState }
-// Without loader: component receives { params, state, setState, resetState }
+        <CodeBlock language="tsx">{`// With loader: component receives { data, params, state, setState, resetState, info }
+// Without loader: component receives { params, state, setState, resetState, info }
 
 // Example without state type:
 route({
@@ -135,7 +137,13 @@ routeState<{ tab: string }>()({
         <CodeBlock language="typescript">{`interface NavigateOptions {
   replace?: boolean;
   state?: unknown;
+  info?: unknown;  // Ephemeral, not persisted in history
 }`}</CodeBlock>
+        <p>
+          <strong>Note:</strong> <code>state</code> is persisted in history and
+          available across back/forward navigation. <code>info</code> is
+          ephemeral and only available during the navigation that triggered it.
+        </p>
       </article>
     </div>
   );

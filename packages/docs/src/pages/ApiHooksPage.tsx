@@ -24,7 +24,8 @@ function MyComponent() {
   // Navigate with options
   navigate("/users/123", {
     replace: true,  // Replace current history entry
-    state: { from: "home" },  // Pass state data
+    state: { from: "home" },  // Persistent state (survives back/forward)
+    info: { referrer: "home" },  // Ephemeral info (only for this navigation)
   });
 }`}</CodeBlock>
       </article>
