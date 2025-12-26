@@ -6,6 +6,8 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
   let currentEntry: MockNavigationHistoryEntry;
   const entries: MockNavigationHistoryEntry[] = [];
   const listeners = new Map<string, Set<(event: Event) => void>>();
+  // Counter for generating unique entry ids (id is unique per entry, even for replace)
+  let nextEntryId = 0;
 
   class MockNavigationHistoryEntry extends EventTarget {
     url: string;
@@ -19,7 +21,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       super();
       this.url = url;
       this.key = `key-${index}`;
-      this.id = `id-${index}`;
+      this.id = `id-${nextEntryId++}`;
       this.index = index;
       this.#state = state;
     }
@@ -134,8 +136,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
             currentIndex,
             options?.state,
           );
-          newEntry.key = currentEntry.key; // Replace keeps the same key
-          newEntry.id = currentEntry.id; // Replace keeps the same id
+          newEntry.key = currentEntry.key; // Replace keeps the same key (but id is new)
           entries[currentIndex] = newEntry;
           currentEntry = newEntry;
         }
