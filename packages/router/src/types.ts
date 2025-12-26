@@ -32,7 +32,8 @@ export type InternalRouteDefinition = {
     data?: unknown;
     params?: Record<string, string>;
     state?: unknown;
-    setState?: (state: unknown | ((prev: unknown) => unknown)) => void;
+    setState?: (state: unknown | ((prev: unknown) => unknown)) => Promise<void>;
+    setStateSync?: (state: unknown | ((prev: unknown) => unknown)) => void;
     resetState?: () => void;
     info?: unknown;
   }>;

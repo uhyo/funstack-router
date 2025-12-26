@@ -27,13 +27,33 @@ type Props = RouteComponentProps<
 type Props = {
   params: { userId: string };
   state: { scrollPosition: number } | undefined;
+  // Async state update via replace navigation
   setState: (
+    state: { scrollPosition: number } |
+           ((prev: { scrollPosition: number } | undefined) => { scrollPosition: number })
+  ) => Promise<void>;
+  // Sync state update via updateCurrentEntry
+  setStateSync: (
     state: { scrollPosition: number } |
            ((prev: { scrollPosition: number } | undefined) => { scrollPosition: number })
   ) => void;
   resetState: () => void;
   info: unknown; // Ephemeral navigation info
 };`}</CodeBlock>
+        <p>
+          <strong>setState vs setStateSync:</strong>
+        </p>
+        <ul>
+          <li>
+            <code>setState</code> - Async method that returns a Promise. Uses
+            replace navigation internally, ensuring the state update goes
+            through the full navigation cycle.
+          </li>
+          <li>
+            <code>setStateSync</code> - Synchronous method that updates state
+            immediately using <code>navigation.updateCurrentEntry()</code>.
+          </li>
+        </ul>
       </article>
 
       <article className="api-item">
@@ -57,7 +77,8 @@ type Props = {
   params: { userId: string };
   data: User;
   state: { selectedTab: string } | undefined;
-  setState: (state: ...) => void;
+  setState: (state: ...) => Promise<void>;  // async
+  setStateSync: (state: ...) => void;       // sync
   resetState: () => void;
   info: unknown; // Ephemeral navigation info
 };`}</CodeBlock>
@@ -88,11 +109,12 @@ type MyParams = PathParams<"/users/:userId">;
           When using the <code>route()</code> or <code>routeState()</code>{" "}
           helper, component types are inferred automatically. Components always
           receive <code>params</code>, <code>state</code>, <code>setState</code>
-          , <code>resetState</code>, and <code>info</code> props, and receive a{" "}
-          <code>data</code> prop when a loader is defined.
+          , <code>setStateSync</code>, <code>resetState</code>, and{" "}
+          <code>info</code> props, and receive a <code>data</code> prop when a
+          loader is defined.
         </p>
-        <CodeBlock language="tsx">{`// With loader: component receives { data, params, state, setState, resetState, info }
-// Without loader: component receives { params, state, setState, resetState, info }
+        <CodeBlock language="tsx">{`// With loader: component receives { data, params, state, setState, setStateSync, resetState, info }
+// Without loader: component receives { params, state, setState, setStateSync, resetState, info }
 
 // Example without state type:
 route({

@@ -17,8 +17,8 @@ export function ApiUtilitiesPage() {
           always receives a <code>params</code> prop with types inferred from
           the path pattern. When a <code>loader</code> is defined, the component
           also receives a <code>data</code> prop. Components also receive{" "}
-          <code>state</code>, <code>setState</code>, and <code>resetState</code>{" "}
-          props for navigation state management.
+          <code>state</code>, <code>setState</code>, <code>setStateSync</code>,
+          and <code>resetState</code> props for navigation state management.
         </p>
         <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
@@ -121,14 +121,21 @@ function UserPage({
   params,
   state,
   setState,
+  setStateSync,
   resetState,
 }: RouteComponentProps<{ userId: string }, PageState>) {
   // state is PageState | undefined (undefined on first visit)
   const scrollPosition = state?.scrollPosition ?? 0;
   const selectedTab = state?.selectedTab ?? "posts";
 
-  const handleTabChange = (tab: string) => {
-    setState({ scrollPosition, selectedTab: tab });
+  // Async state update (recommended for most cases)
+  const handleTabChange = async (tab: string) => {
+    await setState({ scrollPosition, selectedTab: tab });
+  };
+
+  // Sync state update (for immediate updates like scroll position)
+  const handleScroll = (position: number) => {
+    setStateSync({ scrollPosition: position, selectedTab });
   };
 
   return (
@@ -160,9 +167,21 @@ const productRoute = routeState<{ filter: string }>()({
             rel="noopener noreferrer"
           >
             Navigation API
-          </a>{" "}
-          via <code>navigation.updateCurrentEntry()</code>. This means:
+          </a>
+          . The router provides two methods to update state:
         </p>
+        <ul>
+          <li>
+            <code>setState</code> - Async method that uses replace navigation.
+            Returns a Promise that resolves when the navigation completes.
+          </li>
+          <li>
+            <code>setStateSync</code> - Sync method that uses{" "}
+            <code>navigation.updateCurrentEntry()</code>. Updates state
+            immediately without waiting.
+          </li>
+        </ul>
+        <p>Navigation state characteristics:</p>
         <ul>
           <li>State persists when navigating back/forward in history</li>
           <li>Each history entry has its own independent state</li>

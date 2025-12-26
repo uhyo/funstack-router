@@ -31,6 +31,10 @@ export class NullAdapter implements RouterAdapter {
     );
   }
 
+  async navigateAsync(to: string, options?: NavigateOptions): Promise<void> {
+    this.navigate(to, options);
+  }
+
   setupInterception(
     _routes: InternalRouteDefinition[],
     _onNavigate?: OnNavigateCallback,

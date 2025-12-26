@@ -70,6 +70,14 @@ export function Router({
     [adapter],
   );
 
+  // Navigate function that returns a Promise
+  const navigateAsync = useCallback(
+    (to: string, options?: NavigateOptions) => {
+      return adapter.navigateAsync(to, options);
+    },
+    [adapter],
+  );
+
   // Update current entry's state without navigation
   const updateCurrentEntryState = useCallback(
     (state: unknown) => {
@@ -102,6 +110,7 @@ export function Router({
       locationEntry,
       url,
       navigate,
+      navigateAsync,
       updateCurrentEntryState,
     };
 
@@ -112,7 +121,14 @@ export function Router({
         ) : null}
       </RouterContext.Provider>
     );
-  }, [navigate, updateCurrentEntryState, locationEntry, routes, adapter]);
+  }, [
+    navigate,
+    navigateAsync,
+    updateCurrentEntryState,
+    locationEntry,
+    routes,
+    adapter,
+  ]);
 }
 
 type RouteRendererProps = {
@@ -137,14 +153,15 @@ function RouteRenderer({
   if (!routerContext) {
     throw new Error("RouteRenderer must be used within RouterContext");
   }
-  const { locationEntry, updateCurrentEntryState } = routerContext;
+  const { locationEntry, url, navigateAsync, updateCurrentEntryState } =
+    routerContext;
 
   // Extract this route's state from internal structure
   const internalState = locationEntry.state as InternalRouteState | undefined;
   const routeState = internalState?.__routeStates?.[index];
 
-  // Create stable setState callback for this route's slice
-  const setState = useCallback(
+  // Create stable setStateSync callback for this route's slice (synchronous via updateCurrentEntry)
+  const setStateSync = useCallback(
     (stateOrUpdater: unknown | ((prev: unknown) => unknown)) => {
       const currentStates =
         (locationEntry.state as InternalRouteState | undefined)
@@ -161,6 +178,32 @@ function RouteRenderer({
       updateCurrentEntryState({ __routeStates: newStates });
     },
     [locationEntry.state, index, updateCurrentEntryState],
+  );
+
+  // Create stable setState callback for this route's slice (async via replace navigation)
+  const setState = useCallback(
+    async (
+      stateOrUpdater: unknown | ((prev: unknown) => unknown),
+    ): Promise<void> => {
+      const currentStates =
+        (locationEntry.state as InternalRouteState | undefined)
+          ?.__routeStates ?? [];
+      const currentRouteState = currentStates[index];
+
+      const newState =
+        typeof stateOrUpdater === "function"
+          ? (stateOrUpdater as (prev: unknown) => unknown)(currentRouteState)
+          : stateOrUpdater;
+
+      const newStates = [...currentStates];
+      newStates[index] = newState;
+
+      await navigateAsync(url.href, {
+        replace: true,
+        state: { __routeStates: newStates },
+      });
+    },
+    [locationEntry.state, index, url, navigateAsync],
   );
 
   // Create stable resetState callback
@@ -192,6 +235,7 @@ function RouteRenderer({
     const stateProps = {
       state: routeState,
       setState,
+      setStateSync,
       resetState,
     };
 
@@ -206,7 +250,8 @@ function RouteRenderer({
         data: unknown;
         params: Record<string, string>;
         state: unknown;
-        setState: (s: unknown | ((prev: unknown) => unknown)) => void;
+        setState: (s: unknown | ((prev: unknown) => unknown)) => Promise<void>;
+        setStateSync: (s: unknown | ((prev: unknown) => unknown)) => void;
         resetState: () => void;
         info: unknown;
       }>;
@@ -222,7 +267,8 @@ function RouteRenderer({
     const ComponentWithoutData = Component as React.ComponentType<{
       params: Record<string, string>;
       state: unknown;
-      setState: (s: unknown | ((prev: unknown) => unknown)) => void;
+      setState: (s: unknown | ((prev: unknown) => unknown)) => Promise<void>;
+      setStateSync: (s: unknown | ((prev: unknown) => unknown)) => void;
       resetState: () => void;
       info: unknown;
     }>;

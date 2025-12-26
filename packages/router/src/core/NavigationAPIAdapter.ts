@@ -120,6 +120,20 @@ export class NavigationAPIAdapter implements RouterAdapter {
     });
   }
 
+  async navigateAsync(to: string, options?: NavigateOptions): Promise<void> {
+    // Invalidate cached snapshot before navigation (especially important for replace,
+    // which keeps the same entry id but may change state)
+    // TODO: shouldn't need to invalidate,
+    // since both push and replace will create a new entry id
+    this.#cachedSnapshot = null;
+    const result = navigation.navigate(to, {
+      history: options?.replace ? "replace" : "push",
+      state: options?.state,
+      info: options?.info,
+    });
+    await result.finished;
+  }
+
   setupInterception(
     routes: InternalRouteDefinition[],
     onNavigate?: OnNavigateCallback,

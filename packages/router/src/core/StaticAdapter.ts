@@ -51,6 +51,10 @@ export class StaticAdapter implements RouterAdapter {
     // If needed in the future, we could add a "static-reload" mode.
   }
 
+  async navigateAsync(to: string, options?: NavigateOptions): Promise<void> {
+    this.navigate(to, options);
+  }
+
   setupInterception(
     _routes: InternalRouteDefinition[],
     _onNavigate?: OnNavigateCallback,

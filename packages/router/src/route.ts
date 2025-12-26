@@ -45,8 +45,14 @@ export type RouteComponentProps<
   params: TParams;
   /** Current navigation state for this route (undefined on first visit) */
   state: TState | undefined;
-  /** Update navigation state for this route */
-  setState: (state: TState | ((prev: TState | undefined) => TState)) => void;
+  /** Update navigation state for this route asynchronously via replace navigation */
+  setState: (
+    state: TState | ((prev: TState | undefined) => TState),
+  ) => Promise<void>;
+  /** Update navigation state for this route synchronously via updateCurrentEntry */
+  setStateSync: (
+    state: TState | ((prev: TState | undefined) => TState),
+  ) => void;
   /** Reset navigation state to undefined */
   resetState: () => void;
   /** Ephemeral navigation info (only available during navigation, not persisted) */

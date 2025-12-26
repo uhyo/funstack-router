@@ -48,6 +48,12 @@ export interface RouterAdapter {
   navigate(to: string, options?: NavigateOptions): void;
 
   /**
+   * Perform programmatic navigation and wait for completion.
+   * Returns a Promise that resolves when the navigation finishes.
+   */
+  navigateAsync(to: string, options?: NavigateOptions): Promise<void>;
+
+  /**
    * Set up navigation interception for route matching.
    * Returns a cleanup function, or undefined if not supported.
    */

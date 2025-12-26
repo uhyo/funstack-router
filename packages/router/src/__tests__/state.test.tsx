@@ -40,8 +40,8 @@ describe("Navigation State Management", () => {
     });
   });
 
-  describe("setState", () => {
-    it("updates state with object value", () => {
+  describe("setState (async)", () => {
+    it("updates state with object value", async () => {
       type PageState = { count: number };
 
       function Page({
@@ -51,7 +51,122 @@ describe("Navigation State Management", () => {
         return (
           <div>
             <span>Count: {state?.count ?? 0}</span>
-            <button onClick={() => setState({ count: 5 })}>Set 5</button>
+            <button onClick={() => void setState({ count: 5 })}>Set 5</button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(screen.getByText("Count: 0")).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button"));
+      });
+      expect(screen.getByText("Count: 5")).toBeInTheDocument();
+    });
+
+    it("updates state with function updater", async () => {
+      type PageState = { count: number };
+
+      function Page({
+        state,
+        setState,
+      }: RouteComponentProps<Record<string, never>, PageState>) {
+        return (
+          <div>
+            <span>Count: {state?.count ?? 0}</span>
+            <button
+              onClick={() =>
+                void setState((prev) => ({ count: (prev?.count ?? 0) + 1 }))
+              }
+            >
+              Increment
+            </button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button"));
+      });
+      expect(screen.getByText("Count: 1")).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button"));
+      });
+      expect(screen.getByText("Count: 2")).toBeInTheDocument();
+    });
+
+    it("returns a Promise", async () => {
+      type PageState = { count: number };
+      let setStatePromise: Promise<void> | undefined;
+
+      function Page({
+        state,
+        setState,
+      }: RouteComponentProps<Record<string, never>, PageState>) {
+        return (
+          <div>
+            <span>Count: {state?.count ?? 0}</span>
+            <button
+              onClick={() => {
+                setStatePromise = setState({ count: 5 });
+              }}
+            >
+              Set 5
+            </button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button"));
+        // setState returns a Promise
+        expect(setStatePromise).toBeInstanceOf(Promise);
+        await setStatePromise;
+      });
+
+      expect(screen.getByText("Count: 5")).toBeInTheDocument();
+    });
+  });
+
+  describe("setStateSync", () => {
+    it("updates state synchronously with object value", () => {
+      type PageState = { count: number };
+
+      function Page({
+        state,
+        setStateSync,
+      }: RouteComponentProps<Record<string, never>, PageState>) {
+        return (
+          <div>
+            <span>Count: {state?.count ?? 0}</span>
+            <button onClick={() => setStateSync({ count: 5 })}>Set 5</button>
           </div>
         );
       }
@@ -72,19 +187,19 @@ describe("Navigation State Management", () => {
       expect(screen.getByText("Count: 5")).toBeInTheDocument();
     });
 
-    it("updates state with function updater", () => {
+    it("updates state synchronously with function updater", () => {
       type PageState = { count: number };
 
       function Page({
         state,
-        setState,
+        setStateSync,
       }: RouteComponentProps<Record<string, never>, PageState>) {
         return (
           <div>
             <span>Count: {state?.count ?? 0}</span>
             <button
               onClick={() =>
-                setState((prev) => ({ count: (prev?.count ?? 0) + 1 }))
+                setStateSync((prev) => ({ count: (prev?.count ?? 0) + 1 }))
               }
             >
               Increment
@@ -120,13 +235,13 @@ describe("Navigation State Management", () => {
 
       function Page({
         state,
-        setState,
+        setStateSync,
         resetState,
       }: RouteComponentProps<Record<string, never>, PageState>) {
         return (
           <div>
             <span>Count: {state?.count ?? "none"}</span>
-            <button onClick={() => setState({ count: 10 })}>Set</button>
+            <button onClick={() => setStateSync({ count: 10 })}>Set</button>
             <button onClick={resetState}>Reset</button>
           </div>
         );
@@ -160,12 +275,12 @@ describe("Navigation State Management", () => {
 
       function Layout({
         state,
-        setState,
+        setStateSync,
       }: RouteComponentProps<Record<string, never>, LayoutState>) {
         return (
           <div>
             <span>Sidebar: {state?.sidebar ? "open" : "closed"}</span>
-            <button onClick={() => setState({ sidebar: true })}>
+            <button onClick={() => setStateSync({ sidebar: true })}>
               Open Sidebar
             </button>
             <Outlet />
@@ -175,12 +290,12 @@ describe("Navigation State Management", () => {
 
       function Page({
         state,
-        setState,
+        setStateSync,
       }: RouteComponentProps<Record<string, never>, PageState>) {
         return (
           <div>
             <span>Tab: {state?.tab ?? "default"}</span>
-            <button onClick={() => setState({ tab: "settings" })}>
+            <button onClick={() => setStateSync({ tab: "settings" })}>
               Settings Tab
             </button>
           </div>
@@ -229,13 +344,13 @@ describe("Navigation State Management", () => {
       function Page({
         params,
         state,
-        setState,
+        setStateSync,
       }: RouteComponentProps<{ id: string }, PageState>) {
         return (
           <div>
             <span data-testid="page-id">Page: {params.id}</span>
             <span data-testid="count">Count: {state?.count ?? 0}</span>
-            <button onClick={() => setState({ count: 42 })}>Set</button>
+            <button onClick={() => setStateSync({ count: 42 })}>Set</button>
           </div>
         );
       }
@@ -328,7 +443,7 @@ describe("Navigation State Management", () => {
       function Page({
         data,
         state,
-        setState,
+        setStateSync,
       }: RouteComponentProps<Record<string, never>, FilterState> & {
         data: { items: string[] };
       }) {
@@ -339,7 +454,7 @@ describe("Navigation State Management", () => {
           <div>
             <input
               value={filter}
-              onChange={(e) => setState({ filter: e.target.value })}
+              onChange={(e) => setStateSync({ filter: e.target.value })}
               placeholder="Filter"
             />
             <ul>
