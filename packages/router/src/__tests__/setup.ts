@@ -6,8 +6,20 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
   let currentEntry: MockNavigationHistoryEntry;
   const entries: MockNavigationHistoryEntry[] = [];
   const listeners = new Map<string, Set<(event: Event) => void>>();
-  // Counter for generating unique entry ids (id is unique per entry, even for replace)
-  let nextEntryId = 0;
+  // Map from index to key (key represents the "slot" and is reused for replace)
+  const slotKeys = new Map<number, string>();
+
+  /**
+   * Get or create a key for a given slot index.
+   */
+  function getKeyForSlot(index: number): string {
+    let key = slotKeys.get(index);
+    if (!key) {
+      key = crypto.randomUUID();
+      slotKeys.set(index, key);
+    }
+    return key;
+  }
 
   class MockNavigationHistoryEntry extends EventTarget {
     url: string;
@@ -20,8 +32,8 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     constructor(url: string, index: number, state?: unknown) {
       super();
       this.url = url;
-      this.key = `key-${index}`;
-      this.id = `id-${nextEntryId++}`;
+      this.key = getKeyForSlot(index);
+      this.id = crypto.randomUUID();
       this.index = index;
       this.#state = state;
     }
@@ -69,8 +81,8 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       hashChange: false,
       destination: {
         url: destinationUrl,
-        key: `key-${entries.length}`,
-        id: `id-${entries.length}`,
+        key: getKeyForSlot(entries.length),
+        id: crypto.randomUUID(),
         index: entries.length,
         sameDocument: true,
         getState: () => undefined,
@@ -130,13 +142,13 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
           entries.push(newEntry);
           currentEntry = newEntry;
         } else {
+          // Replace: reuses the same slot (index), so key stays the same via getKeyForSlot
           const currentIndex = entries.indexOf(currentEntry);
           const newEntry = new MockNavigationHistoryEntry(
             newUrl,
             currentIndex,
             options?.state,
           );
-          newEntry.key = currentEntry.key; // Replace keeps the same key (but id is new)
           entries[currentIndex] = newEntry;
           currentEntry = newEntry;
         }
