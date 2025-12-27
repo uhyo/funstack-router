@@ -68,7 +68,7 @@ function SearchPage() {
 
       <article className="api-item">
         <h3>
-          <code>useBlocker(shouldBlock)</code>
+          <code>useBlocker(options)</code>
         </h3>
         <p>
           Prevents navigation away from the current route. Useful for scenarios
@@ -76,16 +76,18 @@ function SearchPage() {
           be lost on navigation.
         </p>
         <CodeBlock language="tsx">{`import { useBlocker } from "@funstack/router";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 function EditForm() {
   const [isDirty, setIsDirty] = useState(false);
 
-  useBlocker(() => {
-    if (isDirty) {
-      return !confirm("You have unsaved changes. Leave anyway?");
-    }
-    return false;
+  useBlocker({
+    shouldBlock: useCallback(() => {
+      if (isDirty) {
+        return !confirm("You have unsaved changes. Leave anyway?");
+      }
+      return false;
+    }, [isDirty]),
   });
 
   const handleSave = () => {
@@ -102,13 +104,14 @@ function EditForm() {
     </form>
   );
 }`}</CodeBlock>
-        <h4>Parameters</h4>
+        <h4>Options</h4>
         <ul>
           <li>
             <code>shouldBlock</code>: A function that returns <code>true</code>{" "}
             to block navigation, or <code>false</code> to allow it. You can call{" "}
             <code>confirm()</code> inside this function to show a confirmation
-            dialog.
+            dialog. Wrap with <code>useCallback</code> when the function depends
+            on state.
           </li>
         </ul>
         <h4>Notes</h4>

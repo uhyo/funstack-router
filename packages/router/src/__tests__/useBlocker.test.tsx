@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, cleanup, act } from "@testing-library/react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Router } from "../Router.js";
 import { Outlet } from "../Outlet.js";
 import { useBlocker } from "../hooks/useBlocker.js";
@@ -21,7 +21,7 @@ describe("useBlocker", () => {
 
   it("throws when used outside Router", () => {
     function TestComponent() {
-      useBlocker(() => true);
+      useBlocker({ shouldBlock: () => true });
       return null;
     }
 
@@ -32,7 +32,7 @@ describe("useBlocker", () => {
 
   it("does not block navigation when shouldBlock returns false", () => {
     function TestComponent() {
-      useBlocker(() => false);
+      useBlocker({ shouldBlock: () => false });
       return <div>Home</div>;
     }
 
@@ -55,7 +55,7 @@ describe("useBlocker", () => {
 
   it("blocks navigation when shouldBlock returns true", () => {
     function TestComponent() {
-      useBlocker(() => true);
+      useBlocker({ shouldBlock: () => true });
       return <div>Home</div>;
     }
 
@@ -78,7 +78,9 @@ describe("useBlocker", () => {
   it("blocks navigation based on dynamic condition", async () => {
     function TestComponent() {
       const [isDirty, setIsDirty] = useState(false);
-      useBlocker(() => isDirty);
+      // Use useCallback to create a stable function reference that updates when isDirty changes
+      const shouldBlock = useCallback(() => isDirty, [isDirty]);
+      useBlocker({ shouldBlock });
       return (
         <div>
           <div>Home</div>
@@ -113,12 +115,12 @@ describe("useBlocker", () => {
 
   it("supports multiple blockers - any true blocks navigation", () => {
     function Blocker1() {
-      useBlocker(() => false);
+      useBlocker({ shouldBlock: () => false });
       return null;
     }
 
     function Blocker2() {
-      useBlocker(() => true);
+      useBlocker({ shouldBlock: () => true });
       return null;
     }
 
@@ -146,12 +148,12 @@ describe("useBlocker", () => {
 
   it("supports multiple blockers - all false allows navigation", () => {
     function Blocker1() {
-      useBlocker(() => false);
+      useBlocker({ shouldBlock: () => false });
       return null;
     }
 
     function Blocker2() {
-      useBlocker(() => false);
+      useBlocker({ shouldBlock: () => false });
       return null;
     }
 
@@ -179,7 +181,8 @@ describe("useBlocker", () => {
 
   it("cleans up blocker on unmount", () => {
     function BlockerComponent({ block }: { block: boolean }) {
-      useBlocker(() => block);
+      const shouldBlock = useCallback(() => block, [block]);
+      useBlocker({ shouldBlock });
       return <div>Blocker</div>;
     }
 
@@ -221,7 +224,7 @@ describe("useBlocker", () => {
     const shouldBlock = vi.fn(() => false);
 
     function TestComponent() {
-      useBlocker(shouldBlock);
+      useBlocker({ shouldBlock });
       return <div>Home</div>;
     }
 
@@ -246,7 +249,7 @@ describe("useBlocker", () => {
     mockNavigation = setupNavigationMock("http://localhost/parent/child");
 
     function Parent() {
-      useBlocker(() => false);
+      useBlocker({ shouldBlock: () => false });
       return (
         <div>
           <div>Parent</div>
@@ -256,7 +259,7 @@ describe("useBlocker", () => {
     }
 
     function Child() {
-      useBlocker(() => true);
+      useBlocker({ shouldBlock: () => true });
       return <div>Child</div>;
     }
 
@@ -284,9 +287,11 @@ describe("useBlocker", () => {
     const callOrder: string[] = [];
 
     function TestComponent() {
-      useBlocker(() => {
-        callOrder.push("blocker");
-        return true;
+      useBlocker({
+        shouldBlock: () => {
+          callOrder.push("blocker");
+          return true;
+        },
       });
       return <div>Home</div>;
     }
@@ -311,7 +316,7 @@ describe("useBlocker", () => {
 
   it("allows onNavigate to be called when blocker allows navigation", () => {
     function TestComponent() {
-      useBlocker(() => false);
+      useBlocker({ shouldBlock: () => false });
       return <div>Home</div>;
     }
 
