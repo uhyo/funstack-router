@@ -7,7 +7,7 @@ The `useBlocker` hook allows components to prevent navigation away from the curr
 ## Design Goals
 
 1. **Synchronous blocking only** - Aligns with the `beforeunload` event's synchronous nature
-2. **Simple API** - Boolean-returning function for maximum flexibility
+2. **Simple API** - Declarative boolean option
 3. **Composable** - Multiple blockers can coexist in the component tree
 4. **Consistent behavior** - Same blocking logic for soft navigations (SPA) and hard navigations (tab close, external URLs)
 
@@ -16,7 +16,11 @@ The `useBlocker` hook allows components to prevent navigation away from the curr
 ### Type Signature
 
 ```typescript
-function useBlocker(shouldBlock: () => boolean): void;
+type UseBlockerOptions = {
+  enabled: boolean;
+};
+
+function useBlocker(options: UseBlockerOptions): void;
 ```
 
 ### Basic Usage
@@ -28,7 +32,7 @@ function EditForm() {
   const [isDirty, setIsDirty] = useState(false);
 
   // Block navigation when form has unsaved changes
-  useBlocker(() => isDirty);
+  useBlocker({ enabled: isDirty });
 
   const handleSave = () => {
     // Save logic...
@@ -62,11 +66,11 @@ To allow navigation, the component must change the blocking condition (e.g., sav
 For navigations within the app (links, programmatic navigation):
 
 1. Navigation event fires
-2. All registered blockers are checked synchronously
-3. If any blocker returns `true`:
+2. All registered blockers are checked
+3. If any blocker has `enabled: true`:
    - Navigation is prevented (`event.preventDefault()`)
    - User remains on current page
-4. If all blockers return `false`:
+4. If all blockers have `enabled: false`:
    - Navigation proceeds normally
 
 ### Hard Navigations
@@ -74,8 +78,8 @@ For navigations within the app (links, programmatic navigation):
 For navigations that leave the page (tab close, external URL, refresh):
 
 1. `beforeunload` event fires
-2. All registered blockers are checked synchronously
-3. If any blocker returns `true`:
+2. All registered blockers are checked
+3. If any blocker has `enabled: true`:
    - `event.preventDefault()` is called
    - `event.returnValue` is set (required by some browsers)
    - Browser shows native confirmation dialog
@@ -91,9 +95,11 @@ type BlockerId = string;
 
 type BlockerRegistry = {
   // Register a blocker, returns unregister function
-  register: (id: BlockerId, shouldBlock: () => boolean) => () => void;
-  // Check all blockers - returns true if any blocks
-  checkAll: () => boolean;
+  register: (id: BlockerId) => () => void;
+  // Update blocker's enabled state
+  setEnabled: (id: BlockerId, enabled: boolean) => void;
+  // Check if any blocker is enabled
+  isBlocked: () => boolean;
 };
 
 type BlockerContextValue = {
@@ -111,11 +117,11 @@ Modify `setupInterception` to check blockers before processing navigation:
 setupInterception(
   routes: InternalRouteDefinition[],
   onNavigate?: OnNavigateCallback,
-  checkBlockers?: () => boolean,  // New parameter
+  isBlocked?: () => boolean,  // New parameter
 ): (() => void) | undefined {
   const handleNavigate = (event: NavigateEvent) => {
     // Check blockers first
-    if (checkBlockers?.()) {
+    if (isBlocked?.()) {
       event.preventDefault();
       return;
     }
@@ -139,7 +145,7 @@ function Router({ routes, children, ... }) {
   // Setup beforeunload handler
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (blockerRegistry.checkAll()) {
+      if (blockerRegistry.isBlocked()) {
         event.preventDefault();
         event.returnValue = "";
       }
@@ -156,7 +162,7 @@ function Router({ routes, children, ... }) {
 #### 3. useBlocker Hook Implementation
 
 ```typescript
-function useBlocker(shouldBlock: () => boolean): void {
+function useBlocker(options: UseBlockerOptions): void {
   const context = useContext(BlockerContext);
   if (!context) {
     throw new Error("useBlocker must be used within a Router");
@@ -167,8 +173,13 @@ function useBlocker(shouldBlock: () => boolean): void {
 
   // Register blocker on mount, unregister on unmount
   useEffect(() => {
-    return registry.register(blockerId, shouldBlock);
-  }, [blockerId, shouldBlock, registry]);
+    return registry.register(blockerId);
+  }, [blockerId, registry]);
+
+  // Update enabled state when it changes
+  useEffect(() => {
+    registry.setEnabled(blockerId, options.enabled);
+  }, [blockerId, options.enabled, registry]);
 }
 ```
 
@@ -183,7 +194,7 @@ NavigateEvent fires
        ▼
 ┌──────────────────┐
 │ Check blockers   │
-│ (synchronously)  │
+│ (any enabled?)   │
 └────────┬─────────┘
          │
     ┌────┴────┐
@@ -205,8 +216,8 @@ current page      │
 
 When multiple components register blockers:
 
-- All are checked; if any returns `true`, navigation is blocked
-- Navigation proceeds only when all blockers return `false`
+- If any has `enabled: true`, navigation is blocked
+- Navigation proceeds only when all have `enabled: false`
 
 ### Nested Routes
 
@@ -252,9 +263,9 @@ The existing `onNavigate` callback on `<Router>` can already prevent navigation:
 
 ### Unit Tests
 
-1. **Basic blocking**: Verify navigation is blocked when `shouldBlock` returns `true`
-2. **Unblocking**: Verify navigation proceeds when `shouldBlock` returns `false`
-3. **Multiple blockers**: Verify any returning `true` blocks navigation
+1. **Basic blocking**: Verify navigation is blocked when `enabled: true`
+2. **Unblocking**: Verify navigation proceeds when `enabled: false`
+3. **Multiple blockers**: Verify any with `enabled: true` blocks navigation
 4. **Unmount behavior**: Verify blocker cleanup on unmount
 
 ### Integration Tests
@@ -275,23 +286,6 @@ This is a new feature with no breaking changes:
 - Existing `onNavigate` callback continues to work
 - Blockers and `onNavigate` can coexist (blockers checked first)
 
-## Open Questions
-
-### 1. Should `shouldBlock` receive navigation info?
-
-```typescript
-// Option A: No arguments (proposed)
-useBlocker(() => isDirty);
-
-// Option B: Receive destination
-useBlocker((destination) => {
-  // Could allow navigation to specific routes
-  return isDirty && !destination.pathname.startsWith("/save");
-});
-```
-
-**Recommendation**: Start with Option A for simplicity. Can extend later if needed.
-
 ## Implementation Plan
 
 1. Create `BlockerContext` and registry utilities
@@ -311,7 +305,7 @@ packages/router/src/
 │   └── useBlocker.ts           # New: useBlocker hook
 ├── core/
 │   ├── NavigationAPIAdapter.ts # Modified: Add blocker check
-│   └── RouterAdapter.ts        # Modified: Add checkBlockers param
+│   └── RouterAdapter.ts        # Modified: Add isBlocked param
 ├── Router.tsx                  # Modified: Provide BlockerContext
 └── index.ts                    # Modified: Export useBlocker
 ```
