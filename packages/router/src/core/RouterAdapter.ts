@@ -56,10 +56,16 @@ export interface RouterAdapter {
   /**
    * Set up navigation interception for route matching.
    * Returns a cleanup function, or undefined if not supported.
+   *
+   * @param routes - Route definitions to match against
+   * @param onNavigate - Optional callback invoked before navigation is intercepted
+   * @param checkBlockers - Optional function to check if any blockers are active.
+   *                        If this function returns true, navigation is prevented.
    */
   setupInterception(
     routes: InternalRouteDefinition[],
     onNavigate?: OnNavigateCallback,
+    checkBlockers?: () => boolean,
   ): (() => void) | undefined;
 
   /**

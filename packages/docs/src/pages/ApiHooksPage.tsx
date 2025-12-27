@@ -65,6 +65,68 @@ function SearchPage() {
   };
 }`}</CodeBlock>
       </article>
+
+      <article className="api-item">
+        <h3>
+          <code>useBlocker(options)</code>
+        </h3>
+        <p>
+          Prevents navigation away from the current route. Useful for scenarios
+          like unsaved form data, ongoing file uploads, or any state that would
+          be lost on navigation.
+        </p>
+        <CodeBlock language="tsx">{`import { useBlocker } from "@funstack/router";
+import { useState, useCallback } from "react";
+
+function EditForm() {
+  const [isDirty, setIsDirty] = useState(false);
+
+  useBlocker({
+    shouldBlock: useCallback(() => {
+      if (isDirty) {
+        return !confirm("You have unsaved changes. Leave anyway?");
+      }
+      return false;
+    }, [isDirty]),
+  });
+
+  const handleSave = () => {
+    // Save logic...
+    setIsDirty(false);
+  };
+
+  return (
+    <form>
+      <input onChange={() => setIsDirty(true)} />
+      <button type="button" onClick={handleSave}>
+        Save
+      </button>
+    </form>
+  );
+}`}</CodeBlock>
+        <h4>Options</h4>
+        <ul>
+          <li>
+            <code>shouldBlock</code>: A function that returns <code>true</code>{" "}
+            to block navigation, or <code>false</code> to allow it. You can call{" "}
+            <code>confirm()</code> inside this function to show a confirmation
+            dialog. Wrap with <code>useCallback</code> when the function depends
+            on state.
+          </li>
+        </ul>
+        <h4>Notes</h4>
+        <ul>
+          <li>
+            Multiple blockers can coexist in the component tree. If any blocker
+            returns <code>true</code>, navigation is blocked.
+          </li>
+          <li>
+            This hook only handles SPA navigations (links, programmatic
+            navigation). For hard navigations (tab close, refresh), handle{" "}
+            <code>beforeunload</code> separately.
+          </li>
+        </ul>
+      </article>
     </div>
   );
 }

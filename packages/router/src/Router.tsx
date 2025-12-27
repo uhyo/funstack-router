@@ -4,10 +4,15 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useState,
   useSyncExternalStore,
 } from "react";
 import { RouterContext } from "./context/RouterContext.js";
 import { RouteContext } from "./context/RouteContext.js";
+import {
+  BlockerContext,
+  createBlockerRegistry,
+} from "./context/BlockerContext.js";
 import {
   type NavigateOptions,
   type MatchedRouteWithData,
@@ -50,6 +55,9 @@ export function Router({
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
 
+  // Create blocker registry once
+  const [blockerRegistry] = useState(() => createBlockerRegistry());
+
   // Subscribe to location changes via adapter
   const locationEntry = useSyncExternalStore(
     useCallback((callback) => adapter.subscribe(callback), [adapter]),
@@ -59,8 +67,12 @@ export function Router({
 
   // Set up navigation interception via adapter
   useEffect(() => {
-    return adapter.setupInterception(routes, onNavigate);
-  }, [adapter, routes, onNavigate]);
+    return adapter.setupInterception(
+      routes,
+      onNavigate,
+      blockerRegistry.checkAll,
+    );
+  }, [adapter, routes, onNavigate, blockerRegistry]);
 
   // Navigate function from adapter
   const navigate = useCallback(
@@ -114,12 +126,16 @@ export function Router({
       updateCurrentEntryState,
     };
 
+    const blockerContextValue = { registry: blockerRegistry };
+
     return (
-      <RouterContext.Provider value={routerContextValue}>
-        {matchedRoutesWithData ? (
-          <RouteRenderer matchedRoutes={matchedRoutesWithData} index={0} />
-        ) : null}
-      </RouterContext.Provider>
+      <BlockerContext.Provider value={blockerContextValue}>
+        <RouterContext.Provider value={routerContextValue}>
+          {matchedRoutesWithData ? (
+            <RouteRenderer matchedRoutes={matchedRoutesWithData} index={0} />
+          ) : null}
+        </RouterContext.Provider>
+      </BlockerContext.Provider>
     );
   }, [
     navigate,
@@ -128,6 +144,7 @@ export function Router({
     locationEntry,
     routes,
     adapter,
+    blockerRegistry,
   ]);
 }
 

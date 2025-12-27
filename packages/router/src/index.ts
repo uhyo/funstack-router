@@ -8,6 +8,7 @@ export { Outlet } from "./Outlet.js";
 export { useNavigate } from "./hooks/useNavigate.js";
 export { useLocation } from "./hooks/useLocation.js";
 export { useSearchParams } from "./hooks/useSearchParams.js";
+export { useBlocker, type UseBlockerOptions } from "./hooks/useBlocker.js";
 
 // Route Definition Helpers
 export { route, routeState } from "./route.js";

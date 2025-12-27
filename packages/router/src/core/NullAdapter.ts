@@ -38,6 +38,7 @@ export class NullAdapter implements RouterAdapter {
   setupInterception(
     _routes: InternalRouteDefinition[],
     _onNavigate?: OnNavigateCallback,
+    _checkBlockers?: () => boolean,
   ): (() => void) | undefined {
     return undefined;
   }
