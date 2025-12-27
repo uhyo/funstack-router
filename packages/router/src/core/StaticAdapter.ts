@@ -58,6 +58,7 @@ export class StaticAdapter implements RouterAdapter {
   setupInterception(
     _routes: InternalRouteDefinition[],
     _onNavigate?: OnNavigateCallback,
+    _checkBlockers?: () => boolean,
   ): (() => void) | undefined {
     // No interception in static mode - links cause full page loads
     return undefined;

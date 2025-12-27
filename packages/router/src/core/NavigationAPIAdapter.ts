@@ -132,6 +132,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
   setupInterception(
     routes: InternalRouteDefinition[],
     onNavigate?: OnNavigateCallback,
+    checkBlockers?: () => boolean,
   ): (() => void) | undefined {
     const handleNavigate = (event: NavigateEvent) => {
       // Capture ephemeral info from the navigate event
@@ -139,6 +140,12 @@ export class NavigationAPIAdapter implements RouterAdapter {
       this.#currentNavigationInfo = event.info;
       // Invalidate cached snapshot to pick up new info
       this.#cachedSnapshot = null;
+
+      // Check blockers first - if any blocker returns true, prevent navigation
+      if (checkBlockers?.()) {
+        event.preventDefault();
+        return;
+      }
 
       // Only intercept same-origin navigations
       if (!event.canIntercept) {
