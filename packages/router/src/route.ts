@@ -208,3 +208,47 @@ export function routeState<TState>(): {
     return definition as unknown as OpaqueRouteDefinition;
   };
 }
+
+/**
+ * Input type for a single route in the routes array.
+ * Accepts routes with or without loaders.
+ */
+type RouteInput<TPath extends string = string, TData = unknown> =
+  | RouteWithLoader<TPath, TData, undefined>
+  | RouteWithoutLoader<TPath, undefined>;
+
+/**
+ * Helper function for creating an array of type-safe route definitions.
+ *
+ * This is a convenience function that allows defining multiple routes at once
+ * with the same type safety as the `route` helper function.
+ *
+ * @example
+ * ```typescript
+ * // Define multiple routes at once
+ * const myRoutes = routes([
+ *   {
+ *     path: "/",
+ *     component: Layout,
+ *     children: [...]
+ *   },
+ *   {
+ *     path: "users/:userId",
+ *     loader: async ({ params, signal }) => {
+ *       const res = await fetch(`/api/users/${params.userId}`, { signal });
+ *       return res.json() as Promise<User>;
+ *     },
+ *     component: UserDetail,
+ *   },
+ *   {
+ *     path: "about",
+ *     component: AboutPage,
+ *   },
+ * ]);
+ * ```
+ */
+export function routes<const T extends readonly RouteInput[]>(
+  definitions: T,
+): OpaqueRouteDefinition[] {
+  return definitions as unknown as OpaqueRouteDefinition[];
+}

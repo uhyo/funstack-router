@@ -13,7 +13,7 @@ export { useSearchParams } from "./hooks/useSearchParams.js";
 export { useBlocker, type UseBlockerOptions } from "./hooks/useBlocker.js";
 
 // Route Definition Helpers
-export { route, routeState } from "./route.js";
+export { route, routes, routeState } from "./route.js";
 
 // Types
 export type {

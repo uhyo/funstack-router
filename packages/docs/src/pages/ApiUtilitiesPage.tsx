@@ -106,6 +106,62 @@ const myRoute = route({
 
       <article className="api-item">
         <h3>
+          <code>routes()</code>
+        </h3>
+        <p>
+          Helper function to define an array of routes. This is a convenience
+          function that allows defining multiple routes at once. For full type
+          safety with loaders and path params, you can use <code>route()</code>{" "}
+          for individual routes within the array.
+        </p>
+        <CodeBlock language="tsx">{`import { routes, route } from "@funstack/router";
+
+// Define multiple routes at once
+const myRoutes = routes([
+  // Simple routes can use plain objects
+  { path: "/", component: HomePage },
+  { path: "/about", component: AboutPage },
+
+  // Use route() for routes that need type inference
+  route({
+    path: "/users/:userId",
+    loader: async ({ params }) => fetchUser(params.userId),
+    component: UserPage,
+  }),
+]);
+
+// Pass to Router
+<Router routes={myRoutes} />`}</CodeBlock>
+        <h4>Options</h4>
+        <table className="props-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <code>definitions</code>
+              </td>
+              <td>
+                <code>RouteDefinition[]</code>
+              </td>
+              <td>Array of route definition objects</td>
+            </tr>
+          </tbody>
+        </table>
+        <h4>Returns</h4>
+        <p>
+          <code>OpaqueRouteDefinition[]</code> - An array of route definitions
+          that can be passed to the <code>Router</code> component.
+        </p>
+      </article>
+
+      <article className="api-item">
+        <h3>
           <code>routeState&lt;TState&gt;()</code>
         </h3>
         <p>
@@ -208,15 +264,16 @@ const productRoute = routeState<{ filter: string }>()({
       <article className="api-item">
         <h3>Server Entry Point</h3>
         <p>
-          The <code>route()</code> and <code>routeState()</code> helpers are
-          also available from a server-compatible entry point. Use this when
-          defining routes in React Server Components or other server-side code.
+          The <code>route()</code>, <code>routes()</code>, and{" "}
+          <code>routeState()</code> helpers are also available from a
+          server-compatible entry point. Use this when defining routes in React
+          Server Components or other server-side code.
         </p>
         <CodeBlock language="tsx">{`// In Server Components or server-side route definitions
-import { route, routeState } from "@funstack/router/server";
+import { route, routes, routeState } from "@funstack/router/server";
 
 // Define routes without the "use client" directive
-const routes = [
+const appRoutes = routes([
   route({
     path: "/",
     component: HomePage,
@@ -225,7 +282,7 @@ const routes = [
     path: "/dashboard",
     component: DashboardPage,
   }),
-];`}</CodeBlock>
+]);`}</CodeBlock>
         <h4>When to Use</h4>
         <ul>
           <li>Defining routes in React Server Components</li>
@@ -241,6 +298,9 @@ const routes = [
         <ul>
           <li>
             <code>route</code> - Route definition helper
+          </li>
+          <li>
+            <code>routes</code> - Array route definition helper
           </li>
           <li>
             <code>routeState</code> - Route definition helper with typed state

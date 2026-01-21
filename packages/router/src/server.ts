@@ -2,7 +2,7 @@
 // Use this entry point when defining routes in server components
 
 // Route Definition Helpers
-export { route, routeState } from "./route.js";
+export { route, routes, routeState } from "./route.js";
 
 // Types
 export type {
