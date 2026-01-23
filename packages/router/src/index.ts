@@ -33,4 +33,6 @@ export type {
   PathParams,
   RouteComponentProps,
   RouteComponentPropsWithData,
+  OpaqueRouteDefinition,
+  TypefulOpaqueRouteDefinition,
 } from "./route.js";
