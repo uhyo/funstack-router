@@ -11,6 +11,9 @@ export { useNavigate } from "./hooks/useNavigate.js";
 export { useLocation } from "./hooks/useLocation.js";
 export { useSearchParams } from "./hooks/useSearchParams.js";
 export { useBlocker, type UseBlockerOptions } from "./hooks/useBlocker.js";
+export { useRouteParams } from "./hooks/useRouteParams.js";
+export { useRouteState } from "./hooks/useRouteState.js";
+export { useRouteData } from "./hooks/useRouteData.js";
 
 // Route Definition Helpers
 export { route, routeState } from "./route.js";
@@ -35,4 +38,8 @@ export type {
   RouteComponentPropsWithData,
   OpaqueRouteDefinition,
   TypefulOpaqueRouteDefinition,
+  ExtractRouteId,
+  ExtractRouteParams,
+  ExtractRouteState,
+  ExtractRouteData,
 } from "./route.js";

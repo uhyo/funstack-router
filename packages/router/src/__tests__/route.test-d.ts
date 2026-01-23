@@ -3,7 +3,14 @@ import { route, routeState } from "../route.js";
 import type {
   TypefulOpaqueRouteDefinition,
   OpaqueRouteDefinition,
+  ExtractRouteId,
+  ExtractRouteParams,
+  ExtractRouteState,
+  ExtractRouteData,
 } from "../route.js";
+import { useRouteParams } from "../hooks/useRouteParams.js";
+import { useRouteState } from "../hooks/useRouteState.js";
+import { useRouteData } from "../hooks/useRouteData.js";
 
 describe("route() type inference", () => {
   it("returns OpaqueRouteDefinition when id is not provided", () => {
@@ -100,5 +107,114 @@ describe("routeState() type inference", () => {
         { items: string[] }
       >
     >();
+  });
+});
+
+describe("Type extraction utilities", () => {
+  it("ExtractRouteId extracts the id type", () => {
+    const r = route({
+      id: "user",
+      path: "/users/:userId",
+      component: () => null,
+    });
+    type Id = ExtractRouteId<typeof r>;
+    expectTypeOf<Id>().toEqualTypeOf<"user">();
+  });
+
+  it("ExtractRouteParams extracts the params type", () => {
+    const r = route({
+      id: "user",
+      path: "/users/:userId",
+      component: () => null,
+    });
+    type Params = ExtractRouteParams<typeof r>;
+    expectTypeOf<Params>().toEqualTypeOf<{ userId: string }>();
+  });
+
+  it("ExtractRouteState extracts the state type", () => {
+    type MyState = { scrollPos: number };
+    const r = routeState<MyState>()({
+      id: "scroll",
+      path: "/scroll",
+      component: () => null,
+    });
+    type State = ExtractRouteState<typeof r>;
+    expectTypeOf<State>().toEqualTypeOf<MyState>();
+  });
+
+  it("ExtractRouteData extracts the data type", () => {
+    const r = route({
+      id: "user",
+      path: "/users/:userId",
+      loader: () => ({ name: "John", age: 30 }),
+      component: () => null,
+    });
+    type Data = ExtractRouteData<typeof r>;
+    expectTypeOf<Data>().toEqualTypeOf<{ name: string; age: number }>();
+  });
+});
+
+describe("useRouteParams type inference", () => {
+  it("returns correctly typed params", () => {
+    const userRoute = route({
+      id: "user",
+      path: "/users/:userId",
+      component: () => null,
+    });
+
+    // Type check the return type of useRouteParams
+    const params = useRouteParams(userRoute);
+    expectTypeOf(params).toEqualTypeOf<{ userId: string }>();
+  });
+
+  it("handles multiple params", () => {
+    const postRoute = route({
+      id: "post",
+      path: "/users/:userId/posts/:postId",
+      component: () => null,
+    });
+
+    const params = useRouteParams(postRoute);
+    expectTypeOf(params).toEqualTypeOf<{ userId: string; postId: string }>();
+  });
+});
+
+describe("useRouteState type inference", () => {
+  it("returns correctly typed state or undefined", () => {
+    type MyState = { scrollPos: number };
+    const scrollRoute = routeState<MyState>()({
+      id: "scroll",
+      path: "/scroll",
+      component: () => null,
+    });
+
+    const state = useRouteState(scrollRoute);
+    expectTypeOf(state).toEqualTypeOf<MyState | undefined>();
+  });
+});
+
+describe("useRouteData type inference", () => {
+  it("returns correctly typed data", () => {
+    const userRoute = route({
+      id: "user",
+      path: "/users/:userId",
+      loader: () => ({ name: "John", age: 30 }),
+      component: () => null,
+    });
+
+    const data = useRouteData(userRoute);
+    expectTypeOf(data).toEqualTypeOf<{ name: string; age: number }>();
+  });
+
+  it("handles async loader return type", () => {
+    const userRoute = route({
+      id: "user",
+      path: "/users/:userId",
+      loader: async () => ({ name: "John", age: 30 }),
+      component: () => null,
+    });
+
+    const data = useRouteData(userRoute);
+    expectTypeOf(data).toEqualTypeOf<Promise<{ name: string; age: number }>>();
   });
 });

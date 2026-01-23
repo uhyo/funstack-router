@@ -101,6 +101,50 @@ export interface TypefulOpaqueRouteDefinition<
   children?: RouteDefinition[];
 }
 
+/** Extract the Id type from a TypefulOpaqueRouteDefinition */
+export type ExtractRouteId<T> =
+  T extends TypefulOpaqueRouteDefinition<
+    infer Id,
+    infer _Params,
+    infer _State,
+    infer _Data
+  >
+    ? Id
+    : never;
+
+/** Extract the Params type from a TypefulOpaqueRouteDefinition */
+export type ExtractRouteParams<T> =
+  T extends TypefulOpaqueRouteDefinition<
+    infer _Id,
+    infer Params,
+    infer _State,
+    infer _Data
+  >
+    ? Params
+    : never;
+
+/** Extract the State type from a TypefulOpaqueRouteDefinition */
+export type ExtractRouteState<T> =
+  T extends TypefulOpaqueRouteDefinition<
+    infer _Id,
+    infer _Params,
+    infer State,
+    infer _Data
+  >
+    ? State
+    : never;
+
+/** Extract the Data type from a TypefulOpaqueRouteDefinition */
+export type ExtractRouteData<T> =
+  T extends TypefulOpaqueRouteDefinition<
+    infer _Id,
+    infer _Params,
+    infer _State,
+    infer Data
+  >
+    ? Data
+    : never;
+
 /**
  * Any route definition defined by user.
  */

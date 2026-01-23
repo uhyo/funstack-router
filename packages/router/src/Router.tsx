@@ -238,9 +238,19 @@ function RouteRenderer({
       <RouteRenderer matchedRoutes={matchedRoutes} index={index + 1} />
     ) : null;
 
+  // Extract id from route definition (if available)
+  const routeId = (route as { id?: string }).id;
+
   const routeContextValue = useMemo(
-    () => ({ params, matchedPath: pathname, outlet }),
-    [params, pathname, outlet],
+    () => ({
+      id: routeId,
+      params,
+      matchedPath: pathname,
+      state: routeState,
+      data,
+      outlet,
+    }),
+    [routeId, params, pathname, routeState, data, outlet],
   );
 
   // Render component with or without data prop based on loader presence
