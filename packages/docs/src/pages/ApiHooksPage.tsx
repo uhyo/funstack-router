@@ -127,6 +127,128 @@ function EditForm() {
           </li>
         </ul>
       </article>
+
+      <h2>Type-Safe Hooks</h2>
+      <p>
+        These hooks provide type-safe access to route data when using routes
+        defined with an <code>id</code>. They extract type information from{" "}
+        <code>TypefulOpaqueRouteDefinition</code> and validate at runtime that
+        you're using them within the correct route.
+      </p>
+
+      <article className="api-item">
+        <h3>
+          <code>useRouteParams(route)</code>
+        </h3>
+        <p>
+          Returns typed route parameters for the given route definition. The
+          parameter types are automatically inferred from the route's path
+          pattern.
+        </p>
+        <CodeBlock language="tsx">{`import { route, useRouteParams } from "@funstack/router";
+
+// Define route with id for type-safe access
+const userRoute = route({
+  id: "user",
+  path: "/users/:userId",
+  component: UserPage,
+});
+
+function UserPage() {
+  // params is typed as { userId: string }
+  const params = useRouteParams(userRoute);
+
+  return <div>User ID: {params.userId}</div>;
+}`}</CodeBlock>
+        <h4>Errors</h4>
+        <ul>
+          <li>Throws if called outside a route component (no RouteContext).</li>
+          <li>
+            Throws if the current route's <code>id</code> doesn't match the
+            provided route definition's <code>id</code>.
+          </li>
+        </ul>
+      </article>
+
+      <article className="api-item">
+        <h3>
+          <code>useRouteState(route)</code>
+        </h3>
+        <p>
+          Returns typed navigation state for the given route definition. Use
+          this with routes defined via <code>routeState&lt;T&gt;()</code> to get
+          properly typed state.
+        </p>
+        <CodeBlock language="tsx">{`import { routeState, useRouteState } from "@funstack/router";
+
+type ScrollState = { scrollPos: number };
+
+const scrollRoute = routeState<ScrollState>()({
+  id: "scroll",
+  path: "/page",
+  component: ScrollPage,
+});
+
+function ScrollPage() {
+  // state is typed as ScrollState | undefined
+  const state = useRouteState(scrollRoute);
+
+  return <div>Scroll position: {state?.scrollPos ?? 0}</div>;
+}`}</CodeBlock>
+        <h4>Return Value</h4>
+        <p>
+          Returns <code>State | undefined</code>. State is{" "}
+          <code>undefined</code> on initial visit and when navigating to a new
+          entry without state.
+        </p>
+        <h4>Errors</h4>
+        <ul>
+          <li>Throws if called outside a route component (no RouteContext).</li>
+          <li>
+            Throws if the current route's <code>id</code> doesn't match the
+            provided route definition's <code>id</code>.
+          </li>
+        </ul>
+      </article>
+
+      <article className="api-item">
+        <h3>
+          <code>useRouteData(route)</code>
+        </h3>
+        <p>
+          Returns typed loader data for the given route definition. The data
+          type is automatically inferred from the route's <code>loader</code>{" "}
+          function.
+        </p>
+        <CodeBlock language="tsx">{`import { route, useRouteData } from "@funstack/router";
+
+const userRoute = route({
+  id: "user",
+  path: "/users/:userId",
+  loader: async ({ params }) => {
+    const res = await fetch(\`/api/users/\${params.userId}\`);
+    return res.json() as Promise<{ name: string; age: number }>;
+  },
+  component: UserPage,
+});
+
+function UserPage() {
+  // data is typed as Promise<{ name: string; age: number }>
+  const data = useRouteData(userRoute);
+
+  // Use with React.use() or Suspense
+  const user = use(data);
+  return <div>User: {user.name}</div>;
+}`}</CodeBlock>
+        <h4>Errors</h4>
+        <ul>
+          <li>Throws if called outside a route component (no RouteContext).</li>
+          <li>
+            Throws if the current route's <code>id</code> doesn't match the
+            provided route definition's <code>id</code>.
+          </li>
+        </ul>
+      </article>
     </div>
   );
 }

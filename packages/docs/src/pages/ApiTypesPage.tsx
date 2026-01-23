@@ -103,6 +103,72 @@ type MyParams = PathParams<"/users/:userId">;
 
       <article className="api-item">
         <h3>
+          <code>
+            TypefulOpaqueRouteDefinition&lt;Id, Params, State, Data&gt;
+          </code>
+        </h3>
+        <p>
+          A route definition that carries type information. Created when using{" "}
+          <code>route()</code> or <code>routeState()</code> with an{" "}
+          <code>id</code> property. This enables type-safe access to route
+          params, state, and data via hooks.
+        </p>
+        <CodeBlock language="tsx">{`import { route, routeState } from "@funstack/router";
+import type { TypefulOpaqueRouteDefinition } from "@funstack/router";
+
+// Route with id gets TypefulOpaqueRouteDefinition type
+const userRoute = route({
+  id: "user",
+  path: "/users/:userId",
+  loader: () => ({ name: "John" }),
+  component: UserPage,
+});
+// Type: TypefulOpaqueRouteDefinition<"user", { userId: string }, undefined, { name: string }>
+
+// Route without id gets OpaqueRouteDefinition (no type info)
+const aboutRoute = route({
+  path: "/about",
+  component: AboutPage,
+});
+// Type: OpaqueRouteDefinition`}</CodeBlock>
+      </article>
+
+      <article className="api-item">
+        <h3>Type Extraction Utilities</h3>
+        <p>
+          Helper types to extract type information from{" "}
+          <code>TypefulOpaqueRouteDefinition</code>. Useful for advanced type
+          manipulation.
+        </p>
+        <CodeBlock language="tsx">{`import type {
+  ExtractRouteId,
+  ExtractRouteParams,
+  ExtractRouteState,
+  ExtractRouteData,
+} from "@funstack/router";
+
+const userRoute = route({
+  id: "user",
+  path: "/users/:userId",
+  loader: () => ({ name: "John", age: 30 }),
+  component: UserPage,
+});
+
+type Id = ExtractRouteId<typeof userRoute>;
+// "user"
+
+type Params = ExtractRouteParams<typeof userRoute>;
+// { userId: string }
+
+type State = ExtractRouteState<typeof userRoute>;
+// undefined
+
+type Data = ExtractRouteData<typeof userRoute>;
+// { name: string; age: number }`}</CodeBlock>
+      </article>
+
+      <article className="api-item">
+        <h3>
           <code>RouteDefinition</code>
         </h3>
         <p>
