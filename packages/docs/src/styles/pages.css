@@ -225,3 +225,19 @@
 .learn-content li strong {
   color: var(--color-text);
 }
+
+/* Not Found Page */
+.not-found-page {
+  text-align: center;
+  padding: 64px 0;
+}
+
+.not-found-page h1 {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.not-found-page p {
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+}

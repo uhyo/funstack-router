@@ -12,6 +12,7 @@ import { LearnNavigationApiPage } from "./pages/LearnNavigationApiPage.js";
 import { LearnNestedRoutesPage } from "./pages/LearnNestedRoutesPage.js";
 import { LearnTypeSafetyPage } from "./pages/LearnTypeSafetyPage.js";
 import { ExamplesPage } from "./pages/ExamplesPage.js";
+import { NotFoundPage } from "./pages/NotFoundPage.js";
 import { useEffect } from "react";
 
 const routes = [
@@ -70,6 +71,9 @@ const routes = [
       route({
         path: "/examples",
         component: ExamplesPage,
+      }),
+      route({
+        component: NotFoundPage,
       }),
     ],
   }),
