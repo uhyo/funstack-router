@@ -25,6 +25,32 @@ function matchRoute(
   pathname: string,
 ): MatchedRoute[] | null {
   const hasChildren = Boolean(route.children?.length);
+
+  // Handle pathless routes - always match, consume nothing
+  if (route.path === undefined) {
+    const result: MatchedRoute = {
+      route,
+      params: {},
+      pathname: "",
+    };
+
+    if (hasChildren) {
+      for (const child of route.children!) {
+        const childMatch = matchRoute(child, pathname);
+        if (childMatch) {
+          return [result, ...childMatch];
+        }
+      }
+      // No children matched - only valid if this route has a component
+      if (route.component) {
+        return [result];
+      }
+      return null;
+    }
+
+    return [result];
+  }
+
   const isExact = route.exact ?? !hasChildren;
 
   const { matched, params, consumedPathname } = matchPath(

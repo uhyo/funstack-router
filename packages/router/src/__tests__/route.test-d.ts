@@ -218,3 +218,73 @@ describe("useRouteData type inference", () => {
     expectTypeOf(data).toEqualTypeOf<Promise<{ name: string; age: number }>>();
   });
 });
+
+describe("pathless route type inference", () => {
+  it("pathless route has Record<string, never> params type", () => {
+    const layoutRoute = route({
+      id: "layout",
+      component: () => null,
+    });
+
+    expectTypeOf(layoutRoute).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<
+        "layout",
+        Record<string, never>,
+        undefined,
+        undefined
+      >
+    >();
+  });
+
+  it("pathless route with loader infers data type correctly", () => {
+    const layoutRoute = route({
+      id: "layout",
+      loader: () => ({ theme: "dark" }),
+      component: () => null,
+    });
+
+    expectTypeOf(layoutRoute).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<
+        "layout",
+        Record<string, never>,
+        undefined,
+        { theme: string }
+      >
+    >();
+  });
+
+  it("pathless route without id returns OpaqueRouteDefinition", () => {
+    const layoutRoute = route({
+      component: () => null,
+    });
+
+    expectTypeOf(layoutRoute).toEqualTypeOf<OpaqueRouteDefinition>();
+  });
+
+  it("pathless route with state returns correct types", () => {
+    type MyState = { expanded: boolean };
+    const layoutRoute = routeState<MyState>()({
+      id: "layout",
+      component: () => null,
+    });
+
+    expectTypeOf(layoutRoute).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<
+        "layout",
+        Record<string, never>,
+        MyState,
+        undefined
+      >
+    >();
+  });
+
+  it("useRouteParams with pathless route returns empty object type", () => {
+    const layoutRoute = route({
+      id: "layout",
+      component: () => null,
+    });
+
+    const params = useRouteParams(layoutRoute);
+    expectTypeOf(params).toEqualTypeOf<Record<string, never>>();
+  });
+});

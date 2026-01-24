@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { matchRoutes } from "../core/matchRoutes.js";
-import { internalRoutes, type InternalRouteDefinition } from "../types.js";
+import { internalRoutes } from "../types.js";
 
 describe("matchRoutes", () => {
   describe("basic matching", () => {
@@ -227,6 +227,144 @@ describe("matchRoutes", () => {
       expect(result).toHaveLength(1);
       expect(result![0].params).toEqual({ id: "123" });
       expect(result![0].pathname).toBe("/users/123");
+    });
+  });
+
+  describe("pathless routes", () => {
+    it("pathless route always matches any pathname", () => {
+      const routes = internalRoutes([{ component: () => null }]);
+
+      expect(matchRoutes(routes, "/")).toHaveLength(1);
+      expect(matchRoutes(routes, "/about")).toHaveLength(1);
+      expect(matchRoutes(routes, "/users/123/posts")).toHaveLength(1);
+    });
+
+    it("pathless route has empty params and empty pathname", () => {
+      const routes = internalRoutes([{ component: () => null }]);
+
+      const result = matchRoutes(routes, "/users/123");
+      expect(result).toHaveLength(1);
+      expect(result![0].params).toEqual({});
+      expect(result![0].pathname).toBe("");
+    });
+
+    it("pathless route passes full pathname to children", () => {
+      const routes = internalRoutes([
+        {
+          component: () => null,
+          children: [{ path: "/users/:id", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/users/123");
+      expect(result).toHaveLength(2);
+      expect(result![0].params).toEqual({});
+      expect(result![0].pathname).toBe("");
+      expect(result![1].params).toEqual({ id: "123" });
+      expect(result![1].pathname).toBe("/users/123");
+    });
+
+    it("pathless layout wrapper between parent and children", () => {
+      const routes = internalRoutes([
+        {
+          path: "/",
+          component: () => null,
+          children: [
+            {
+              // Pathless layout wrapper
+              component: () => null,
+              children: [
+                { path: "about", component: () => null },
+                { path: "contact", component: () => null },
+              ],
+            },
+          ],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/about");
+      expect(result).toHaveLength(3);
+      expect(result![0].route.path).toBe("/");
+      expect(result![1].route.path).toBeUndefined();
+      expect(result![2].route.path).toBe("about");
+    });
+
+    it("pathless route inherits params from ancestors", () => {
+      const routes = internalRoutes([
+        {
+          path: "/org/:orgId",
+          component: () => null,
+          children: [
+            {
+              // Pathless layout
+              component: () => null,
+              children: [{ path: "users/:userId", component: () => null }],
+            },
+          ],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/org/acme/users/123");
+      expect(result).toHaveLength(3);
+      // Child should inherit params from parent through pathless route
+      expect(result![2].params).toEqual({ orgId: "acme", userId: "123" });
+    });
+
+    it("pathless route as catch-all (leaf route)", () => {
+      const routes = internalRoutes([
+        { path: "/specific", component: () => null },
+        { component: () => null }, // Catch-all
+      ]);
+
+      expect(matchRoutes(routes, "/specific")).toHaveLength(1);
+      expect(matchRoutes(routes, "/specific")![0].route.path).toBe("/specific");
+
+      expect(matchRoutes(routes, "/anything")).toHaveLength(1);
+      expect(matchRoutes(routes, "/anything")![0].route.path).toBeUndefined();
+    });
+
+    it("pathless route without component requires matching children", () => {
+      const routes = internalRoutes([
+        {
+          // Pathless route without component
+          children: [{ path: "/about", component: () => null }],
+        },
+      ]);
+
+      // Should match when child matches
+      expect(matchRoutes(routes, "/about")).toHaveLength(2);
+
+      // Should not match when no child matches
+      expect(matchRoutes(routes, "/contact")).toBeNull();
+    });
+
+    it("multiple pathless routes in sequence", () => {
+      const routes = internalRoutes([
+        {
+          path: "/",
+          component: () => null,
+          children: [
+            {
+              // First pathless wrapper
+              component: () => null,
+              children: [
+                {
+                  // Second pathless wrapper
+                  component: () => null,
+                  children: [{ path: "deep", component: () => null }],
+                },
+              ],
+            },
+          ],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/deep");
+      expect(result).toHaveLength(4);
+      expect(result![0].route.path).toBe("/");
+      expect(result![1].route.path).toBeUndefined();
+      expect(result![2].route.path).toBeUndefined();
+      expect(result![3].route.path).toBe("deep");
     });
   });
 });

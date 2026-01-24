@@ -77,7 +77,7 @@ export type RouteComponentPropsWithData<
  */
 export interface OpaqueRouteDefinition {
   [routeDefinitionSymbol]: never;
-  path: string;
+  path?: string;
   children?: RouteDefinition[];
   exact?: boolean;
 }
@@ -98,7 +98,7 @@ export interface TypefulOpaqueRouteDefinition<
     state: State;
     data: Data;
   };
-  path: string;
+  path?: string;
   children?: RouteDefinition[];
   exact?: boolean;
 }
@@ -159,7 +159,7 @@ export type RouteDefinition =
       unknown
     >
   | {
-      path: string;
+      path?: string;
       component?: ComponentType<object> | ReactNode;
       children?: RouteDefinition[];
       exact?: boolean;
@@ -210,6 +210,42 @@ type RouteWithoutLoader<
 };
 
 /**
+ * Pathless route definition with loader.
+ * Pathless routes always match and don't consume any pathname.
+ */
+type PathlessRouteWithLoader<
+  TData,
+  TState,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path?: undefined;
+  loader: (args: LoaderArgs) => TData;
+  component:
+    | ComponentType<
+        RouteComponentPropsWithData<Record<string, never>, TData, TState>
+      >
+    | ReactNode;
+  children?: RouteDefinition[];
+};
+
+/**
+ * Pathless route definition without loader.
+ * Pathless routes always match and don't consume any pathname.
+ */
+type PathlessRouteWithoutLoader<
+  TState,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path?: undefined;
+  component?:
+    | ComponentType<RouteComponentProps<Record<string, never>, TState>>
+    | ReactNode;
+  children?: RouteDefinition[];
+};
+
+/**
  * Helper function for creating type-safe route definitions.
  *
  * When a loader is provided, TypeScript infers the return type and ensures
@@ -237,6 +273,27 @@ type RouteWithoutLoader<
  * });
  * ```
  */
+// Pathless overload with id + loader → TypefulOpaqueRouteDefinition
+export function route<TId extends string, TData>(
+  definition: PathlessRouteWithLoader<TData, undefined, TId> & { id: TId },
+): TypefulOpaqueRouteDefinition<TId, Record<string, never>, undefined, TData>;
+// Pathless overload with id + no loader → TypefulOpaqueRouteDefinition
+export function route<TId extends string>(
+  definition: PathlessRouteWithoutLoader<undefined, TId> & { id: TId },
+): TypefulOpaqueRouteDefinition<
+  TId,
+  Record<string, never>,
+  undefined,
+  undefined
+>;
+// Pathless overload with loader (no id)
+export function route<TData>(
+  definition: PathlessRouteWithLoader<TData, undefined>,
+): OpaqueRouteDefinition;
+// Pathless overload without loader (no id)
+export function route(
+  definition: PathlessRouteWithoutLoader<undefined>,
+): OpaqueRouteDefinition;
 // Overload with id + loader → TypefulOpaqueRouteDefinition
 export function route<TId extends string, TPath extends string, TData>(
   definition: RouteWithLoader<TPath, TData, undefined, TId> & { id: TId },
@@ -256,12 +313,17 @@ export function route<TPath extends string>(
 // Implementation
 export function route<TId extends string, TPath extends string, TData>(
   definition:
+    | (PathlessRouteWithLoader<TData, undefined, TId> & { id: TId })
+    | (PathlessRouteWithoutLoader<undefined, TId> & { id: TId })
+    | PathlessRouteWithLoader<TData, undefined>
+    | PathlessRouteWithoutLoader<undefined>
     | (RouteWithLoader<TPath, TData, undefined, TId> & { id: TId })
     | (RouteWithoutLoader<TPath, undefined, TId> & { id: TId })
     | RouteWithLoader<TPath, TData, undefined>
     | RouteWithoutLoader<TPath, undefined>,
 ):
   | TypefulOpaqueRouteDefinition<TId, PathParams<TPath>, undefined, TData>
+  | TypefulOpaqueRouteDefinition<TId, Record<string, never>, undefined, TData>
   | OpaqueRouteDefinition {
   return definition as unknown as OpaqueRouteDefinition;
 }
@@ -291,6 +353,25 @@ export function route<TId extends string, TPath extends string, TData>(
  * ```
  */
 export function routeState<TState>(): {
+  // Pathless overload with id + loader → TypefulOpaqueRouteDefinition
+  <TId extends string, TData>(
+    definition: PathlessRouteWithLoader<TData, TState, TId> & { id: TId },
+  ): TypefulOpaqueRouteDefinition<TId, Record<string, never>, TState, TData>;
+  // Pathless overload with id + no loader → TypefulOpaqueRouteDefinition
+  <TId extends string>(
+    definition: PathlessRouteWithoutLoader<TState, TId> & { id: TId },
+  ): TypefulOpaqueRouteDefinition<
+    TId,
+    Record<string, never>,
+    TState,
+    undefined
+  >;
+  // Pathless overload with loader (no id)
+  <TData>(
+    definition: PathlessRouteWithLoader<TData, TState>,
+  ): OpaqueRouteDefinition;
+  // Pathless overload without loader (no id)
+  (definition: PathlessRouteWithoutLoader<TState>): OpaqueRouteDefinition;
   // Overload with id + loader → TypefulOpaqueRouteDefinition
   <TId extends string, TPath extends string, TData>(
     definition: RouteWithLoader<TPath, TData, TState, TId> & { id: TId },

@@ -235,6 +235,93 @@ function ProductList() {
       </section>
 
       <section>
+        <h2>Pathless Routes</h2>
+        <p>
+          Routes without a <code>path</code> are called "pathless routes". They
+          always match and don't consume any pathname, making them ideal for
+          layout wrappers that don't affect the URL structure.
+        </p>
+        <CodeBlock language="tsx">{`import { route, Outlet } from "@funstack/router";
+
+// A layout wrapper that provides authentication context
+function AuthLayout() {
+  return (
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
+  );
+}
+
+// A layout wrapper that provides a sidebar
+function DashboardLayout() {
+  return (
+    <div className="dashboard">
+      <Sidebar />
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+const routes = [
+  route({
+    path: "/",
+    component: RootLayout,
+    children: [
+      route({ path: "/", component: HomePage }),
+      route({ path: "/about", component: AboutPage }),
+      // Pathless route wraps authenticated pages
+      route({
+        component: AuthLayout,
+        children: [
+          // Another pathless route for dashboard layout
+          route({
+            component: DashboardLayout,
+            children: [
+              route({ path: "/dashboard", component: DashboardHome }),
+              route({ path: "/dashboard/settings", component: Settings }),
+              route({ path: "/dashboard/profile", component: Profile }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  }),
+];`}</CodeBlock>
+        <p>Key behaviors of pathless routes:</p>
+        <ul>
+          <li>
+            <strong>Always match</strong> - They don't participate in path
+            matching
+          </li>
+          <li>
+            <strong>Consume no pathname</strong> - Children receive the full
+            remaining pathname
+          </li>
+          <li>
+            <strong>No params</strong> - The <code>params</code> prop is always
+            an empty object
+          </li>
+          <li>
+            <strong>Can have loaders</strong> - Pathless routes can still load
+            data
+          </li>
+        </ul>
+        <h3>Catch-All Routes</h3>
+        <p>
+          A pathless route at the end of a route list can serve as a catch-all
+          for unmatched paths:
+        </p>
+        <CodeBlock language="tsx">{`const routes = [
+  route({ path: "/", component: HomePage }),
+  route({ path: "/about", component: AboutPage }),
+  // Catch-all: matches any unmatched path
+  route({ component: NotFoundPage }),
+];`}</CodeBlock>
+      </section>
+
+      <section>
         <h2>Navigation Callback</h2>
         <p>
           React to navigation events. The callback receives the{" "}

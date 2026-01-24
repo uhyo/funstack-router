@@ -64,10 +64,12 @@ const myRoute = route({
                 <code>path</code>
               </td>
               <td>
-                <code>string</code>
+                <code>string</code> (optional)
               </td>
               <td>
-                URL path pattern (supports <code>:param</code> syntax)
+                URL path pattern (supports <code>:param</code> syntax). If
+                omitted, creates a pathless route that always matches and
+                consumes no pathname. Useful for layout wrappers.
               </td>
             </tr>
             <tr>
