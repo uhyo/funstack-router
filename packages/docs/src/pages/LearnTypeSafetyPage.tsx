@@ -449,6 +449,52 @@ function UserPostsPage() {
           FUNSTACK Router exports several utility types for extracting
           information from route definitions:
         </p>
+
+        <h4>RouteComponentPropsOf</h4>
+        <p>
+          The most useful utility for typing route components is{" "}
+          <code>RouteComponentPropsOf</code>. It extracts the complete props
+          type from a route definition, so you don't have to manually construct{" "}
+          <code>RouteComponentProps</code> or{" "}
+          <code>RouteComponentPropsWithData</code> types.
+        </p>
+        <CodeBlock language="tsx">{`import { route, routeState } from "@funstack/router";
+import type { RouteComponentPropsOf } from "@funstack/router";
+
+// Define the route
+const userRoute = route({
+  id: "user",
+  path: "/users/:userId",
+  loader: async ({ params }) => {
+    const response = await fetch(\`/api/users/\${params.userId}\`);
+    return response.json() as Promise<User>;
+  },
+  component: UserPage,
+});
+
+// Extract props type directly from the route
+type UserPageProps = RouteComponentPropsOf<typeof userRoute>;
+
+// Now use it in your component
+function UserPage({ params, data }: UserPageProps) {
+  const user = use(data);
+  return <h1>User: {user.name} (ID: {params.userId})</h1>;
+}`}</CodeBlock>
+        <p>
+          This approach keeps your component props in sync with the route
+          definition automatically. If you change the route's path or loader,
+          the props type updates accordingly.
+        </p>
+        <p>
+          <strong>Note:</strong> <code>RouteComponentPropsOf</code> requires the
+          route to have an <code>id</code> property. Using it with a route
+          without <code>id</code> will result in a type error.
+        </p>
+
+        <h4>Other Extraction Utilities</h4>
+        <p>
+          For more granular type extraction, use these individual utilities:
+        </p>
         <CodeBlock language="tsx">{`import type {
   ExtractRouteId,
   ExtractRouteParams,
@@ -543,9 +589,15 @@ type Data = ExtractRouteData<typeof myRoute>;
             <code>:userId</code>
           </li>
           <li>
-            Use <code>RouteComponentProps&lt;Params, State&gt;</code> or{" "}
+            Use <code>RouteComponentPropsOf&lt;typeof route&gt;</code> to
+            extract the props type directly from a route definition (requires{" "}
+            <code>id</code>)
+          </li>
+          <li>
+            Alternatively, use{" "}
+            <code>RouteComponentProps&lt;Params, State&gt;</code> or{" "}
             <code>RouteComponentPropsWithData&lt;Params, Data, State&gt;</code>{" "}
-            for typed component props
+            for manual type construction
           </li>
           <li>
             Loader data is delivered as a Promise&mdash;use React's{" "}

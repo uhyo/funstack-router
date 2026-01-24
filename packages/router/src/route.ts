@@ -76,7 +76,7 @@ export type RouteComponentPropsWithData<
  * Route definition created by the `route` helper function.
  */
 export interface OpaqueRouteDefinition {
-  [routeDefinitionSymbol]: never;
+  [routeDefinitionSymbol]: unknown;
   path?: string;
   children?: RouteDefinition[];
   exact?: boolean;
@@ -145,6 +145,26 @@ export type ExtractRouteData<T> =
     infer Data
   >
     ? Data
+    : never;
+
+/** Extract the component props type from a TypefulOpaqueRouteDefinition */
+export type RouteComponentPropsOf<
+  T extends TypefulOpaqueRouteDefinition<
+    string,
+    Record<string, string>,
+    unknown,
+    unknown
+  >,
+> =
+  T extends TypefulOpaqueRouteDefinition<
+    infer _Id,
+    infer Params,
+    infer State,
+    infer Data
+  >
+    ? Data extends undefined
+      ? RouteComponentProps<Params, State>
+      : RouteComponentPropsWithData<Params, Data, State>
     : never;
 
 /**

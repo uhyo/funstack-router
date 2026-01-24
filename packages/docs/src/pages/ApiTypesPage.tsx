@@ -169,6 +169,62 @@ type Data = ExtractRouteData<typeof userRoute>;
 
       <article className="api-item">
         <h3>
+          <code>RouteComponentPropsOf&lt;T&gt;</code>
+        </h3>
+        <p>
+          Utility type that extracts the component props type from a route
+          definition. Returns <code>RouteComponentProps</code> for routes
+          without a loader, or <code>RouteComponentPropsWithData</code> for
+          routes with a loader. This is useful for typing route components
+          separately from the route definition.
+        </p>
+        <CodeBlock language="tsx">{`import { route, routeState } from "@funstack/router";
+import type { RouteComponentPropsOf } from "@funstack/router";
+
+// Route without loader
+const userRoute = route({
+  id: "user",
+  path: "/users/:userId",
+  component: UserPage,
+});
+
+type UserPageProps = RouteComponentPropsOf<typeof userRoute>;
+// RouteComponentProps<{ userId: string }, undefined>
+
+function UserPage({ params }: UserPageProps) {
+  return <h1>User: {params.userId}</h1>;
+}
+
+// Route with loader
+const profileRoute = route({
+  id: "profile",
+  path: "/profile/:userId",
+  loader: () => ({ name: "John", age: 30 }),
+  component: ProfilePage,
+});
+
+type ProfilePageProps = RouteComponentPropsOf<typeof profileRoute>;
+// RouteComponentPropsWithData<{ userId: string }, { name: string; age: number }, undefined>
+
+// Route with state
+type MyState = { tab: string };
+const settingsRoute = routeState<MyState>()({
+  id: "settings",
+  path: "/settings",
+  component: SettingsPage,
+});
+
+type SettingsPageProps = RouteComponentPropsOf<typeof settingsRoute>;
+// RouteComponentProps<Record<string, never>, MyState>`}</CodeBlock>
+        <p>
+          <strong>Note:</strong> This utility requires a route with an{" "}
+          <code>id</code> property. Using it with a route without{" "}
+          <code>id</code> will result in a type error.
+        </p>
+      </article>
+
+      <article className="api-item">
+        <h3>
           <code>RouteDefinition</code>
         </h3>
         <p>

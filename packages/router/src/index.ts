@@ -43,4 +43,5 @@ export type {
   ExtractRouteParams,
   ExtractRouteState,
   ExtractRouteData,
+  RouteComponentPropsOf,
 } from "./route.js";

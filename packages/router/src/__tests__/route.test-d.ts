@@ -7,6 +7,9 @@ import type {
   ExtractRouteParams,
   ExtractRouteState,
   ExtractRouteData,
+  RouteComponentPropsOf,
+  RouteComponentProps,
+  RouteComponentPropsWithData,
 } from "../route.js";
 import { useRouteParams } from "../hooks/useRouteParams.js";
 import { useRouteState } from "../hooks/useRouteState.js";
@@ -286,5 +289,110 @@ describe("pathless route type inference", () => {
 
     const params = useRouteParams(layoutRoute);
     expectTypeOf(params).toEqualTypeOf<Record<string, never>>();
+  });
+});
+
+describe("RouteComponentPropsOf utility type", () => {
+  it("extracts RouteComponentProps for route without loader", () => {
+    const userRoute = route({
+      id: "user",
+      path: "/users/:userId",
+      component: () => null,
+    });
+
+    type Props = RouteComponentPropsOf<typeof userRoute>;
+    expectTypeOf<Props>().toEqualTypeOf<
+      RouteComponentProps<{ userId: string }, undefined>
+    >();
+  });
+
+  it("extracts RouteComponentPropsWithData for route with loader", () => {
+    const userRoute = route({
+      id: "user",
+      path: "/users/:userId",
+      loader: () => ({ name: "John", age: 30 }),
+      component: () => null,
+    });
+
+    type Props = RouteComponentPropsOf<typeof userRoute>;
+    expectTypeOf<Props>().toEqualTypeOf<
+      RouteComponentPropsWithData<
+        { userId: string },
+        { name: string; age: number },
+        undefined
+      >
+    >();
+  });
+
+  it("extracts props with state type from routeState", () => {
+    type MyState = { scrollPos: number };
+    const scrollRoute = routeState<MyState>()({
+      id: "scroll",
+      path: "/scroll",
+      component: () => null,
+    });
+
+    type Props = RouteComponentPropsOf<typeof scrollRoute>;
+    expectTypeOf<Props>().toEqualTypeOf<
+      RouteComponentProps<Record<string, never>, MyState>
+    >();
+  });
+
+  it("extracts props with both state and loader", () => {
+    type FilterState = { filter: string };
+    const productsRoute = routeState<FilterState>()({
+      id: "products",
+      path: "/products/:category",
+      loader: () => ({ items: [] as string[] }),
+      component: () => null,
+    });
+
+    type Props = RouteComponentPropsOf<typeof productsRoute>;
+    expectTypeOf<Props>().toEqualTypeOf<
+      RouteComponentPropsWithData<
+        { category: string },
+        { items: string[] },
+        FilterState
+      >
+    >();
+  });
+
+  it("extracts props for pathless route", () => {
+    const layoutRoute = route({
+      id: "layout",
+      component: () => null,
+    });
+
+    type Props = RouteComponentPropsOf<typeof layoutRoute>;
+    expectTypeOf<Props>().toEqualTypeOf<
+      RouteComponentProps<Record<string, never>, undefined>
+    >();
+  });
+
+  it("extracts props for pathless route with loader", () => {
+    const layoutRoute = route({
+      id: "layout",
+      loader: () => ({ theme: "dark" }),
+      component: () => null,
+    });
+
+    type Props = RouteComponentPropsOf<typeof layoutRoute>;
+    expectTypeOf<Props>().toEqualTypeOf<
+      RouteComponentPropsWithData<
+        Record<string, never>,
+        { theme: string },
+        undefined
+      >
+    >();
+  });
+
+  it("rejects route without id with type error", () => {
+    const noIdRoute = route({
+      path: "/users/:userId",
+      component: () => null,
+    });
+
+    // @ts-expect-error - RouteComponentPropsOf requires a route with id
+    type _Props = RouteComponentPropsOf<typeof noIdRoute>;
   });
 });
