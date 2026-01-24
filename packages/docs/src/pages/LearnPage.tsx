@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "@funstack/router";
 
 const learnNavItems = [
   { path: "/funstack-router/learn/nested-routes", label: "Nested Routes" },
+  { path: "/funstack-router/learn/type-safety", label: "Type Safety" },
 ];
 
 export function LearnPage() {
@@ -42,6 +43,19 @@ export function LearnPage() {
               child routes. This guide covers the core concepts of nested
               routing including the <code>{"<Outlet>"}</code> component,
               parameter inheritance, and practical layout patterns.
+            </p>
+          </section>
+
+          <section className="learn-category">
+            <h2>
+              <a href="/funstack-router/learn/type-safety">Type Safety</a>
+            </h2>
+            <p>
+              Discover how to access route params, navigation state, and loader
+              data in a fully type-safe manner. This guide covers two
+              approaches: receiving typed data via component props (recommended)
+              and using hooks for advanced scenarios like accessing parent route
+              data or avoiding prop drilling.
             </p>
           </section>
         </div>

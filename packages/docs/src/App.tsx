@@ -9,6 +9,7 @@ import { ApiUtilitiesPage } from "./pages/ApiUtilitiesPage.js";
 import { ApiTypesPage } from "./pages/ApiTypesPage.js";
 import { LearnPage } from "./pages/LearnPage.js";
 import { LearnNestedRoutesPage } from "./pages/LearnNestedRoutesPage.js";
+import { LearnTypeSafetyPage } from "./pages/LearnTypeSafetyPage.js";
 import { ExamplesPage } from "./pages/ExamplesPage.js";
 import { useEffect } from "react";
 
@@ -32,6 +33,10 @@ const routes = [
           route({
             path: "/nested-routes",
             component: LearnNestedRoutesPage,
+          }),
+          route({
+            path: "/type-safety",
+            component: LearnTypeSafetyPage,
           }),
         ],
       }),
