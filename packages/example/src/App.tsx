@@ -33,12 +33,13 @@ const routes = [
  * This callback fires before every navigation is handled.
  * Use it for analytics, logging, or even preventing navigation.
  */
-const handleNavigate: OnNavigateCallback = (event, matched) => {
+const handleNavigate: OnNavigateCallback = (event, info) => {
   // Log navigation for analytics
   console.log("[Analytics] Navigation:", {
     url: event.destination.url,
     navigationType: event.navigationType,
-    matchedRoutes: matched?.map((m) => m.route.path) ?? null,
+    matchedRoutes: info.matches?.map((m) => m.route.path) ?? null,
+    intercepting: info.intercepting,
   });
 
   // Example: You can prevent navigation by calling event.preventDefault()
