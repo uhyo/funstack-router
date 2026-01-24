@@ -25,13 +25,12 @@ function matchRoute(
   pathname: string,
 ): MatchedRoute[] | null {
   const hasChildren = Boolean(route.children?.length);
+  const isExact = route.exact ?? !hasChildren;
 
-  // For parent routes (with children), we need to match as a prefix
-  // For leaf routes (no children), we need an exact match
   const { matched, params, consumedPathname } = matchPath(
     route.path,
     pathname,
-    !hasChildren,
+    isExact,
   );
 
   if (!matched) {

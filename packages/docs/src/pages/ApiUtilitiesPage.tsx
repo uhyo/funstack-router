@@ -100,6 +100,19 @@ const myRoute = route({
               </td>
               <td>Nested child routes</td>
             </tr>
+            <tr>
+              <td>
+                <code>exact</code>
+              </td>
+              <td>
+                <code>boolean</code>
+              </td>
+              <td>
+                Override default matching. <code>true</code> = exact match only,{" "}
+                <code>false</code> = prefix match. Defaults to <code>true</code>{" "}
+                for leaf routes, <code>false</code> for parent routes.
+              </td>
+            </tr>
           </tbody>
         </table>
       </article>

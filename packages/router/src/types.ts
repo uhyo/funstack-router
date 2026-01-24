@@ -21,6 +21,13 @@ export type InternalRouteDefinition = {
   path: string;
   /** Child routes for nested routing */
   children?: InternalRouteDefinition[];
+  /**
+   * Whether this route requires an exact match.
+   * - true: Only matches exact pathname
+   * - false: Matches as prefix
+   * - undefined: Default (exact for leaf, prefix for parent)
+   */
+  exact?: boolean;
 
   // Note: `loader` and `component` may both exist or both not exist.
   // Also, `unknown`s may actually be more specific types. They are guaranteed
