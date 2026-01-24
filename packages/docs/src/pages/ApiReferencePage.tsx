@@ -66,10 +66,20 @@ export function ApiReferencePage() {
                 <code>useLocation()</code> — Current location object
               </li>
               <li>
-                <code>useParams()</code> — Route parameters
+                <code>useSearchParams()</code> — Search query management
               </li>
               <li>
-                <code>useSearchParams()</code> — Search query management
+                <code>useBlocker()</code> — Prevent navigation away from current
+                route
+              </li>
+              <li>
+                <code>useRouteParams()</code> — Type-safe route parameters
+              </li>
+              <li>
+                <code>useRouteState()</code> — Type-safe navigation state
+              </li>
+              <li>
+                <code>useRouteData()</code> — Type-safe loader data
               </li>
             </ul>
           </section>
@@ -108,11 +118,17 @@ export function ApiReferencePage() {
                 <code>PathParams</code> — Extract parameters from path patterns
               </li>
               <li>
-                <code>RouteDefinition</code> — Route definition type
+                <code>TypefulOpaqueRouteDefinition</code> — Type-safe route
+                definition
               </li>
               <li>
-                <code>LoaderArgs</code>, <code>Location</code>,{" "}
-                <code>NavigateOptions</code>
+                <code>ExtractRouteId</code>, <code>ExtractRouteParams</code>,{" "}
+                <code>ExtractRouteState</code>, <code>ExtractRouteData</code> —
+                Type extraction utilities
+              </li>
+              <li>
+                <code>RouteDefinition</code>, <code>LoaderArgs</code>,{" "}
+                <code>Location</code>, <code>NavigateOptions</code>
               </li>
             </ul>
           </section>
