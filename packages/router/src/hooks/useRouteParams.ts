@@ -1,13 +1,13 @@
-import { useContext } from "react";
-import { RouteContext } from "../context/RouteContext.js";
 import type {
   TypefulOpaqueRouteDefinition,
   ExtractRouteParams,
 } from "../route.js";
+import { useRouteContext } from "./useRouteContext.js";
 
 /**
  * Returns typed route parameters for the given route definition.
- * Throws an error if called outside a matching route or if route IDs don't match.
+ * Throws an error if called outside a matching route or if the route ID is not found
+ * in the current route hierarchy.
  *
  * @example
  * ```typescript
@@ -32,17 +32,7 @@ export function useRouteParams<
     unknown
   >,
 >(route: T): ExtractRouteParams<T> {
-  const context = useContext(RouteContext);
-  if (!context) {
-    throw new Error("useRouteParams must be used within a route component");
-  }
-
-  const expectedId = (route as { id?: string }).id;
-  if (expectedId !== undefined && context.id !== expectedId) {
-    throw new Error(
-      `useRouteParams: Route ID mismatch. Expected "${expectedId}" but current route is "${context.id ?? "(no id)"}"`,
-    );
-  }
-
+  const routeId = (route as { id?: string }).id;
+  const context = useRouteContext("useRouteParams", routeId);
   return context.params as ExtractRouteParams<T>;
 }

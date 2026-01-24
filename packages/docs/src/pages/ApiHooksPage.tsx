@@ -133,7 +133,13 @@ function EditForm() {
         These hooks provide type-safe access to route data when using routes
         defined with an <code>id</code>. They extract type information from{" "}
         <code>TypefulOpaqueRouteDefinition</code> and validate at runtime that
-        you're using them within the correct route.
+        the specified route exists in the current route hierarchy.
+      </p>
+      <p>
+        In nested routes, these hooks can access data from any ancestor route in
+        the hierarchy. For example, a child route component can use{" "}
+        <code>useRouteParams(parentRoute)</code> to access the parent route's
+        parameters.
       </p>
 
       <article className="api-item">
@@ -159,13 +165,28 @@ function UserPage() {
   const params = useRouteParams(userRoute);
 
   return <div>User ID: {params.userId}</div>;
+}
+
+// In nested routes, access parent route params:
+const orgRoute = route({
+  id: "org",
+  path: "/org/:orgId",
+  component: OrgLayout,
+  children: [teamRoute],
+});
+
+function TeamPage() {
+  // Access parent route's params
+  const { orgId } = useRouteParams(orgRoute);
+  return <div>Org: {orgId}</div>;
 }`}</CodeBlock>
         <h4>Errors</h4>
         <ul>
           <li>Throws if called outside a route component (no RouteContext).</li>
           <li>
-            Throws if the current route's <code>id</code> doesn't match the
-            provided route definition's <code>id</code>.
+            Throws if the specified route's <code>id</code> is not found in the
+            current route hierarchy (neither the current route nor any
+            ancestor).
           </li>
         </ul>
       </article>
@@ -205,8 +226,9 @@ function ScrollPage() {
         <ul>
           <li>Throws if called outside a route component (no RouteContext).</li>
           <li>
-            Throws if the current route's <code>id</code> doesn't match the
-            provided route definition's <code>id</code>.
+            Throws if the specified route's <code>id</code> is not found in the
+            current route hierarchy (neither the current route nor any
+            ancestor).
           </li>
         </ul>
       </article>
@@ -244,8 +266,9 @@ function UserPage() {
         <ul>
           <li>Throws if called outside a route component (no RouteContext).</li>
           <li>
-            Throws if the current route's <code>id</code> doesn't match the
-            provided route definition's <code>id</code>.
+            Throws if the specified route's <code>id</code> is not found in the
+            current route hierarchy (neither the current route nor any
+            ancestor).
           </li>
         </ul>
       </article>

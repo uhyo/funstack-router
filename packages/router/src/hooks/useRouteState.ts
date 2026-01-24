@@ -1,13 +1,13 @@
-import { useContext } from "react";
-import { RouteContext } from "../context/RouteContext.js";
 import type {
   TypefulOpaqueRouteDefinition,
   ExtractRouteState,
 } from "../route.js";
+import { useRouteContext } from "./useRouteContext.js";
 
 /**
  * Returns typed navigation state for the given route definition.
- * Throws an error if called outside a matching route or if route IDs don't match.
+ * Throws an error if called outside a matching route or if the route ID is not found
+ * in the current route hierarchy.
  *
  * @example
  * ```typescript
@@ -33,17 +33,7 @@ export function useRouteState<
     unknown
   >,
 >(route: T): ExtractRouteState<T> | undefined {
-  const context = useContext(RouteContext);
-  if (!context) {
-    throw new Error("useRouteState must be used within a route component");
-  }
-
-  const expectedId = (route as { id?: string }).id;
-  if (expectedId !== undefined && context.id !== expectedId) {
-    throw new Error(
-      `useRouteState: Route ID mismatch. Expected "${expectedId}" but current route is "${context.id ?? "(no id)"}"`,
-    );
-  }
-
+  const routeId = (route as { id?: string }).id;
+  const context = useRouteContext("useRouteState", routeId);
   return context.state as ExtractRouteState<T> | undefined;
 }

@@ -160,6 +160,9 @@ function RouteRenderer({
   matchedRoutes,
   index,
 }: RouteRendererProps): ReactNode {
+  // Get parent route context (null for root route)
+  const parentRouteContext = useContext(RouteContext);
+
   const match = matchedRoutes[index];
   if (!match) return null;
 
@@ -249,8 +252,9 @@ function RouteRenderer({
       state: routeState,
       data,
       outlet,
+      parent: parentRouteContext,
     }),
-    [routeId, params, pathname, routeState, data, outlet],
+    [routeId, params, pathname, routeState, data, outlet, parentRouteContext],
   );
 
   // Render component with or without data prop based on loader presence
