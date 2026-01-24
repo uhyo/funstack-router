@@ -160,6 +160,7 @@ describe("matchRoutes", () => {
           path: "/users",
           component: () => null,
           exact: true,
+          requireChildren: false,
           children: [{ path: ":id", component: () => null }],
         },
       ]);
@@ -168,7 +169,7 @@ describe("matchRoutes", () => {
       const childResult = matchRoutes(routes, "/users/123");
       expect(childResult).toBeNull();
 
-      // But exact match on parent still works
+      // But exact match on parent still works (with requireChildren: false)
       const exactResult = matchRoutes(routes, "/users");
       expect(exactResult).toHaveLength(1);
       expect(exactResult![0].route.path).toBe("/users");
@@ -179,6 +180,7 @@ describe("matchRoutes", () => {
         {
           path: "/",
           component: () => null,
+          requireChildren: false,
           children: [{ path: "about", component: () => null }],
         },
       ]);
@@ -188,7 +190,7 @@ describe("matchRoutes", () => {
       expect(result).toHaveLength(2);
 
       // Leaf requires exact match (default) - child "about" doesn't match "/about/extra"
-      // But parent "/" has a component, so it's still a valid match (just the parent)
+      // But parent "/" has a component and requireChildren: false, so it's still a valid match (just the parent)
       const partialMatch = matchRoutes(routes, "/about/extra");
       expect(partialMatch).toHaveLength(1);
       expect(partialMatch![0].route.path).toBe("/");
@@ -365,6 +367,86 @@ describe("matchRoutes", () => {
       expect(result![1].route.path).toBeUndefined();
       expect(result![2].route.path).toBeUndefined();
       expect(result![3].route.path).toBe("deep");
+    });
+  });
+
+  describe("requireChildren option", () => {
+    it("parent with children does not match when no children match (default)", () => {
+      const routes = internalRoutes([
+        {
+          path: "/dashboard",
+          component: () => null,
+          children: [{ path: "/main", component: () => null }],
+        },
+      ]);
+      expect(matchRoutes(routes, "/dashboard/sub")).toBeNull();
+      expect(matchRoutes(routes, "/dashboard")).toBeNull();
+    });
+
+    it("parent with requireChildren: false matches when no children match", () => {
+      const routes = internalRoutes([
+        {
+          path: "/dashboard",
+          component: () => null,
+          requireChildren: false,
+          children: [{ path: "/main", component: () => null }],
+        },
+      ]);
+      expect(matchRoutes(routes, "/dashboard/sub")).toHaveLength(1);
+      expect(matchRoutes(routes, "/dashboard")).toHaveLength(1);
+    });
+
+    it("catch-all NotFound works with requireChildren: true (default)", () => {
+      const routes = internalRoutes([
+        {
+          path: "/dashboard",
+          component: () => null,
+          children: [{ path: "/main", component: () => null }],
+        },
+        { path: "/*", component: () => null }, // NotFound
+      ]);
+      const result = matchRoutes(routes, "/dashboard/sub");
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBe("/*");
+    });
+
+    it("pathless route with children and requireChildren: false matches when no children match", () => {
+      const routes = internalRoutes([
+        {
+          component: () => null,
+          requireChildren: false,
+          children: [{ path: "/specific", component: () => null }],
+        },
+      ]);
+      // Child matches
+      expect(matchRoutes(routes, "/specific")).toHaveLength(2);
+      // No child matches, but pathless route has component and requireChildren: false
+      expect(matchRoutes(routes, "/other")).toHaveLength(1);
+    });
+
+    it("pathless route with children does not match when no children match (default)", () => {
+      const routes = internalRoutes([
+        {
+          component: () => null,
+          children: [{ path: "/specific", component: () => null }],
+        },
+      ]);
+      // Child matches
+      expect(matchRoutes(routes, "/specific")).toHaveLength(2);
+      // No child matches, default requireChildren is true
+      expect(matchRoutes(routes, "/other")).toBeNull();
+    });
+
+    it("requireChildren: false without component still does not match", () => {
+      const routes = internalRoutes([
+        {
+          path: "/dashboard",
+          requireChildren: false,
+          children: [{ path: "/main", component: () => null }],
+        },
+      ]);
+      // No component means no match even with requireChildren: false
+      expect(matchRoutes(routes, "/dashboard")).toBeNull();
     });
   });
 });

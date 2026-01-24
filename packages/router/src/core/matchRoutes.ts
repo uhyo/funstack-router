@@ -41,8 +41,8 @@ function matchRoute(
           return [result, ...childMatch];
         }
       }
-      // No children matched - only valid if this route has a component
-      if (route.component) {
+      // No children matched - only valid if requireChildren is false and route has a component
+      if (route.component && route.requireChildren === false) {
         return [result];
       }
       return null;
@@ -94,8 +94,8 @@ function matchRoute(
       }
     }
 
-    // If no children matched but this route has a component, it's still a valid match
-    if (route.component) {
+    // If no children matched - only valid if requireChildren is false and route has a component
+    if (route.component && route.requireChildren === false) {
       return [result];
     }
 

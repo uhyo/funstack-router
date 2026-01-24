@@ -115,6 +115,21 @@ const myRoute = route({
                 for leaf routes, <code>false</code> for parent routes.
               </td>
             </tr>
+            <tr>
+              <td>
+                <code>requireChildren</code>
+              </td>
+              <td>
+                <code>boolean</code>
+              </td>
+              <td>
+                Whether a parent route requires a child to match.{" "}
+                <code>true</code> (default) = parent only matches if a child
+                matches, <code>false</code> = parent can match alone with{" "}
+                <code>outlet</code> as <code>null</code>. Enables catch-all
+                routes to work intuitively.
+              </td>
+            </tr>
           </tbody>
         </table>
       </article>

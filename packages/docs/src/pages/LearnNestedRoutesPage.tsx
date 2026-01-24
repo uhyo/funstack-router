@@ -210,6 +210,53 @@ const routes = [
           match this route at all. This is rarely needed but useful when you
           want a route to behave as a leaf even though it has children defined.
         </p>
+
+        <h4>Requiring Children to Match</h4>
+        <p>
+          By default, parent routes <strong>require</strong> at least one child
+          route to match. If no children match, the parent doesn't match
+          either&mdash;allowing other routes (like a catch-all) to handle the
+          URL instead.
+        </p>
+        <CodeBlock language="tsx">{`const routes = [
+  route({
+    path: "/dashboard",
+    component: DashboardLayout,
+    children: [
+      route({ path: "/", component: DashboardHome }),
+      route({ path: "/settings", component: SettingsPage }),
+    ],
+  }),
+  route({
+    path: "/*",  // Catch-all for unmatched routes
+    component: NotFoundPage,
+  }),
+];
+
+// /dashboard → matches DashboardLayout + DashboardHome
+// /dashboard/settings → matches DashboardLayout + SettingsPage
+// /dashboard/unknown → matches NotFoundPage (not DashboardLayout)`}</CodeBlock>
+        <p>
+          This behavior ensures that catch-all routes work intuitively. Without
+          it, <code>/dashboard/unknown</code> would match the dashboard layout
+          with an empty outlet, which is usually not desired.
+        </p>
+        <p>
+          If you want a parent route to match even when no children match, set{" "}
+          <code>requireChildren: false</code>. The <code>{"<Outlet>"}</code>{" "}
+          will render <code>null</code> in this case.
+        </p>
+        <CodeBlock language="tsx">{`route({
+  path: "/files",
+  component: FileExplorer,
+  requireChildren: false,  // Match even without child matches
+  children: [
+    route({ path: "/:fileId", component: FileDetails }),
+  ],
+});
+
+// /files → matches FileExplorer (outlet is null)
+// /files/123 → matches FileExplorer + FileDetails`}</CodeBlock>
       </section>
 
       <section>

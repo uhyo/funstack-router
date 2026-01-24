@@ -80,6 +80,7 @@ export interface OpaqueRouteDefinition {
   path?: string;
   children?: RouteDefinition[];
   exact?: boolean;
+  requireChildren?: boolean;
 }
 
 /**
@@ -101,6 +102,7 @@ export interface TypefulOpaqueRouteDefinition<
   path?: string;
   children?: RouteDefinition[];
   exact?: boolean;
+  requireChildren?: boolean;
 }
 
 /** Extract the Id type from a TypefulOpaqueRouteDefinition */
@@ -183,6 +185,7 @@ export type RouteDefinition =
       component?: ComponentType<object> | ReactNode;
       children?: RouteDefinition[];
       exact?: boolean;
+      requireChildren?: boolean;
     };
 
 /**
@@ -207,6 +210,7 @@ type RouteWithLoader<
     | ReactNode;
   children?: RouteDefinition[];
   exact?: boolean;
+  requireChildren?: boolean;
 };
 
 /**
@@ -227,6 +231,7 @@ type RouteWithoutLoader<
     | ReactNode;
   children?: RouteDefinition[];
   exact?: boolean;
+  requireChildren?: boolean;
 };
 
 /**
@@ -247,6 +252,7 @@ type PathlessRouteWithLoader<
       >
     | ReactNode;
   children?: RouteDefinition[];
+  requireChildren?: boolean;
 };
 
 /**
@@ -263,6 +269,7 @@ type PathlessRouteWithoutLoader<
     | ComponentType<RouteComponentProps<Record<string, never>, TState>>
     | ReactNode;
   children?: RouteDefinition[];
+  requireChildren?: boolean;
 };
 
 /**

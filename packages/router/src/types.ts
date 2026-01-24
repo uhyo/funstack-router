@@ -28,6 +28,12 @@ export type InternalRouteDefinition = {
    * - undefined: Default (exact for leaf, prefix for parent)
    */
   exact?: boolean;
+  /**
+   * Whether this route requires a child to match when it has children.
+   * - true (default): Parent does not match if no child matches
+   * - false: Parent can match alone if it has a component, outlet will be null
+   */
+  requireChildren?: boolean;
 
   // Note: `loader` and `component` may both exist or both not exist.
   // Also, `unknown`s may actually be more specific types. They are guaranteed
