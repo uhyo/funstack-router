@@ -35,9 +35,12 @@ describe("setupInterception", () => {
       // Dispatch the navigate event
       dispatchNavigateEvent(mockNav, event);
 
-      // onNavigate should be called with empty matched routes
+      // onNavigate should be called with empty matched routes and intercepting: false
       expect(onNavigate).toHaveBeenCalledTimes(1);
-      expect(onNavigate).toHaveBeenCalledWith(event, []);
+      expect(onNavigate).toHaveBeenCalledWith(event, {
+        matches: [],
+        intercepting: false,
+      });
     });
 
     it("does not call event.intercept when canIntercept is false", () => {
@@ -66,10 +69,11 @@ describe("setupInterception", () => {
       dispatchNavigateEvent(mockNav, event);
 
       expect(onNavigate).toHaveBeenCalledTimes(1);
-      // Should receive matched routes (not empty)
-      const [, matchedRoutes] = onNavigate.mock.calls[0];
-      expect(matchedRoutes).toHaveLength(1);
-      expect(matchedRoutes[0].route.path).toBe("/about");
+      // Should receive matched routes with intercepting: false (hash changes are not intercepted)
+      const [, info] = onNavigate.mock.calls[0];
+      expect(info.matches).toHaveLength(1);
+      expect(info.matches[0].route.path).toBe("/about");
+      expect(info.intercepting).toBe(false);
     });
 
     it("does not intercept hash change navigations", () => {
@@ -98,10 +102,11 @@ describe("setupInterception", () => {
       dispatchNavigateEvent(mockNav, event);
 
       expect(onNavigate).toHaveBeenCalledTimes(1);
-      // Should receive matched routes (not empty)
-      const [, matchedRoutes] = onNavigate.mock.calls[0];
-      expect(matchedRoutes).toHaveLength(1);
-      expect(matchedRoutes[0].route.path).toBe("/about");
+      // Should receive matched routes with intercepting: false (download requests are not intercepted)
+      const [, info] = onNavigate.mock.calls[0];
+      expect(info.matches).toHaveLength(1);
+      expect(info.matches[0].route.path).toBe("/about");
+      expect(info.intercepting).toBe(false);
     });
 
     it("does not intercept download requests", () => {
@@ -148,10 +153,11 @@ describe("setupInterception", () => {
       dispatchNavigateEvent(mockNav, event);
 
       expect(onNavigate).toHaveBeenCalledTimes(1);
-      const [, matchedRoutes] = onNavigate.mock.calls[0];
-      expect(matchedRoutes).toHaveLength(1);
-      expect(matchedRoutes[0].route.path).toBe("/users/:id");
-      expect(matchedRoutes[0].params).toEqual({ id: "123" });
+      const [, info] = onNavigate.mock.calls[0];
+      expect(info.matches).toHaveLength(1);
+      expect(info.matches[0].route.path).toBe("/users/:id");
+      expect(info.matches[0].params).toEqual({ id: "123" });
+      expect(info.intercepting).toBe(true);
     });
 
     it("does not intercept when onNavigate calls preventDefault", () => {

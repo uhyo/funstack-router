@@ -238,19 +238,25 @@ function ProductList() {
         <h2>Navigation Callback</h2>
         <p>
           React to navigation events. The callback receives the{" "}
-          <code>NavigateEvent</code> from the Navigation API and the matched
-          routes:
+          <code>NavigateEvent</code> from the Navigation API and an info object
+          containing matched routes and whether the navigation will be
+          intercepted:
         </p>
         <CodeBlock language="tsx">{`import { Router, route, type OnNavigateCallback } from "@funstack/router";
 
 function App() {
-  const handleNavigate: OnNavigateCallback = (event) => {
+  const handleNavigate: OnNavigateCallback = (event, info) => {
     // Track page views
     const url = new URL(event.destination.url);
     analytics.track("page_view", {
       path: url.pathname,
       search: url.search,
     });
+
+    // info.matches contains the matched routes (or null if no match)
+    // info.intercepting indicates if the router will handle this navigation
+    console.log("Matched routes:", info.matches);
+    console.log("Intercepting:", info.intercepting);
 
     // You can call event.preventDefault() to cancel the navigation
   };

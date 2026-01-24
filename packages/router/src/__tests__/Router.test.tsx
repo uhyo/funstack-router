@@ -159,11 +159,14 @@ describe("Router", () => {
             url: "http://localhost/about",
           }),
         }),
-        expect.arrayContaining([
-          expect.objectContaining({
-            pathname: "/about",
-          }),
-        ]),
+        expect.objectContaining({
+          matches: expect.arrayContaining([
+            expect.objectContaining({
+              pathname: "/about",
+            }),
+          ]),
+          intercepting: true,
+        }),
       );
     });
 
@@ -227,7 +230,7 @@ describe("Router", () => {
         proceed();
       });
 
-      // onNavigate should be called with null for unmatched routes
+      // onNavigate should be called with null matches and intercepting: false for unmatched routes
       expect(onNavigate).toHaveBeenCalledTimes(1);
       expect(onNavigate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -235,7 +238,10 @@ describe("Router", () => {
             url: "http://localhost/unknown",
           }),
         }),
-        null,
+        expect.objectContaining({
+          matches: null,
+          intercepting: false,
+        }),
       );
     });
   });

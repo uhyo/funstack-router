@@ -77,6 +77,16 @@ export type MatchedRouteWithData = MatchedRoute & {
 };
 
 /**
+ * Information passed to onNavigate callback.
+ */
+export type OnNavigateInfo = {
+  /** Array of matched routes, or null if no routes matched */
+  matches: readonly MatchedRoute[] | null;
+  /** Whether the router will intercept this navigation (before user's preventDefault() call) */
+  intercepting: boolean;
+};
+
+/**
  * Options for navigation.
  */
 export type NavigateOptions = {
@@ -102,11 +112,11 @@ export type Location = {
  * Call `event.preventDefault()` to prevent the router from handling this navigation.
  *
  * @param event - The NavigateEvent from the Navigation API
- * @param matched - Array of matched routes, or null if no routes matched
+ * @param info - Information about the navigation including matched routes and whether it will be intercepted
  */
 export type OnNavigateCallback = (
   event: NavigateEvent,
-  matched: readonly MatchedRoute[] | null,
+  info: OnNavigateInfo,
 ) => void;
 
 /**

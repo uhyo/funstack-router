@@ -33,7 +33,7 @@ export type RouterProps = {
    * Call `event.preventDefault()` to prevent the router from handling this navigation.
    *
    * @param event - The NavigateEvent from the Navigation API
-   * @param matched - Array of matched routes, or null if no routes matched
+   * @param info - Information about the navigation including matched routes and whether it will be intercepted
    */
   onNavigate?: OnNavigateCallback;
   /**

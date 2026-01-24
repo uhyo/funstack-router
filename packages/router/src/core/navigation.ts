@@ -92,15 +92,18 @@ export function setupNavigationInterception(
     const url = new URL(event.destination.url);
     const matched = matchRoutes(routes, url.pathname);
 
+    // Compute whether we will intercept this navigation
+    const willIntercept = matched !== null;
+
     // Call onNavigate callback if provided (regardless of route match)
     if (onNavigate) {
-      onNavigate(event, matched);
+      onNavigate(event, { matches: matched, intercepting: willIntercept });
       if (event.defaultPrevented) {
         return; // Do not intercept, allow browser default
       }
     }
 
-    if (matched) {
+    if (willIntercept) {
       // Abort initial load's loaders if this is the first navigation
       if (idleController) {
         idleController.abort();

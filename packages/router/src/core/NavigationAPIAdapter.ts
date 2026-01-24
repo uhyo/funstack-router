@@ -149,7 +149,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Only intercept same-origin navigations
       if (!event.canIntercept) {
-        onNavigate?.(event, []);
+        onNavigate?.(event, { matches: [], intercepting: false });
         return;
       }
 
@@ -157,21 +157,19 @@ export class NavigationAPIAdapter implements RouterAdapter {
       const url = new URL(event.destination.url);
       const matched = matchRoutes(routes, url.pathname);
 
+      // Compute whether we will intercept this navigation (before user's preventDefault)
+      const willIntercept =
+        matched !== null && !event.hashChange && event.downloadRequest === null;
+
       // Call onNavigate callback if provided (regardless of route match)
       if (onNavigate) {
-        onNavigate(event, matched);
+        onNavigate(event, { matches: matched, intercepting: willIntercept });
         if (event.defaultPrevented) {
           return; // Do not intercept, allow browser default
         }
       }
 
-      // hash change navigations are not intercepted.
-      // Also do not intercept if it is a download request.
-      if (event.hashChange || event.downloadRequest !== null) {
-        return;
-      }
-
-      if (!matched) {
+      if (!willIntercept) {
         return;
       }
 

@@ -25,6 +25,7 @@ export type {
   NavigateOptions,
   Location,
   OnNavigateCallback,
+  OnNavigateInfo,
   FallbackMode,
 } from "./types.js";
 

@@ -17,8 +17,10 @@ export function ApiComponentsPage() {
 
 <Router
   routes={routes}
-  onNavigate={(location) => {
-    console.log("Navigated to:", location.pathname);
+  onNavigate={(event, info) => {
+    console.log("Navigating to:", event.destination.url);
+    console.log("Matched routes:", info.matches);
+    console.log("Will intercept:", info.intercepting);
   }}
 />`}</CodeBlock>
         <h4>Props</h4>
@@ -47,7 +49,11 @@ export function ApiComponentsPage() {
               <td>
                 <code>OnNavigateCallback</code>
               </td>
-              <td>Callback fired after navigation completes</td>
+              <td>
+                Callback fired before navigation is intercepted. Receives the
+                NavigateEvent and an info object with matched routes and whether
+                the router will intercept the navigation.
+              </td>
             </tr>
           </tbody>
         </table>
