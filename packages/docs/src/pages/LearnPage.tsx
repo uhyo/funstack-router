@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "@funstack/router";
 
 const learnNavItems = [
+  { path: "/funstack-router/learn/navigation-api", label: "Navigation API" },
   { path: "/funstack-router/learn/nested-routes", label: "Nested Routes" },
   { path: "/funstack-router/learn/type-safety", label: "Type Safety" },
 ];
@@ -32,6 +33,18 @@ export function LearnPage() {
             through practical, use-case-driven examples. Each guide builds on
             real-world scenarios to help you understand not just how, but why.
           </p>
+
+          <section className="learn-category">
+            <h2>
+              <a href="/funstack-router/learn/navigation-api">Navigation API</a>
+            </h2>
+            <p>
+              Understand the Navigation API that powers FUNSTACK Router. Learn
+              how it differs from the History API, why native{" "}
+              <code>{"<a>"}</code> elements work for SPA navigation, and how to
+              access Navigation API events directly when needed.
+            </p>
+          </section>
 
           <section className="learn-category">
             <h2>

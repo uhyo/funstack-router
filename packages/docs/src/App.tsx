@@ -8,6 +8,7 @@ import { ApiHooksPage } from "./pages/ApiHooksPage.js";
 import { ApiUtilitiesPage } from "./pages/ApiUtilitiesPage.js";
 import { ApiTypesPage } from "./pages/ApiTypesPage.js";
 import { LearnPage } from "./pages/LearnPage.js";
+import { LearnNavigationApiPage } from "./pages/LearnNavigationApiPage.js";
 import { LearnNestedRoutesPage } from "./pages/LearnNestedRoutesPage.js";
 import { LearnTypeSafetyPage } from "./pages/LearnTypeSafetyPage.js";
 import { ExamplesPage } from "./pages/ExamplesPage.js";
@@ -30,6 +31,10 @@ const routes = [
         path: "/learn",
         component: LearnPage,
         children: [
+          route({
+            path: "/navigation-api",
+            component: LearnNavigationApiPage,
+          }),
           route({
             path: "/nested-routes",
             component: LearnNestedRoutesPage,
