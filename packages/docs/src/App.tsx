@@ -3,11 +3,13 @@ import { Layout } from "./components/Layout.js";
 import { HomePage } from "./pages/HomePage.js";
 import { GettingStartedPage } from "./pages/GettingStartedPage.js";
 import { ApiReferencePage } from "./pages/ApiReferencePage.js";
+import { ApiReferenceIndexPage } from "./pages/ApiReferenceIndexPage.js";
 import { ApiComponentsPage } from "./pages/ApiComponentsPage.js";
 import { ApiHooksPage } from "./pages/ApiHooksPage.js";
 import { ApiUtilitiesPage } from "./pages/ApiUtilitiesPage.js";
 import { ApiTypesPage } from "./pages/ApiTypesPage.js";
 import { LearnPage } from "./pages/LearnPage.js";
+import { LearnIndexPage } from "./pages/LearnIndexPage.js";
 import { LearnNavigationApiPage } from "./pages/LearnNavigationApiPage.js";
 import { LearnNestedRoutesPage } from "./pages/LearnNestedRoutesPage.js";
 import { LearnTypeSafetyPage } from "./pages/LearnTypeSafetyPage.js";
@@ -33,6 +35,10 @@ const routes = [
         component: LearnPage,
         children: [
           route({
+            path: "/",
+            component: LearnIndexPage,
+          }),
+          route({
             path: "/navigation-api",
             component: LearnNavigationApiPage,
           }),
@@ -50,6 +56,10 @@ const routes = [
         path: "/api",
         component: ApiReferencePage,
         children: [
+          route({
+            path: "/",
+            component: ApiReferenceIndexPage,
+          }),
           route({
             path: "/components",
             component: ApiComponentsPage,
