@@ -1,3 +1,5 @@
+"use client";
+
 import { Outlet, useLocation } from "@funstack/router";
 
 const learnNavItems = [

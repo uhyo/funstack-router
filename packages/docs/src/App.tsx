@@ -1,4 +1,4 @@
-import { Router, route } from "@funstack/router";
+import { route } from "@funstack/router/server";
 import { Layout } from "./components/Layout.js";
 import { HomePage } from "./pages/HomePage.js";
 import { GettingStartedPage } from "./pages/GettingStartedPage.js";
@@ -13,7 +13,7 @@ import { LearnNestedRoutesPage } from "./pages/LearnNestedRoutesPage.js";
 import { LearnTypeSafetyPage } from "./pages/LearnTypeSafetyPage.js";
 import { ExamplesPage } from "./pages/ExamplesPage.js";
 import { NotFoundPage } from "./pages/NotFoundPage.js";
-import { useEffect } from "react";
+import { ClientApp } from "./ClientApp.js";
 
 const routes = [
   route({
@@ -79,33 +79,6 @@ const routes = [
   }),
 ];
 
-export function App() {
-  // Auto scroll to top - this should be handled by the browser per spec,
-  // but currently Chrome and Safari do not follow the spec.
-  useEffect(() => {
-    // @ts-expect-error -- TypeScript does not yet know about the Navigation API
-    const navigation = window.navigation;
-    if (!navigation) {
-      return;
-    }
-    const controller = new AbortController();
-    navigation.addEventListener(
-      "navigatesuccess",
-      () => {
-        const transition = navigation.transition;
-        if (
-          transition.navigationType === "push" ||
-          transition.navigationType === "replace"
-        ) {
-          window.scrollTo(0, 0);
-        }
-      },
-      { signal: controller.signal },
-    );
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  return <Router routes={routes} fallback="static" />;
+export default function App() {
+  return <ClientApp routes={routes} />;
 }

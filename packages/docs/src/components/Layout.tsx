@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Outlet, useLocation } from "@funstack/router";
 

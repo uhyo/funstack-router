@@ -1,3 +1,5 @@
+"use client";
+
 import { Highlight, type PrismTheme } from "prism-react-renderer";
 
 const theme: PrismTheme = {

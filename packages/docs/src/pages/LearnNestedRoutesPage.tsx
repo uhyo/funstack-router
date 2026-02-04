@@ -1,3 +1,5 @@
+"use client";
+
 import { CodeBlock } from "../components/CodeBlock.js";
 
 export function LearnNestedRoutesPage() {

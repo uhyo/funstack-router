@@ -21,8 +21,8 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^0.0.4
-        version: 0.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1)
+        specifier: ^0.0.5
+        version: 0.0.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1)
       prism-react-renderer:
         specifier: ^2.4.1
         version: 2.4.1(react@19.2.4)
@@ -446,8 +446,8 @@ packages:
     resolution: {integrity: sha512-lEYZQ4tFOLidvxy60tE7/28LUy4bJOlbT8o0ebcolaFV/cluSGtnDpWEUWIQWORtnGhrWnYl7Gr9aHvjHYkoEQ==}
     hasBin: true
 
-  '@funstack/static@0.0.4':
-    resolution: {integrity: sha512-/ALHk3H1QvFMkBN8FK+SxEJeFu1x0tOea9qO57k32aCEearcYUVoa8tKH6ZJp1FEUNVULGbuqAVH9Qx27eL6YQ==}
+  '@funstack/static@0.0.5':
+    resolution: {integrity: sha512-KvB8AsKSePfOTFvovKNDbrsMb2fJ9Khp2kubgwBKWBlD8JIEQ2QwIwffXUm1Xi040sO/lxUdJ1RhROcN4Ec4UQ==}
     hasBin: true
     peerDependencies:
       react: ^19.2.3
@@ -1748,7 +1748,7 @@ snapshots:
 
   '@funstack/skill-installer@1.0.0': {}
 
-  '@funstack/static@0.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1)':
+  '@funstack/static@0.0.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1)':
     dependencies:
       '@funstack/skill-installer': 1.0.0
       '@vitejs/plugin-rsc': 0.5.17(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1)
