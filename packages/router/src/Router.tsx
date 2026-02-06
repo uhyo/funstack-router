@@ -5,8 +5,8 @@ import {
   useEffect,
   useMemo,
   useState,
-  useSyncExternalStore,
 } from "react";
+import type { LocationEntry } from "./core/RouterAdapter.js";
 import { RouterContext } from "./context/RouterContext.js";
 import { RouteContext } from "./context/RouteContext.js";
 import {
@@ -58,12 +58,25 @@ export function Router({
   // Create blocker registry once
   const [blockerRegistry] = useState(() => createBlockerRegistry());
 
-  // Subscribe to location changes via adapter
-  const locationEntry = useSyncExternalStore(
-    useCallback((callback) => adapter.subscribe(callback), [adapter]),
-    () => adapter.getSnapshot(),
-    () => adapter.getServerSnapshot(),
+  // Determine if running on server (SSR)
+  const isServer = typeof window === "undefined";
+
+  // Initialize state: use server snapshot for SSR, client snapshot for client
+  const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(
+    () => (isServer ? adapter.getServerSnapshot() : adapter.getSnapshot()),
   );
+
+  // Subscribe to navigation changes and sync state
+  useEffect(() => {
+    // Immediately sync with current snapshot on mount
+    // This handles the case where the snapshot changed between SSR and hydration
+    setLocationEntry(adapter.getSnapshot());
+
+    // Subscribe to future changes
+    return adapter.subscribe(() => {
+      setLocationEntry(adapter.getSnapshot());
+    });
+  }, [adapter]);
 
   // Set up navigation interception via adapter
   useEffect(() => {
