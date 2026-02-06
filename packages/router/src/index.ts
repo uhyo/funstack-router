@@ -14,6 +14,7 @@ export { useBlocker, type UseBlockerOptions } from "./hooks/useBlocker.js";
 export { useRouteParams } from "./hooks/useRouteParams.js";
 export { useRouteState } from "./hooks/useRouteState.js";
 export { useRouteData } from "./hooks/useRouteData.js";
+export { useIsPending } from "./hooks/useIsPending.js";
 
 // Route Definition Helpers
 export { route, routeState } from "./route.js";

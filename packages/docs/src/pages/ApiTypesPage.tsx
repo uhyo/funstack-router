@@ -41,6 +41,7 @@ type Props = {
   ) => void;
   resetState: () => void;
   info: unknown; // Ephemeral navigation info
+  isPending: boolean; // Whether a navigation transition is pending
 };`}</CodeBlock>
         <p>
           <strong>setState vs setStateSync:</strong>
@@ -83,6 +84,7 @@ type Props = {
   setStateSync: (state: ...) => void;       // sync
   resetState: () => void;
   info: unknown; // Ephemeral navigation info
+  isPending: boolean; // Whether a navigation transition is pending
 };`}</CodeBlock>
       </article>
 
@@ -238,8 +240,8 @@ type SettingsPageProps = RouteComponentPropsOf<typeof settingsRoute>;
             <code>component: UserPage</code>): Router automatically injects
             props (<code>params</code>, <code>state</code>,{" "}
             <code>setState</code>, <code>setStateSync</code>,{" "}
-            <code>resetState</code>, <code>info</code>, and <code>data</code>{" "}
-            when a loader is defined).
+            <code>resetState</code>, <code>info</code>, <code>isPending</code>,
+            and <code>data</code> when a loader is defined).
           </li>
           <li>
             <strong>JSX element</strong> (e.g.,{" "}

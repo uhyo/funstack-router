@@ -53,6 +53,9 @@ export function ApiReferenceIndexPage() {
           <li>
             <code>useRouteData()</code> — Type-safe loader data
           </li>
+          <li>
+            <code>useIsPending()</code> — Navigation transition pending state
+          </li>
         </ul>
       </section>
 

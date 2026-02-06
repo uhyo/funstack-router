@@ -130,6 +130,52 @@ function EditForm() {
         </ul>
       </article>
 
+      <article className="api-item">
+        <h3>
+          <code>useIsPending()</code>
+        </h3>
+        <p>
+          Returns whether a navigation transition is currently pending. When
+          navigating to a route that suspends (e.g., using{" "}
+          <code>React.lazy</code>), <code>isPending</code> becomes{" "}
+          <code>true</code> while React keeps the previous UI visible, and
+          returns to <code>false</code> once the new route is ready.
+        </p>
+        <CodeBlock language="tsx">{`import { useIsPending } from "@funstack/router";
+
+function MyComponent() {
+  const isPending = useIsPending();
+
+  return (
+    <div style={{ opacity: isPending ? 0.7 : 1 }}>
+      {isPending && <span>Navigating...</span>}
+      {/* page content */}
+    </div>
+  );
+}`}</CodeBlock>
+        <h4>Return Value</h4>
+        <ul>
+          <li>
+            <code>boolean</code> — <code>true</code> when a navigation
+            transition is in progress (the destination route is suspending),{" "}
+            <code>false</code> otherwise.
+          </li>
+        </ul>
+        <h4>Notes</h4>
+        <ul>
+          <li>
+            This hook is powered by React's <code>useTransition</code>. The
+            router wraps navigation state updates in{" "}
+            <code>startTransition</code>, so React defers rendering suspended
+            routes and keeps the current UI visible.
+          </li>
+          <li>
+            The same <code>isPending</code> value is also available as a prop on
+            route components.
+          </li>
+        </ul>
+      </article>
+
       <h2>Type-Safe Hooks</h2>
       <p>
         These hooks provide type-safe access to route data when using routes

@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useTransition,
 } from "react";
 import type { LocationEntry } from "./core/RouterAdapter.js";
 import { RouterContext } from "./context/RouterContext.js";
@@ -66,17 +67,21 @@ export function Router({
     () => (isServer ? adapter.getServerSnapshot() : adapter.getSnapshot()),
   );
 
+  const [isPending, startTransition] = useTransition();
+
   // Subscribe to navigation changes and sync state
   useEffect(() => {
     // Immediately sync with current snapshot on mount
     // This handles the case where the snapshot changed between SSR and hydration
     setLocationEntry(adapter.getSnapshot());
 
-    // Subscribe to future changes
+    // Subscribe to future changes (wrapped in transition)
     return adapter.subscribe(() => {
-      setLocationEntry(adapter.getSnapshot());
+      startTransition(() => {
+        setLocationEntry(adapter.getSnapshot());
+      });
     });
-  }, [adapter]);
+  }, [adapter, startTransition]);
 
   // Set up navigation interception via adapter
   useEffect(() => {
@@ -134,6 +139,7 @@ export function Router({
     const routerContextValue = {
       locationEntry,
       url,
+      isPending,
       navigate,
       navigateAsync,
       updateCurrentEntryState,
@@ -154,6 +160,7 @@ export function Router({
     navigate,
     navigateAsync,
     updateCurrentEntryState,
+    isPending,
     locationEntry,
     routes,
     adapter,
@@ -185,8 +192,13 @@ function RouteRenderer({
   if (!routerContext) {
     throw new Error("RouteRenderer must be used within RouterContext");
   }
-  const { locationEntry, url, navigateAsync, updateCurrentEntryState } =
-    routerContext;
+  const {
+    locationEntry,
+    url,
+    isPending,
+    navigateAsync,
+    updateCurrentEntryState,
+  } = routerContext;
 
   // Extract this route's state from internal structure
   const internalState = locationEntry.state as InternalRouteState | undefined;
@@ -308,6 +320,7 @@ function RouteRenderer({
         setStateSync: (s: unknown | ((prev: unknown) => unknown)) => void;
         resetState: () => void;
         info: unknown;
+        isPending: boolean;
       }>;
       return (
         <ComponentWithData
@@ -315,6 +328,7 @@ function RouteRenderer({
           params={params}
           {...stateProps}
           info={info}
+          isPending={isPending}
         />
       );
     }
@@ -325,8 +339,16 @@ function RouteRenderer({
       setStateSync: (s: unknown | ((prev: unknown) => unknown)) => void;
       resetState: () => void;
       info: unknown;
+      isPending: boolean;
     }>;
-    return <ComponentWithoutData params={params} {...stateProps} info={info} />;
+    return (
+      <ComponentWithoutData
+        params={params}
+        {...stateProps}
+        info={info}
+        isPending={isPending}
+      />
+    );
   };
 
   return (

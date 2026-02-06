@@ -57,6 +57,8 @@ export interface RouteComponentProps<
   resetState: () => void;
   /** Ephemeral navigation info (only available during navigation, not persisted) */
   info: unknown;
+  /** Whether a navigation transition is pending */
+  isPending: boolean;
 }
 
 /**

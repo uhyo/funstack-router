@@ -7,6 +7,8 @@ export type RouterContextValue = {
   locationEntry: LocationEntry;
   /** Current URL */
   url: URL;
+  /** Whether a navigation transition is pending */
+  isPending: boolean;
   /** Navigate to a new URL */
   navigate: (to: string, options?: NavigateOptions) => void;
   /** Navigate to a new URL and wait for completion */
