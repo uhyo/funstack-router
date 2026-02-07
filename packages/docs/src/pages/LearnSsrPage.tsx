@@ -91,9 +91,10 @@ useSearchParams();
 // Error: "useSearchParams: URL is not available during SSR."`}</CodeBlock>
         <p>
           To avoid these errors, either use URL-dependent hooks only in
-          components rendered by path-based routes, or use the SSR-safe{" "}
-          <code>useLocationSSR()</code> hook which returns <code>null</code>{" "}
-          instead of throwing when the URL is unavailable:
+          components rendered by path-based routes, or read the current path
+          inside a client-side effect (e.g., <code>useLayoutEffect</code> +{" "}
+          <code>navigation.currentEntry</code>) so the value is only accessed
+          after hydration:
         </p>
         <CodeBlock language="tsx">{`// ✗ Bad: AppShell renders during SSR, useLocation will throw
 function AppShell() {
@@ -101,13 +102,20 @@ function AppShell() {
   return <div>{/* ... */}</div>;
 }
 
-// ✓ Good: Use useLocationSSR in components that render during SSR
+// ✓ Good: Read the path in a client-side effect
+function useCurrentPath() {
+  const [path, setPath] = useState<string | undefined>(undefined);
+  useLayoutEffect(() => {
+    setPath(navigation.currentEntry?.url
+      ? new URL(navigation.currentEntry.url).pathname
+      : undefined);
+  }, []);
+  return path;
+}
+
 function AppShell() {
-  const location = useLocationSSR(); // Returns null during SSR
-  const isActive = (path: string) => {
-    if (location === null) return false;
-    return location.pathname === path;
-  };
+  const path = useCurrentPath(); // undefined during SSR, string after hydration
+  const isActive = (p: string) => path === p;
   return <nav>{/* ... */}</nav>;
 }
 
@@ -159,8 +167,9 @@ function HomePage() {
           </li>
           <li>
             Avoid <code>useLocation</code> and <code>useSearchParams</code> in
-            components that render during SSR; use <code>useLocationSSR</code>{" "}
-            instead when you need location information in the app shell
+            components that render during SSR; use a client-side effect (e.g.,{" "}
+            <code>useLayoutEffect</code>) to read location information in the
+            app shell
           </li>
           <li>
             This two-stage model keeps SSR output lightweight while enabling
