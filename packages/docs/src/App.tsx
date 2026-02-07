@@ -1,4 +1,5 @@
 import { route } from "@funstack/router/server";
+import { defer } from "@funstack/static/server";
 import { Layout } from "./components/Layout.js";
 import { HomePage } from "./pages/HomePage.js";
 import { GettingStartedPage } from "./pages/GettingStartedPage.js";
@@ -27,11 +28,13 @@ const routes = [
         children: [
           route({
             path: "/",
-            component: HomePage,
+            component: defer(<HomePage />, { name: "HomePage" }),
           }),
           route({
             path: "/getting-started",
-            component: GettingStartedPage,
+            component: defer(<GettingStartedPage />, {
+              name: "GettingStartedPage",
+            }),
           }),
           route({
             path: "/learn",
@@ -39,23 +42,31 @@ const routes = [
             children: [
               route({
                 path: "/",
-                component: LearnIndexPage,
+                component: defer(<LearnIndexPage />, {
+                  name: "LearnIndexPage",
+                }),
               }),
               route({
                 path: "/navigation-api",
-                component: LearnNavigationApiPage,
+                component: defer(<LearnNavigationApiPage />, {
+                  name: "LearnNavigationApiPage",
+                }),
               }),
               route({
                 path: "/nested-routes",
-                component: LearnNestedRoutesPage,
+                component: defer(<LearnNestedRoutesPage />, {
+                  name: "LearnNestedRoutesPage",
+                }),
               }),
               route({
                 path: "/type-safety",
-                component: LearnTypeSafetyPage,
+                component: defer(<LearnTypeSafetyPage />, {
+                  name: "LearnTypeSafetyPage",
+                }),
               }),
               route({
                 path: "/server-side-rendering",
-                component: LearnSsrPage,
+                component: defer(<LearnSsrPage />, { name: "LearnSsrPage" }),
               }),
             ],
           }),
@@ -65,32 +76,38 @@ const routes = [
             children: [
               route({
                 path: "/",
-                component: ApiReferenceIndexPage,
+                component: defer(<ApiReferenceIndexPage />, {
+                  name: "ApiReferenceIndexPage",
+                }),
               }),
               route({
                 path: "/components",
-                component: ApiComponentsPage,
+                component: defer(<ApiComponentsPage />, {
+                  name: "ApiComponentsPage",
+                }),
               }),
               route({
                 path: "/hooks",
-                component: ApiHooksPage,
+                component: defer(<ApiHooksPage />, { name: "ApiHooksPage" }),
               }),
               route({
                 path: "/utilities",
-                component: ApiUtilitiesPage,
+                component: defer(<ApiUtilitiesPage />, {
+                  name: "ApiUtilitiesPage",
+                }),
               }),
               route({
                 path: "/types",
-                component: ApiTypesPage,
+                component: defer(<ApiTypesPage />, { name: "ApiTypesPage" }),
               }),
             ],
           }),
           route({
             path: "/examples",
-            component: ExamplesPage,
+            component: defer(<ExamplesPage />, { name: "ExamplesPage" }),
           }),
           route({
-            component: NotFoundPage,
+            component: defer(<NotFoundPage />, { name: "NotFoundPage" }),
           }),
         ],
       }),
