@@ -16,10 +16,6 @@ export class NullAdapter implements RouterAdapter {
     return null;
   }
 
-  getServerSnapshot(): LocationEntry | null {
-    return null;
-  }
-
   subscribe(_callback: () => void): () => void {
     return () => {};
   }

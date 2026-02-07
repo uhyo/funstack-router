@@ -31,12 +31,6 @@ export interface RouterAdapter {
   getSnapshot(): LocationEntry | null;
 
   /**
-   * Get the server snapshot for SSR.
-   * Returns null as location is not available on server.
-   */
-  getServerSnapshot(): LocationEntry | null;
-
-  /**
    * Subscribe to location changes.
    * Returns an unsubscribe function.
    */

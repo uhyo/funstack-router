@@ -31,10 +31,6 @@ export class StaticAdapter implements RouterAdapter {
     return this.#cachedSnapshot;
   }
 
-  getServerSnapshot(): LocationEntry | null {
-    return null;
-  }
-
   subscribe(_callback: () => void): () => void {
     // Static mode never fires location change events
     return () => {};

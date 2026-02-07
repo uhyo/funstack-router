@@ -59,10 +59,6 @@ export class NavigationAPIAdapter implements RouterAdapter {
     return this.#cachedSnapshot;
   }
 
-  getServerSnapshot(): LocationEntry | null {
-    return null;
-  }
-
   subscribe(callback: () => void): () => void {
     const controller = new AbortController();
     navigation.addEventListener("currententrychange", callback, {

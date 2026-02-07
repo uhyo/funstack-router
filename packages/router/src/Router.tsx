@@ -64,7 +64,7 @@ export function Router({
 
   // Initialize state: use server snapshot for SSR, client snapshot for client
   const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(
-    () => (isServer ? adapter.getServerSnapshot() : adapter.getSnapshot()),
+    () => (isServer ? null : adapter.getSnapshot()),
   );
 
   const [isPending, startTransition] = useTransition();
