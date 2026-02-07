@@ -20,75 +20,79 @@ import { ClientApp } from "./ClientApp.js";
 
 const routes = [
   route({
-    path: "/funstack-router",
     component: Layout,
     children: [
       route({
-        path: "/",
-        component: HomePage,
-      }),
-      route({
-        path: "/getting-started",
-        component: GettingStartedPage,
-      }),
-      route({
-        path: "/learn",
-        component: LearnPage,
+        path: "/funstack-router",
         children: [
           route({
             path: "/",
-            component: LearnIndexPage,
+            component: HomePage,
           }),
           route({
-            path: "/navigation-api",
-            component: LearnNavigationApiPage,
+            path: "/getting-started",
+            component: GettingStartedPage,
           }),
           route({
-            path: "/nested-routes",
-            component: LearnNestedRoutesPage,
+            path: "/learn",
+            component: LearnPage,
+            children: [
+              route({
+                path: "/",
+                component: LearnIndexPage,
+              }),
+              route({
+                path: "/navigation-api",
+                component: LearnNavigationApiPage,
+              }),
+              route({
+                path: "/nested-routes",
+                component: LearnNestedRoutesPage,
+              }),
+              route({
+                path: "/type-safety",
+                component: LearnTypeSafetyPage,
+              }),
+              route({
+                path: "/server-side-rendering",
+                component: LearnSsrPage,
+              }),
+            ],
           }),
           route({
-            path: "/type-safety",
-            component: LearnTypeSafetyPage,
+            path: "/api",
+            component: ApiReferencePage,
+            children: [
+              route({
+                path: "/",
+                component: ApiReferenceIndexPage,
+              }),
+              route({
+                path: "/components",
+                component: ApiComponentsPage,
+              }),
+              route({
+                path: "/hooks",
+                component: ApiHooksPage,
+              }),
+              route({
+                path: "/utilities",
+                component: ApiUtilitiesPage,
+              }),
+              route({
+                path: "/types",
+                component: ApiTypesPage,
+              }),
+            ],
           }),
           route({
-            path: "/server-side-rendering",
-            component: LearnSsrPage,
+            path: "/examples",
+            component: ExamplesPage,
+          }),
+          route({
+            component: NotFoundPage,
           }),
         ],
-      }),
-      route({
-        path: "/api",
-        component: ApiReferencePage,
-        children: [
-          route({
-            path: "/",
-            component: ApiReferenceIndexPage,
-          }),
-          route({
-            path: "/components",
-            component: ApiComponentsPage,
-          }),
-          route({
-            path: "/hooks",
-            component: ApiHooksPage,
-          }),
-          route({
-            path: "/utilities",
-            component: ApiUtilitiesPage,
-          }),
-          route({
-            path: "/types",
-            component: ApiTypesPage,
-          }),
-        ],
-      }),
-      route({
-        path: "/examples",
-        component: ExamplesPage,
-      }),
-      route({
-        component: NotFoundPage,
       }),
     ],
   }),

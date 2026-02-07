@@ -38,6 +38,10 @@ export function ApiReferenceIndexPage() {
             <code>useLocation()</code> — Current location object
           </li>
           <li>
+            <code>useLocationSSR()</code> — SSR-safe current location (returns{" "}
+            <code>null</code> during SSR)
+          </li>
+          <li>
             <code>useSearchParams()</code> — Search query management
           </li>
           <li>

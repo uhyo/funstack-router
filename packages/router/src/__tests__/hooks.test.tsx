@@ -4,9 +4,11 @@ import { Suspense, type ReactNode } from "react";
 import { Router } from "../Router.js";
 import { useNavigate } from "../hooks/useNavigate.js";
 import { useLocation } from "../hooks/useLocation.js";
+import { useLocationSSR } from "../hooks/useLocationSSR.js";
 import { useSearchParams } from "../hooks/useSearchParams.js";
 import { useIsPending } from "../hooks/useIsPending.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
+import { RouterContext } from "../context/RouterContext.js";
 import type { RouteDefinition } from "../route.js";
 
 describe("hooks", () => {
@@ -127,6 +129,72 @@ describe("hooks", () => {
 
       expect(() => render(<TestComponent />)).toThrow(
         "useLocation must be used within a Router",
+      );
+    });
+  });
+
+  describe("useLocationSSR", () => {
+    it("returns current location when URL is available", () => {
+      mockNavigation = setupNavigationMock(
+        "http://localhost/page?foo=bar#section",
+      );
+
+      function TestComponent() {
+        const location = useLocationSSR();
+        return (
+          <div>
+            <span data-testid="pathname">{location?.pathname}</span>
+            <span data-testid="search">{location?.search}</span>
+            <span data-testid="hash">{location?.hash}</span>
+          </div>
+        );
+      }
+
+      const routes: RouteDefinition[] = [
+        { path: "/page", component: TestComponent },
+      ];
+
+      render(<Router routes={routes} />);
+
+      expect(screen.getByTestId("pathname").textContent).toBe("/page");
+      expect(screen.getByTestId("search").textContent).toBe("?foo=bar");
+      expect(screen.getByTestId("hash").textContent).toBe("#section");
+    });
+
+    it("returns null during SSR (url is null)", () => {
+      let capturedLocation: ReturnType<typeof useLocationSSR> | undefined;
+
+      function TestComponent() {
+        capturedLocation = useLocationSSR();
+        return <div>test</div>;
+      }
+
+      const ssrContextValue = {
+        locationEntry: null,
+        url: null,
+        isPending: false,
+        navigate: () => {},
+        navigateAsync: async () => {},
+        updateCurrentEntryState: () => {},
+      };
+
+      render(
+        <RouterContext.Provider value={ssrContextValue}>
+          <TestComponent />
+        </RouterContext.Provider>,
+      );
+
+      expect(capturedLocation).toBeNull();
+    });
+
+    it("throws when used outside Router", () => {
+      function TestComponent() {
+        useLocationSSR();
+        return null;
+      }
+
+      expect(() => render(<TestComponent />)).toThrow(
+        "useLocationSSR must be used within a Router",
       );
     });
   });

@@ -90,15 +90,25 @@ useLocation();
 useSearchParams();
 // Error: "useSearchParams: URL is not available during SSR."`}</CodeBlock>
         <p>
-          To avoid these errors, only use URL-dependent hooks in components
-          rendered by path-based routes. Since path-based routes only render
-          after hydration (when the URL is available), these hooks will work
-          correctly:
+          To avoid these errors, either use URL-dependent hooks only in
+          components rendered by path-based routes, or use the SSR-safe{" "}
+          <code>useLocationSSR()</code> hook which returns <code>null</code>{" "}
+          instead of throwing when the URL is unavailable:
         </p>
         <CodeBlock language="tsx">{`// ✗ Bad: AppShell renders during SSR, useLocation will throw
 function AppShell() {
   const location = useLocation(); // Throws during SSR!
   return <div>{/* ... */}</div>;
+}
+
+// ✓ Good: Use useLocationSSR in components that render during SSR
+function AppShell() {
+  const location = useLocationSSR(); // Returns null during SSR
+  const isActive = (path: string) => {
+    if (location === null) return false;
+    return location.pathname === path;
+  };
+  return <nav>{/* ... */}</nav>;
 }
 
 // ✓ Good: HomePage only renders after hydration (has a path)
@@ -149,7 +159,8 @@ function HomePage() {
           </li>
           <li>
             Avoid <code>useLocation</code> and <code>useSearchParams</code> in
-            components that render during SSR
+            components that render during SSR; use <code>useLocationSSR</code>{" "}
+            instead when you need location information in the app shell
           </li>
           <li>
             This two-stage model keeps SSR output lightweight while enabling

@@ -50,6 +50,44 @@ function MyComponent() {
 
       <article className="api-item">
         <h3>
+          <code>useLocationSSR()</code>
+        </h3>
+        <p>
+          Returns the current location object, or <code>null</code> when the URL
+          is not available (e.g. during SSR). This is the SSR-safe alternative
+          to <code>useLocation()</code>.
+        </p>
+        <CodeBlock language="tsx">{`import { useLocationSSR } from "@funstack/router";
+
+function AppShell() {
+  const location = useLocationSSR();
+
+  // location is null during SSR, Location object after hydration
+  const isActive = (path: string) => {
+    if (location === null) return false;
+    return location.pathname === path;
+  };
+
+  return (
+    <nav>
+      <a className={isActive("/") ? "active" : ""} href="/">Home</a>
+      <a className={isActive("/about") ? "active" : ""} href="/about">About</a>
+    </nav>
+  );
+}`}</CodeBlock>
+        <h4>Return Value</h4>
+        <ul>
+          <li>
+            <code>Location | null</code> &mdash; The current location object
+            with <code>pathname</code>, <code>search</code>, and{" "}
+            <code>hash</code> properties, or <code>null</code> during SSR when
+            no URL is available.
+          </li>
+        </ul>
+      </article>
+
+      <article className="api-item">
+        <h3>
           <code>useSearchParams()</code>
         </h3>
         <p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Outlet, useLocation } from "@funstack/router";
+import { Outlet, useLocationSSR } from "@funstack/router";
 
 const navItems = [
   { path: "/funstack-router/", label: "Home" },
@@ -12,10 +12,11 @@ const navItems = [
 ];
 
 export function Layout() {
-  const location = useLocation();
+  const location = useLocationSSR();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
+    if (location === null) return false;
     // Handle API Reference section (match any /api/* path)
     if (path === "/funstack-router/api") {
       return location.pathname.startsWith("/funstack-router/api");
