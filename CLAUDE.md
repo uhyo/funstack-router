@@ -53,7 +53,7 @@ The router uses two React contexts:
 
 ### Component Rendering (`packages/router/src/Router.tsx`)
 
-- `<Router>` subscribes to Navigation API via `useSyncExternalStore`
+- `<Router>` subscribes to Navigation API via `useState` + `useEffect` (with an `ssr` prop to control initial state)
 - Intercepts navigation events and matches against route definitions
 - `RouteRenderer` recursively renders matched routes, each wrapped in its own `RouteContext.Provider`
 - Child routes are pre-rendered as `outlet` in the context, consumed by `<Outlet>`

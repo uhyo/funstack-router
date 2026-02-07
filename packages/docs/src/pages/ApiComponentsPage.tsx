@@ -57,6 +57,33 @@ export function ApiComponentsPage() {
                 the router will intercept the navigation.
               </td>
             </tr>
+            <tr>
+              <td>
+                <code>fallback</code>
+              </td>
+              <td>
+                <code>{'"none" | "static"'}</code>
+              </td>
+              <td>
+                Fallback mode when Navigation API is unavailable.{" "}
+                <code>"none"</code> (default) renders nothing;{" "}
+                <code>"static"</code> renders matched routes without navigation
+                capabilities (MPA behavior).
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <code>ssr</code>
+              </td>
+              <td>
+                <code>boolean</code>
+              </td>
+              <td>
+                When <code>true</code>, the router starts with no location entry
+                and syncs after hydration. Use this when the Router is
+                server-side rendered. Defaults to <code>false</code>.
+              </td>
+            </tr>
           </tbody>
         </table>
       </article>

@@ -213,7 +213,7 @@ Loaders execute at different times depending on the trigger:
 │   });                                                           │
 │ });                                                             │
 │     ↓                                                           │
-│ React re-renders (useSyncExternalStore)                         │
+│ React re-renders (useEffect subscription)                       │
 │     ↓                                                           │
 │ Cache HIT - no re-execution                                     │
 │     ↓                                                           │

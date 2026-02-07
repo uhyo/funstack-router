@@ -445,7 +445,7 @@ class StaticAdapter implements RouterAdapter {
 
 #### 7.4 Re-renders on State Update
 
-Calling `setState` triggers `navigation.updateCurrentEntry()`, which fires `currententrychange`. The router already subscribes to this event via `useSyncExternalStore`, so components will re-render automatically.
+Calling `setState` triggers `navigation.updateCurrentEntry()`, which fires `currententrychange`. The router already subscribes to this event via `useEffect`, so components will re-render automatically.
 
 ### 8. Migration Path
 

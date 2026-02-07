@@ -5,7 +5,6 @@ import {
   useEffect,
   useMemo,
   useState,
-  useSyncExternalStore,
   useTransition,
 } from "react";
 import type { LocationEntry } from "./core/RouterAdapter.js";
@@ -45,21 +44,18 @@ export type RouterProps = {
    * - `"static"`: Render matched routes without navigation capabilities (MPA behavior)
    */
   fallback?: FallbackMode;
+  /**
+   * When true, start with null locationEntry and sync after hydration.
+   * Use this when the Router is server-side rendered.
+   */
+  ssr?: boolean;
 };
-
-/**
- * Special value returned as server snapshot during SSR/hydration.
- */
-const serverSnapshotSymbol = Symbol();
-
-const noopSubscribe = () => () => {};
-const getServerSnapshot = (): typeof serverSnapshotSymbol =>
-  serverSnapshotSymbol;
 
 export function Router({
   routes: inputRoutes,
   onNavigate,
   fallback = "none",
+  ssr = false,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
@@ -69,38 +65,16 @@ export function Router({
   // Create blocker registry once
   const [blockerRegistry] = useState(() => createBlockerRegistry());
 
-  // Hydration-aware initial value: null during SSR/hydration, real on client-only mount
-  const getSnapshot = useCallback(() => adapter.getSnapshot(), [adapter]);
-  const initialEntry = useSyncExternalStore<
-    LocationEntry | null | typeof serverSnapshotSymbol
-  >(noopSubscribe, getSnapshot, getServerSnapshot);
-
   const [isPending, startTransition] = useTransition();
-  const [locationEntryInternal, setLocationEntry] = useState<
-    LocationEntry | null | typeof serverSnapshotSymbol
-  >(initialEntry);
-  const locationEntry =
-    locationEntryInternal === serverSnapshotSymbol
-      ? null
-      : locationEntryInternal;
+  const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(
+    () => (ssr ? null : adapter.getSnapshot()),
+  );
 
-  if (
-    locationEntryInternal === serverSnapshotSymbol &&
-    initialEntry !== serverSnapshotSymbol
-  ) {
-    // On second hydrated render on client, sync state with real snapshot
-    // Rendering flow on hydration:
-    // 1. Hydrated Render 1: initialEntry = serverSnapshotSymbol, locationEntryInternal = serverSnapshotSymbol
-    // 2. Render 1 is committed
-    // 3. Hydrated Render 2: initialEntry = client snapshot, locationEntryInternal = serverSnapshotSymbol
-    // 4. This `if` block runs, updating state to client snapshot
-    // 5. Hydrated Render 2 (retry): initialEntry = client snapshot, locationEntryInternal = client snapshot
-    // 6. Render 2 is committed
-    setLocationEntry(initialEntry);
-  }
-
-  // Subscribe to navigation changes (wrapped in transition)
+  // Subscribe to navigation changes (wrapped in transition).
+  // On mount, sync client snapshot (handles SSR hydration;
+  // no-op for non-SSR because adapters cache snapshots by identity).
   useEffect(() => {
+    setLocationEntry(adapter.getSnapshot());
     return adapter.subscribe(() => {
       startTransition(() => {
         setLocationEntry(adapter.getSnapshot());

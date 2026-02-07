@@ -31,7 +31,7 @@ export function resetNavigationState(): void {
  * Adapter that uses the Navigation API for full SPA functionality.
  */
 export class NavigationAPIAdapter implements RouterAdapter {
-  // Cache the snapshot to ensure referential stability for useSyncExternalStore
+  // Cache the snapshot to ensure referential stability across calls
   #cachedSnapshot: LocationEntry | null = null;
   #cachedEntryId: string | null = null;
   // Ephemeral info from the current navigation event (not persisted in history)

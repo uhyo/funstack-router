@@ -32,5 +32,5 @@ export function ClientApp({ routes }: { routes: RouteDefinition[] }) {
     };
   }, []);
 
-  return <Router routes={routes} fallback="static" />;
+  return <Router routes={routes} fallback="static" ssr />;
 }

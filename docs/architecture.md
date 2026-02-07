@@ -227,22 +227,25 @@ type RouteContextValue = {
 
 ### State Management
 
-The Router uses `useSyncExternalStore` to subscribe to the Navigation API. This is the recommended approach for integrating external state sources with React 18+.
+The Router uses `useState` + `useEffect` to subscribe to the Navigation API via a `RouterAdapter`. An explicit `ssr` prop controls the initial state:
+
+- **`ssr={false}` (default):** `useState` initializer calls `adapter.getSnapshot()` for the current location entry immediately.
+- **`ssr={true}`:** `useState` starts with `null` (no URL available during SSR). After hydration, `useEffect` syncs the client snapshot.
 
 ```
 ┌──────────────────────────────────────────────────────┐
 │                 Navigation API                        │
-│                 (External Store)                      │
+│                 (via RouterAdapter)                    │
 │                                                       │
 │  ┌─────────────────────────────────────────────────┐  │
-│  │           useSyncExternalStore                  │  │
+│  │          useState + useEffect                   │  │
 │  │                                                 │  │
-│  │  subscribe: 'currententrychange' event         │  │
-│  │  getSnapshot: () => navigation.currentEntry    │  │
+│  │  init: ssr ? null : adapter.getSnapshot()      │  │
+│  │  effect: subscribe to 'currententrychange'     │  │
 │  └─────────────────────────────────────────────────┘  │
 │                         │                             │
 │                         ▼                             │
-│                  currentEntry                         │
+│                  locationEntry                        │
 │                         │                             │
 │                         ▼                             │
 │                  Context Provider                     │
@@ -254,24 +257,19 @@ The Router uses `useSyncExternalStore` to subscribe to the Navigation API. This 
 
 ```typescript
 // Inside Router component
-const currentEntry = useSyncExternalStore(
-  // subscribe: called when component mounts
-  (callback) => {
-    navigation.addEventListener("currententrychange", callback);
-    return () => navigation.removeEventListener("currententrychange", callback);
-  },
-  // getSnapshot: returns current state
-  () => navigation.currentEntry,
-  // getServerSnapshot: for SSR (Navigation API not available)
-  () => null,
+const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(() =>
+  ssr ? null : adapter.getSnapshot(),
 );
+
+useEffect(() => {
+  setLocationEntry(adapter.getSnapshot());
+  return adapter.subscribe(() => {
+    startTransition(() => {
+      setLocationEntry(adapter.getSnapshot());
+    });
+  });
+}, [adapter, startTransition]);
 ```
-
-**Why `useSyncExternalStore` over `useState` + `useEffect`:**
-
-- Handles React concurrent rendering correctly (prevents tearing)
-- Clean subscription/snapshot separation
-- React manages subscription lifecycle automatically
 
 ## File Structure
 

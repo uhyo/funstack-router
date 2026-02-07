@@ -8,15 +8,12 @@ FUNSTACK Router is built exclusively on the Navigation API. When opened in a bro
 
 ```tsx
 // Current behavior in Router.tsx
-const currentEntry = useSyncExternalStore(
-  subscribeToNavigation,
-  getNavigationSnapshot,
-  () => null, // SSR/no Navigation API returns null
+const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(() =>
+  ssr ? null : adapter.getSnapshot(),
 );
 
-if (currentEntry === null) {
-  return null; // Nothing renders!
-}
+// When ssr=true and Navigation API is unavailable, locationEntry is null
+// and the router renders only pathless routes (the app shell).
 ```
 
 This is intentional but inconvenient for users who want their app to at least display content in unsupported browsers.
@@ -297,56 +294,31 @@ With the adapter abstraction, the Router component becomes much cleaner:
 
 ```typescript
 // In Router.tsx
-function Router({ routes, onNavigate, fallback = "none" }: RouterProps) {
+function Router({
+  routes,
+  onNavigate,
+  fallback = "none",
+  ssr = false,
+}: RouterProps) {
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
 
-  // Subscribe to location changes via adapter
-  const locationEntry = useSyncExternalStore(
-    useCallback(
-      (callback) => adapter?.subscribe(callback) ?? (() => {}),
-      [adapter],
-    ),
-    () => adapter?.getSnapshot() ?? null,
-    () => null, // SSR snapshot
+  // Initialize location state: null during SSR, real snapshot on client-only mount
+  const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(
+    () => (ssr ? null : adapter.getSnapshot()),
   );
 
-  // Early return if no location available
-  if (!locationEntry) {
-    return null;
-  }
-
-  const { url } = locationEntry;
-
-  // Route matching
-  const matchedRoutes = useMemo(
-    () => matchRoutes(routes, url.pathname),
-    [routes, url.pathname],
-  );
-
-  if (!matchedRoutes) {
-    return null;
-  }
-
-  // Setup navigation interception via adapter
+  // Subscribe to location changes and sync initial snapshot
   useEffect(() => {
-    return adapter?.setupInterception(routes, onNavigate);
-  }, [adapter, routes, onNavigate]);
+    setLocationEntry(adapter.getSnapshot());
+    return adapter.subscribe(() => {
+      startTransition(() => {
+        setLocationEntry(adapter.getSnapshot());
+      });
+    });
+  }, [adapter, startTransition]);
 
-  // Navigate function from adapter
-  const navigate = useCallback(
-    (to: string, options?: NavigateOptions) => {
-      adapter?.navigate(to, options);
-    },
-    [adapter],
-  );
-
-  // Render routes
-  return (
-    <RouterContext.Provider value={{ locationEntry, url, navigate }}>
-      <RouteRenderer matchedRoutes={matchedRoutes} index={0} />
-    </RouterContext.Provider>
-  );
+  // ... route matching, interception setup, rendering
 }
 ```
 
@@ -458,7 +430,7 @@ User clicks link
       ▼
 ┌─────────────────────────────────────┐
 │  "currententrychange" event fires   │
-│  useSyncExternalStore updates       │
+│  useEffect subscription updates     │
 └─────────────────────────────────────┘
       │
       ▼

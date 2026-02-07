@@ -17,16 +17,22 @@ export function LearnSsrPage() {
       <section>
         <h3>How SSR Works</h3>
         <p>
+          To enable SSR, pass the <code>ssr</code> prop to{" "}
+          <code>{"<Router>"}</code>:
+        </p>
+        <CodeBlock language="tsx">{`<Router routes={routes} fallback="static" ssr />`}</CodeBlock>
+        <p>
           FUNSTACK Router uses a two-stage rendering model that separates what
           renders on the server from what renders on the client:
         </p>
         <p>
-          <strong>Stage 1 &mdash; Server:</strong> No URL is available on the
-          server. The router matches only pathless routes (routes without a{" "}
-          <code>path</code> property) that do not have a loader. Pathless routes
-          with loaders are skipped because there is no request context to run
-          them. This produces the app shell &mdash; layouts, headers, navigation
-          chrome, and other structural markup.
+          <strong>Stage 1 &mdash; Server:</strong> With <code>ssr</code>{" "}
+          enabled, the router starts with no location entry. It matches only
+          pathless routes (routes without a <code>path</code> property) that do
+          not have a loader. Pathless routes with loaders are skipped because
+          there is no request context to run them. This produces the app shell
+          &mdash; layouts, headers, navigation chrome, and other structural
+          markup.
         </p>
         <p>
           <strong>Stage 2 &mdash; Client hydration:</strong> Once the browser
