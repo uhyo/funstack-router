@@ -50,12 +50,6 @@ export type RouterProps = {
   fallback?: FallbackMode;
 };
 
-/**
- * Initial value of locationEntry.
- * This value means to use the `initialEntry` from `useSyncExternalStore` instead.
- */
-const entryInitValue = Symbol();
-
 export function Router({
   routes: inputRoutes,
   onNavigate,
@@ -78,16 +72,19 @@ export function Router({
   );
 
   const [isPending, startTransition] = useTransition();
-  const [locationEntryInternal, setLocationEntry] = useState<
-    LocationEntry | null | typeof entryInitValue
-  >(entryInitValue);
-  const locationEntry =
-    locationEntryInternal === entryInitValue
-      ? initialEntry
-      : locationEntryInternal;
+  const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(
+    initialEntry,
+  );
 
   // Subscribe to navigation changes (wrapped in transition)
   useEffect(() => {
+    // Immediately sync without transition to lock in the initial entry.
+    // This ensures locationEntryInternal holds a real value before the
+    // first navigation, so React can show the old entry with isPending=true
+    // during transitions (instead of reading through useSyncExternalStore
+    // which always reflects the latest navigation state).
+    setLocationEntry(adapter.getSnapshot());
+
     return adapter.subscribe(() => {
       startTransition(() => {
         setLocationEntry(adapter.getSnapshot());
