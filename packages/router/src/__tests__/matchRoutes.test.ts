@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { matchRoutes } from "../core/matchRoutes.js";
+import type { InternalRouteDefinition } from "../types.js";
 import { internalRoutes } from "../types.js";
 
 describe("matchRoutes", () => {
@@ -517,6 +518,67 @@ describe("matchRoutes", () => {
       ]);
 
       expect(matchRoutes(routes, null)).toBeNull();
+    });
+
+    it("pathless route with loader does NOT match when pathname is null", () => {
+      const routes = [
+        {
+          component: () => null,
+          loader: () => "data",
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      expect(matchRoutes(routes, null)).toBeNull();
+    });
+
+    it("pathless route with loader is skipped, sibling without loader matches", () => {
+      const routes = [
+        {
+          component: () => null,
+          loader: () => "data",
+        },
+        {
+          component: () => null, // no loader — valid SSR shell
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      const result = matchRoutes(routes, null);
+      expect(result).toHaveLength(1);
+      expect(result![0].route.loader).toBeUndefined();
+    });
+
+    it("nested pathless route with loader stops SSR matching at that level", () => {
+      const routes = [
+        {
+          component: () => null, // outer shell (no loader)
+          children: [
+            {
+              component: () => null,
+              loader: () => "data", // has loader — should not match
+            },
+          ],
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      // Outer pathless route matches alone (child with loader is skipped)
+      const result = matchRoutes(routes, null);
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBeUndefined();
+      expect(result![0].route.loader).toBeUndefined();
+    });
+
+    it("pathless route with loader still matches when pathname is non-null", () => {
+      const routes = [
+        {
+          component: () => null,
+          loader: () => "data",
+          children: [{ path: "/about", component: () => null }],
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      const result = matchRoutes(routes, "/about");
+      expect(result).toHaveLength(2);
+      expect(result![0].route.loader).toBeDefined();
     });
   });
 });

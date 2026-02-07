@@ -9,9 +9,9 @@ export function LearnSsrPage() {
 
       <p className="page-intro">
         FUNSTACK Router supports server-side rendering with a two-stage model.
-        During SSR, pathless (layout) routes render to produce an app shell,
-        while path-based routes and loaders activate only after client
-        hydration.
+        During SSR, pathless (layout) routes without loaders render to produce
+        an app shell, while path-based routes and loaders activate only after
+        client hydration.
       </p>
 
       <section>
@@ -23,9 +23,10 @@ export function LearnSsrPage() {
         <p>
           <strong>Stage 1 &mdash; Server:</strong> No URL is available on the
           server. The router matches only pathless routes (routes without a{" "}
-          <code>path</code> property). Loaders are skipped entirely. This
-          produces the app shell &mdash; layouts, headers, navigation chrome,
-          and other structural markup.
+          <code>path</code> property) that do not have a loader. Pathless routes
+          with loaders are skipped because there is no request context to run
+          them. This produces the app shell &mdash; layouts, headers, navigation
+          chrome, and other structural markup.
         </p>
         <p>
           <strong>Stage 2 &mdash; Client hydration:</strong> Once the browser
@@ -37,7 +38,8 @@ export function LearnSsrPage() {
 
 // Stage 1 (Server)         Stage 2 (Client)
 // ─────────────────        ─────────────────
-// App shell (pathless)     App shell (pathless)
+// App shell (pathless      App shell (pathless)
+//   without loader)
 // ✗ No path routes         ✓ Path routes match
 // ✗ No loaders             ✓ Loaders execute
 // ✗ No URL available       ✓ URL from Navigation API`}</CodeBlock>
@@ -140,10 +142,13 @@ function HomePage() {
         <h3>Key Takeaways</h3>
         <ul>
           <li>
-            During SSR, only pathless routes render (no URL is available on the
-            server)
+            During SSR, only pathless routes without loaders render (no URL or
+            request context is available on the server)
           </li>
-          <li>Path-based routes and loaders activate after client hydration</li>
+          <li>
+            Path-based routes, loaders, and pathless routes with loaders
+            activate after client hydration
+          </li>
           <li>
             Pathless routes are ideal for app shell markup (headers, footers,
             layout structure)

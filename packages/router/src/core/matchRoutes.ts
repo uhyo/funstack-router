@@ -28,6 +28,10 @@ function matchRoute(
 
   // Handle pathless routes - always match, consume nothing
   if (route.path === undefined) {
+    // Pathless routes with loaders can't render during SSR (no request context)
+    if (pathname === null && route.loader) {
+      return null;
+    }
     const result: MatchedRoute = {
       route,
       params: {},

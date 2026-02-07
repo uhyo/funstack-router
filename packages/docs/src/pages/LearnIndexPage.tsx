@@ -54,8 +54,9 @@ export function LearnIndexPage() {
         </h2>
         <p>
           Learn how FUNSTACK Router behaves during server-side rendering.
-          Pathless routes render on the server to produce an app shell, while
-          path-based routes and loaders activate after client hydration.
+          Pathless routes without loaders render on the server to produce an app
+          shell, while path-based routes and loaders activate after client
+          hydration.
         </p>
       </section>
     </div>
