@@ -89,12 +89,14 @@ export function Layout() {
       <main className="main">
         <Outlet />
       </main>
-      <footer className="footer">
-        <p>
-          Built with <strong>@funstack/router</strong> &mdash; A modern React
-          router based on the Navigation API
-        </p>
-      </footer>
+      {location !== null && (
+        <footer className="footer">
+          <p>
+            Built with <strong>@funstack/router</strong> &mdash; A modern React
+            router based on the Navigation API
+          </p>
+        </footer>
+      )}
     </div>
   );
 }
