@@ -28,6 +28,9 @@ import { createAdapter } from "./core/createAdapter.js";
 import { executeLoaders, createLoaderRequest } from "./core/loaderCache.js";
 import type { RouteDefinition } from "./route.js";
 
+const noopSubscribe = () => () => {};
+const getServerSnapshot = () => null;
+
 export type RouterProps = {
   routes: RouteDefinition[];
   /**
@@ -61,9 +64,7 @@ export function Router({
   const [blockerRegistry] = useState(() => createBlockerRegistry());
 
   // Hydration-aware initial value: null during SSR/hydration, real on client-only mount
-  const noopSubscribe = useCallback(() => () => {}, []);
   const getSnapshot = useCallback(() => adapter.getSnapshot(), [adapter]);
-  const getServerSnapshot = useCallback(() => null, []);
   const initialEntry = useSyncExternalStore(
     noopSubscribe,
     getSnapshot,
@@ -75,13 +76,8 @@ export function Router({
     initialEntry,
   );
 
-  // Subscribe to navigation changes and sync state
+  // Subscribe to navigation changes (wrapped in transition)
   useEffect(() => {
-    // Immediately sync with current snapshot on mount
-    // This handles the case where the snapshot changed between SSR and hydration
-    setLocationEntry(adapter.getSnapshot());
-
-    // Subscribe to future changes (wrapped in transition)
     return adapter.subscribe(() => {
       startTransition(() => {
         setLocationEntry(adapter.getSnapshot());
