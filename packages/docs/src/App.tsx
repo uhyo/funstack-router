@@ -13,6 +13,7 @@ import { LearnIndexPage } from "./pages/LearnIndexPage.js";
 import { LearnNavigationApiPage } from "./pages/LearnNavigationApiPage.js";
 import { LearnNestedRoutesPage } from "./pages/LearnNestedRoutesPage.js";
 import { LearnTypeSafetyPage } from "./pages/LearnTypeSafetyPage.js";
+import { LearnSsrPage } from "./pages/LearnSsrPage.js";
 import { ExamplesPage } from "./pages/ExamplesPage.js";
 import { NotFoundPage } from "./pages/NotFoundPage.js";
 import { ClientApp } from "./ClientApp.js";
@@ -49,6 +50,10 @@ const routes = [
           route({
             path: "/type-safety",
             component: LearnTypeSafetyPage,
+          }),
+          route({
+            path: "/server-side-rendering",
+            component: LearnSsrPage,
           }),
         ],
       }),

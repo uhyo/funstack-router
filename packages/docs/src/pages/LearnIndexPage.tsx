@@ -46,6 +46,18 @@ export function LearnIndexPage() {
           prop drilling.
         </p>
       </section>
+      <section className="learn-category">
+        <h2>
+          <a href="/funstack-router/learn/server-side-rendering">
+            Server-Side Rendering
+          </a>
+        </h2>
+        <p>
+          Learn how FUNSTACK Router behaves during server-side rendering.
+          Pathless routes render on the server to produce an app shell, while
+          path-based routes and loaders activate after client hydration.
+        </p>
+      </section>
     </div>
   );
 }
