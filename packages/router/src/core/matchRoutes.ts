@@ -6,7 +6,7 @@ import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
  */
 export function matchRoutes(
   routes: InternalRouteDefinition[],
-  pathname: string,
+  pathname: string | null,
 ): MatchedRoute[] | null {
   for (const route of routes) {
     const matched = matchRoute(route, pathname);
@@ -22,7 +22,7 @@ export function matchRoutes(
  */
 function matchRoute(
   route: InternalRouteDefinition,
-  pathname: string,
+  pathname: string | null,
 ): MatchedRoute[] | null {
   const hasChildren = Boolean(route.children?.length);
 
@@ -45,10 +45,19 @@ function matchRoute(
       if (route.component && route.requireChildren === false) {
         return [result];
       }
+      // When pathname is null, pathless route with component matches alone (SSR shell)
+      if (pathname === null && route.component) {
+        return [result];
+      }
       return null;
     }
 
     return [result];
+  }
+
+  // Path-based routes cannot match when pathname is null
+  if (pathname === null) {
+    return null;
   }
 
   const isExact = route.exact ?? !hasChildren;

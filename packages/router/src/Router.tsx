@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 import type { LocationEntry } from "./core/RouterAdapter.js";
@@ -59,15 +60,20 @@ export function Router({
   // Create blocker registry once
   const [blockerRegistry] = useState(() => createBlockerRegistry());
 
-  // Determine if running on server (SSR)
-  const isServer = typeof window === "undefined";
-
-  // Initialize state: use server snapshot for SSR, client snapshot for client
-  const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(
-    () => (isServer ? null : adapter.getSnapshot()),
+  // Hydration-aware initial value: null during SSR/hydration, real on client-only mount
+  const noopSubscribe = useCallback(() => () => {}, []);
+  const getSnapshot = useCallback(() => adapter.getSnapshot(), [adapter]);
+  const getServerSnapshot = useCallback(() => null, []);
+  const initialEntry = useSyncExternalStore(
+    noopSubscribe,
+    getSnapshot,
+    getServerSnapshot,
   );
 
   const [isPending, startTransition] = useTransition();
+  const [locationEntry, setLocationEntry] = useState<LocationEntry | null>(
+    initialEntry,
+  );
 
   // Subscribe to navigation changes and sync state
   useEffect(() => {
@@ -117,16 +123,16 @@ export function Router({
   );
 
   return useMemo(() => {
-    if (locationEntry === null) {
-      // This happens either when Navigation API is unavailable (and no fallback),
-      // or the current document is not fully active.
-      return null;
-    }
-
-    const { url, key } = locationEntry;
-
-    // Match current URL against routes and execute loaders
+    // Match routes and execute loaders
     const matchedRoutesWithData = (() => {
+      if (locationEntry === null) {
+        // SSR/hydration: match only pathless routes, skip loaders
+        const matched = matchRoutes(routes, null);
+        if (!matched) return null;
+        return matched.map((m) => ({ ...m, data: undefined }));
+      }
+
+      const { url, key } = locationEntry;
       const matched = matchRoutes(routes, url.pathname);
       if (!matched) return null;
 
@@ -138,7 +144,7 @@ export function Router({
 
     const routerContextValue = {
       locationEntry,
-      url,
+      url: locationEntry?.url ?? null,
       isPending,
       navigate,
       navigateAsync,
@@ -201,12 +207,13 @@ function RouteRenderer({
   } = routerContext;
 
   // Extract this route's state from internal structure
-  const internalState = locationEntry.state as InternalRouteState | undefined;
+  const internalState = locationEntry?.state as InternalRouteState | undefined;
   const routeState = internalState?.__routeStates?.[index];
 
   // Create stable setStateSync callback for this route's slice (synchronous via updateCurrentEntry)
   const setStateSync = useCallback(
     (stateOrUpdater: unknown | ((prev: unknown) => unknown)) => {
+      if (locationEntry === null) return;
       const currentStates =
         (locationEntry.state as InternalRouteState | undefined)
           ?.__routeStates ?? [];
@@ -221,7 +228,7 @@ function RouteRenderer({
       newStates[index] = newState;
       updateCurrentEntryState({ __routeStates: newStates });
     },
-    [locationEntry.state, index, updateCurrentEntryState],
+    [locationEntry?.state, index, updateCurrentEntryState],
   );
 
   // Create stable setState callback for this route's slice (async via replace navigation)
@@ -229,6 +236,7 @@ function RouteRenderer({
     async (
       stateOrUpdater: unknown | ((prev: unknown) => unknown),
     ): Promise<void> => {
+      if (locationEntry === null || url === null) return;
       const currentStates =
         (locationEntry.state as InternalRouteState | undefined)
           ?.__routeStates ?? [];
@@ -247,18 +255,19 @@ function RouteRenderer({
         state: { __routeStates: newStates },
       });
     },
-    [locationEntry.state, index, url, navigateAsync],
+    [locationEntry?.state, index, url, navigateAsync],
   );
 
   // Create stable resetState callback
   const resetState = useCallback(() => {
+    if (locationEntry === null) return;
     const currentStates =
       (locationEntry.state as InternalRouteState | undefined)?.__routeStates ??
       [];
     const newStates = [...currentStates];
     newStates[index] = undefined;
     updateCurrentEntryState({ __routeStates: newStates });
-  }, [locationEntry.state, index, updateCurrentEntryState]);
+  }, [locationEntry?.state, index, updateCurrentEntryState]);
 
   // Create outlet for child routes
   const outlet =
@@ -306,7 +315,7 @@ function RouteRenderer({
     };
 
     // Ephemeral info from the current navigation
-    const { info } = locationEntry;
+    const info = locationEntry?.info;
 
     // When loader exists, data is defined and component expects data prop
     // When loader doesn't exist, data is undefined and component doesn't expect data prop

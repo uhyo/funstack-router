@@ -14,6 +14,10 @@ export function useLocation(): Location {
 
   const { url } = context;
 
+  if (url === null) {
+    throw new Error("useLocation: URL is not available during SSR.");
+  }
+
   return useMemo(() => {
     return {
       pathname: url.pathname,

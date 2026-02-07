@@ -449,4 +449,74 @@ describe("matchRoutes", () => {
       expect(matchRoutes(routes, "/dashboard")).toBeNull();
     });
   });
+
+  describe("null pathname", () => {
+    it("pathless route matches when pathname is null", () => {
+      const routes = internalRoutes([{ component: () => null }]);
+
+      const result = matchRoutes(routes, null);
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBeUndefined();
+      expect(result![0].params).toEqual({});
+      expect(result![0].pathname).toBe("");
+    });
+
+    it("path-based route does NOT match when pathname is null", () => {
+      const routes = internalRoutes([
+        { path: "/", component: () => null },
+        { path: "/about", component: () => null },
+      ]);
+
+      expect(matchRoutes(routes, null)).toBeNull();
+    });
+
+    it("nested pathless routes all match when pathname is null", () => {
+      const routes = internalRoutes([
+        {
+          component: () => null,
+          children: [{ component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, null);
+      expect(result).toHaveLength(2);
+      expect(result![0].route.path).toBeUndefined();
+      expect(result![1].route.path).toBeUndefined();
+    });
+
+    it("pathless route with only path-based children matches alone", () => {
+      const routes = internalRoutes([
+        {
+          component: () => null,
+          children: [
+            { path: "/about", component: () => null },
+            { path: "/contact", component: () => null },
+          ],
+        },
+      ]);
+
+      const result = matchRoutes(routes, null);
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBeUndefined();
+    });
+
+    it("returns null when no pathless routes exist", () => {
+      const routes = internalRoutes([
+        { path: "/", component: () => null },
+        { path: "/about", component: () => null },
+      ]);
+
+      expect(matchRoutes(routes, null)).toBeNull();
+    });
+
+    it("pathless route without component and only path-based children does not match", () => {
+      const routes = internalRoutes([
+        {
+          children: [{ path: "/about", component: () => null }],
+        },
+      ]);
+
+      expect(matchRoutes(routes, null)).toBeNull();
+    });
+  });
 });

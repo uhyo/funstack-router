@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo } from "react";
+import { useCallback, useContext } from "react";
 import { RouterContext } from "../context/RouterContext.js";
 
 type SetSearchParams = (
@@ -18,11 +18,16 @@ export function useSearchParams(): [URLSearchParams, SetSearchParams] {
     throw new Error("useSearchParams must be used within a Router");
   }
 
-  const searchParams = context.url.searchParams;
+  if (context.url === null) {
+    throw new Error("useSearchParams: URL is not available during SSR.");
+  }
+
+  const currentUrl = context.url;
+  const searchParams = currentUrl.searchParams;
 
   const setSearchParams = useCallback<SetSearchParams>(
     (params) => {
-      const url = new URL(context.url);
+      const url = new URL(currentUrl);
 
       let newParams: URLSearchParams;
       if (typeof params === "function") {
@@ -40,7 +45,7 @@ export function useSearchParams(): [URLSearchParams, SetSearchParams] {
       url.search = newParams.toString();
       context.navigate(url.pathname + url.search + url.hash, { replace: true });
     },
-    [context],
+    [currentUrl, context.navigate],
   );
 
   return [searchParams, setSearchParams];

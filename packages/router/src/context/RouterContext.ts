@@ -3,10 +3,10 @@ import type { NavigateOptions } from "../types.js";
 import type { LocationEntry } from "../core/RouterAdapter.js";
 
 export type RouterContextValue = {
-  /** Current location entry */
-  locationEntry: LocationEntry;
-  /** Current URL */
-  url: URL;
+  /** Current location entry (null during SSR) */
+  locationEntry: LocationEntry | null;
+  /** Current URL (null during SSR) */
+  url: URL | null;
   /** Whether a navigation transition is pending */
   isPending: boolean;
   /** Navigate to a new URL */
