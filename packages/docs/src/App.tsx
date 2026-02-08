@@ -1,25 +1,83 @@
+import { lazy } from "react";
 import { route } from "@funstack/router/server";
 import { defer } from "@funstack/static/server";
 import { Layout } from "./components/Layout.js";
-import { HomePage } from "./pages/HomePage.js";
-import { GettingStartedPage } from "./pages/GettingStartedPage.js";
 import { ApiReferencePage } from "./pages/ApiReferencePage.js";
-import { ApiReferenceIndexPage } from "./pages/ApiReferenceIndexPage.js";
-import { ApiComponentsPage } from "./pages/ApiComponentsPage.js";
-import { ApiHooksPage } from "./pages/ApiHooksPage.js";
-import { ApiUtilitiesPage } from "./pages/ApiUtilitiesPage.js";
-import { ApiTypesPage } from "./pages/ApiTypesPage.js";
 import { LearnPage } from "./pages/LearnPage.js";
-import { LearnIndexPage } from "./pages/LearnIndexPage.js";
-import { LearnNavigationApiPage } from "./pages/LearnNavigationApiPage.js";
-import { LearnNestedRoutesPage } from "./pages/LearnNestedRoutesPage.js";
-import { LearnTypeSafetyPage } from "./pages/LearnTypeSafetyPage.js";
-import { LearnSsrPage } from "./pages/LearnSsrPage.js";
-import { LearnTransitionsPage } from "./pages/LearnTransitionsPage.js";
-import { ExamplesPage } from "./pages/ExamplesPage.js";
-import { NotFoundPage } from "./pages/NotFoundPage.js";
 import { ClientApp } from "./ClientApp.js";
 import { Outlet } from "@funstack/router";
+
+const HomePage = lazy(() =>
+  import("./pages/HomePage.js").then((m) => ({ default: m.HomePage })),
+);
+const GettingStartedPage = lazy(() =>
+  import("./pages/GettingStartedPage.js").then((m) => ({
+    default: m.GettingStartedPage,
+  })),
+);
+const LearnIndexPage = lazy(() =>
+  import("./pages/LearnIndexPage.js").then((m) => ({
+    default: m.LearnIndexPage,
+  })),
+);
+const LearnNavigationApiPage = lazy(() =>
+  import("./pages/LearnNavigationApiPage.js").then((m) => ({
+    default: m.LearnNavigationApiPage,
+  })),
+);
+const LearnNestedRoutesPage = lazy(() =>
+  import("./pages/LearnNestedRoutesPage.js").then((m) => ({
+    default: m.LearnNestedRoutesPage,
+  })),
+);
+const LearnTypeSafetyPage = lazy(() =>
+  import("./pages/LearnTypeSafetyPage.js").then((m) => ({
+    default: m.LearnTypeSafetyPage,
+  })),
+);
+const LearnSsrPage = lazy(() =>
+  import("./pages/LearnSsrPage.js").then((m) => ({ default: m.LearnSsrPage })),
+);
+const LearnTransitionsPage = lazy(() =>
+  import("./pages/LearnTransitionsPage.js").then((m) => ({
+    default: m.LearnTransitionsPage,
+  })),
+);
+const ApiReferenceIndexPage = lazy(() =>
+  import("./pages/ApiReferenceIndexPage.js").then((m) => ({
+    default: m.ApiReferenceIndexPage,
+  })),
+);
+const ApiComponentsPage = lazy(() =>
+  import("./pages/ApiComponentsPage.js").then((m) => ({
+    default: m.ApiComponentsPage,
+  })),
+);
+const ApiHooksPage = lazy(() =>
+  import("./pages/ApiHooksPage.js").then((m) => ({
+    default: m.ApiHooksPage,
+  })),
+);
+const ApiUtilitiesPage = lazy(() =>
+  import("./pages/ApiUtilitiesPage.js").then((m) => ({
+    default: m.ApiUtilitiesPage,
+  })),
+);
+const ApiTypesPage = lazy(() =>
+  import("./pages/ApiTypesPage.js").then((m) => ({
+    default: m.ApiTypesPage,
+  })),
+);
+const ExamplesPage = lazy(() =>
+  import("./pages/ExamplesPage.js").then((m) => ({
+    default: m.ExamplesPage,
+  })),
+);
+const NotFoundPage = lazy(() =>
+  import("./pages/NotFoundPage.js").then((m) => ({
+    default: m.NotFoundPage,
+  })),
+);
 
 const routes = [
   route({
