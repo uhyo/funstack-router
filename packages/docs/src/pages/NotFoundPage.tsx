@@ -1,5 +1,3 @@
-"use client";
-
 export function NotFoundPage() {
   return (
     <div className="page not-found-page">

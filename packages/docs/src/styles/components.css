@@ -29,26 +29,20 @@
 }
 
 /* Code Blocks */
-.code-block {
-  background: var(--color-bg-code);
-  color: var(--color-text-code);
+.code-block-wrapper pre {
   padding: 20px 24px;
   border-radius: 8px;
   overflow-x: auto;
   margin: 16px 0;
 }
 
-.code-block code {
+.code-block-wrapper code {
   background: none;
   padding: 0;
   font-size: 0.875rem;
   line-height: 1.7;
   white-space: pre;
   display: block;
-}
-
-.code-block code > div {
-  white-space: pre;
 }
 
 /* Feature Cards */

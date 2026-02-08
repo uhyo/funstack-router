@@ -1,5 +1,3 @@
-"use client";
-
 export function ApiReferenceIndexPage() {
   return (
     <div className="api-overview">

@@ -1,6 +1,4 @@
-"use client";
-
-import { CodeBlock } from "../components/CodeBlock";
+import { CodeBlock } from "../components/CodeBlock.js";
 
 export function ApiTypesPage() {
   return (

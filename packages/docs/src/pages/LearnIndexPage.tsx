@@ -1,5 +1,3 @@
-"use client";
-
 export function LearnIndexPage() {
   return (
     <div className="learn-overview">
