@@ -285,6 +285,13 @@ const routes = [
           For client-side features like <code>Router</code>, <code>Outlet</code>
           , and hooks, use the main <code>@funstack/router</code> entry point.
         </p>
+        <p>
+          See the{" "}
+          <a href="/funstack-router/learn/react-server-components">
+            React Server Components
+          </a>{" "}
+          guide for a full walkthrough of using the server entry point.
+        </p>
       </article>
     </div>
   );

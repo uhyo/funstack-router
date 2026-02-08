@@ -59,6 +59,19 @@ export function LearnIndexPage() {
       </section>
       <section className="learn-category">
         <h2>
+          <a href="/funstack-router/learn/react-server-components">
+            React Server Components
+          </a>
+        </h2>
+        <p>
+          Learn how to use FUNSTACK Router with React Server Components. Define
+          routes in server modules using the{" "}
+          <code>@funstack/router/server</code> entry point and keep your client
+          bundle lean by separating route definitions from runtime router code.
+        </p>
+      </section>
+      <section className="learn-category">
+        <h2>
           <a href="/funstack-router/learn/transitions">
             Controlling Transitions
           </a>

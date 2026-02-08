@@ -72,7 +72,12 @@ export function HomePage() {
           </div>
           <div className="feature-card">
             <h3>RSC Compatible</h3>
-            <p>Designed to work also with React Server Components.</p>
+            <p>
+              Designed to work with React Server Components.{" "}
+              <a href="/funstack-router/learn/react-server-components">
+                Learn more
+              </a>
+            </p>
           </div>
         </div>
       </section>

@@ -38,6 +38,9 @@ const LearnTypeSafetyPage = lazy(() =>
 const LearnSsrPage = lazy(() =>
   import("./pages/LearnSsrPage.js").then((m) => ({ default: m.LearnSsrPage })),
 );
+const LearnRscPage = lazy(() =>
+  import("./pages/LearnRscPage.js").then((m) => ({ default: m.LearnRscPage })),
+);
 const LearnTransitionsPage = lazy(() =>
   import("./pages/LearnTransitionsPage.js").then((m) => ({
     default: m.LearnTransitionsPage,
@@ -136,6 +139,12 @@ const routes = [
                     path: "/server-side-rendering",
                     component: defer(<LearnSsrPage />, {
                       name: "LearnSsrPage",
+                    }),
+                  }),
+                  route({
+                    path: "/react-server-components",
+                    component: defer(<LearnRscPage />, {
+                      name: "LearnRscPage",
                     }),
                   }),
                   route({
