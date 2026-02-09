@@ -66,11 +66,11 @@ export default function App() {
 }`}</CodeBlock>
         <p>
           In this example, <code>App</code> is a server component. It builds the
-          route array using <code>@funstack/router/server</code> and passes them
-          directly to <code>Router</code>. Because <code>Router</code> is
-          already a client component (the main <code>@funstack/router</code>{" "}
-          entry point is marked <code>"use client"</code>), no additional client
-          wrapper is needed.
+          route array using <code>route()</code> from{" "}
+          <code>@funstack/router/server</code> and renders the{" "}
+          <code>Router</code> component from <code>@funstack/router</code>.
+          Since <code>Router</code> is a client component, the RSC bundler
+          handles the client boundary automatically.
         </p>
         <h4>What the server entry point exports</h4>
         <ul>
@@ -93,19 +93,16 @@ export default function App() {
       <section>
         <h3>The Client Boundary</h3>
         <p>
-          The <code>Router</code> component is a client component &mdash; it
-          subscribes to the Navigation API and manages React state. Because the
-          main <code>@funstack/router</code> entry point is marked{" "}
-          <code>"use client"</code>, you can import <code>Router</code> directly
-          from a server component without creating a separate client wrapper.
-          The RSC bundler automatically places <code>Router</code> and its
-          runtime dependencies in the client bundle.
+          The <code>Router</code> component subscribes to the Navigation API and
+          manages React state, so it is a client component. It serves as the
+          client boundary in your component tree &mdash; server components above
+          it construct the route definitions, while <code>Router</code> and its
+          runtime dependencies run in the browser.
         </p>
         <p>
-          The route definitions themselves (paths, component references,
-          children) are plain serializable data. They are constructed on the
-          server and passed across the client boundary as props to{" "}
-          <code>Router</code>.
+          Route definitions (paths, component references, children) are plain
+          serializable data, so they can be passed from a server component into{" "}
+          <code>Router</code> as props.
         </p>
       </section>
 
@@ -253,8 +250,7 @@ export default function App() {
         <p>
           In this setup, <code>Root</code> and <code>App</code> are server
           components. The route definitions are constructed on the server and
-          passed directly to <code>Router</code>, which is already a client
-          component.
+          passed into <code>Router</code>, which acts as the client boundary.
         </p>
       </section>
 
@@ -267,9 +263,8 @@ export default function App() {
             pulling client code into the server module graph
           </li>
           <li>
-            The <code>Router</code> component is already a client component
-            &mdash; you can use it directly from server components without a
-            separate client wrapper
+            <code>Router</code> is a client component and serves as the client
+            boundary &mdash; render it directly from your server component
           </li>
           <li>
             Route definitions are plain data and can be constructed entirely on
