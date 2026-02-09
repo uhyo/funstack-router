@@ -4,8 +4,8 @@ import { defer } from "@funstack/static/server";
 import { Layout } from "./components/Layout.js";
 import { ApiReferencePage } from "./pages/ApiReferencePage.js";
 import { LearnPage } from "./pages/LearnPage.js";
-import { ClientApp } from "./ClientApp.js";
-import { Outlet } from "@funstack/router";
+import { Router, Outlet } from "@funstack/router";
+import "./styles.css";
 
 const HomePage = lazy(() =>
   import("./pages/HomePage.js").then((m) => ({ default: m.HomePage })),
@@ -207,5 +207,5 @@ const routes = [
 ];
 
 export default function App() {
-  return <ClientApp routes={routes} />;
+  return <Router routes={routes} fallback="static" />;
 }

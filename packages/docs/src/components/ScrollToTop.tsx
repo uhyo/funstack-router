@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { Router, type RouteDefinition } from "@funstack/router";
-import "./styles.css";
 
-export function ClientApp({ routes }: { routes: RouteDefinition[] }) {
+export function ScrollToTop() {
   // Auto scroll to top - this should be handled by the browser per spec,
   // but currently Chrome and Safari do not follow the spec.
   useEffect(() => {
@@ -32,5 +30,5 @@ export function ClientApp({ routes }: { routes: RouteDefinition[] }) {
     };
   }, []);
 
-  return <Router routes={routes} fallback="static" />;
+  return null;
 }
