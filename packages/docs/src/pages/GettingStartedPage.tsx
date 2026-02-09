@@ -16,6 +16,25 @@ yarn add @funstack/router`}</CodeBlock>
       </section>
 
       <section>
+        <h2>AI Agent Skill</h2>
+        <p>
+          FUNSTACK Router ships with an AI agent skill that gives AI coding
+          assistants (Claude Code, Cursor, Copilot, etc.) context about the
+          router's API and best practices. After installing the package, run the
+          skill installer:
+        </p>
+        <CodeBlock language="bash">
+          {`npx funstack-router-skill-installer`}
+        </CodeBlock>
+        <p>
+          The installer will prompt you to choose which AI agent(s) to install
+          the skill for. Once installed, your AI assistant will automatically
+          have access to FUNSTACK Router documentation when working in your
+          project.
+        </p>
+      </section>
+
+      <section>
         <h2>Browser Support</h2>
         <p>
           FUNSTACK Router uses the{" "}

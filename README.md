@@ -20,6 +20,16 @@ A modern React router built on the [Navigation API](https://developer.mozilla.or
 npm install @funstack/router
 ```
 
+## AI Agent Skill
+
+FUNSTACK Router ships with an AI agent skill that gives AI coding assistants (Claude Code, Cursor, Copilot, etc.) context about the router's API and best practices. After installing the package, run the skill installer:
+
+```bash
+npx funstack-router-skill-installer
+```
+
+The installer will prompt you to choose which AI agent(s) to install the skill for. Once installed, your AI assistant will automatically have access to FUNSTACK Router documentation when working in your project.
+
 ## Development
 
 This is a pnpm monorepo. To set up the development environment:
