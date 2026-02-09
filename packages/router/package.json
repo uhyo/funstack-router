@@ -19,10 +19,15 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "skills"
   ],
+  "bin": {
+    "funstack-router-skill-installer": "./dist/bin/skill-installer.mjs"
+  },
   "scripts": {
     "build": "tsdown",
+    "build:docs": "node --experimental-strip-types scripts/generate-ai-docs.ts",
     "dev": "tsdown --watch",
     "test": "vitest",
     "test:run": "vitest run",
@@ -38,10 +43,14 @@
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
   },
+  "dependencies": {
+    "@funstack/skill-installer": "^1.0.0"
+  },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.11",
+    "@types/node": "^22.0.0",
     "jsdom": "^28.0.0",
     "react": "^19.2.4",
     "tsdown": "^0.20.1",
