@@ -44,6 +44,11 @@ interface NavigateEvent extends Event {
   scroll(): void;
 }
 
+interface NavigationCurrentEntryChangeEvent extends Event {
+  readonly navigationType: "push" | "replace" | "reload" | "traverse" | null;
+  readonly from: NavigationHistoryEntry;
+}
+
 interface NavigationInterceptOptions {
   handler?: () => Promise<void>;
   precommitHandler?: () => Promise<void>;
@@ -80,7 +85,12 @@ interface Navigation extends EventTarget {
     options?: AddEventListenerOptions,
   ): void;
   addEventListener(
-    type: "navigatesuccess" | "navigateerror" | "currententrychange",
+    type: "currententrychange",
+    listener: (event: NavigationCurrentEntryChangeEvent) => void,
+    options?: AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: "navigatesuccess" | "navigateerror",
     listener: (event: Event) => void,
     options?: AddEventListenerOptions,
   ): void;
@@ -90,7 +100,12 @@ interface Navigation extends EventTarget {
     options?: EventListenerOptions,
   ): void;
   removeEventListener(
-    type: "navigatesuccess" | "navigateerror" | "currententrychange",
+    type: "currententrychange",
+    listener: (event: NavigationCurrentEntryChangeEvent) => void,
+    options?: EventListenerOptions,
+  ): void;
+  removeEventListener(
+    type: "navigatesuccess" | "navigateerror",
     listener: (event: Event) => void,
     options?: EventListenerOptions,
   ): void;

@@ -5,6 +5,13 @@ import type {
 } from "../types.js";
 
 /**
+ * The type of change that caused a location entry update.
+ * - "navigation": A URL navigation (push, replace, reload, traverse)
+ * - "state": A state-only update via updateCurrentEntry()
+ */
+export type EntryChangeType = "navigation" | "state";
+
+/**
  * Represents the current location state.
  * Abstracts NavigationHistoryEntry for static mode compatibility.
  */
@@ -32,9 +39,10 @@ export interface RouterAdapter {
 
   /**
    * Subscribe to location changes.
+   * The callback receives the type of change that occurred.
    * Returns an unsubscribe function.
    */
-  subscribe(callback: () => void): () => void;
+  subscribe(callback: (changeType: EntryChangeType) => void): () => void;
 
   /**
    * Perform programmatic navigation.

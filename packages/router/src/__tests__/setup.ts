@@ -125,6 +125,10 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
         // Store info for testing and dispatch navigate event with info
         mockNavigation.__lastNavigateInfo = options?.info;
 
+        const previousEntry = currentEntry;
+        const navigationType =
+          options?.history === "replace" ? "replace" : "push";
+
         if (options?.history !== "replace") {
           // When pushing a new entry, dispose all entries after current position
           // This mimics browser behavior when navigating forward from a back state
@@ -155,8 +159,12 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
 
         mockNavigation.currentEntry = currentEntry;
 
-        // Dispatch currententrychange event
-        dispatchEvent("currententrychange", new Event("currententrychange"));
+        // Dispatch currententrychange event with navigationType
+        const event = Object.assign(new Event("currententrychange"), {
+          navigationType,
+          from: previousEntry,
+        });
+        dispatchEvent("currententrychange", event);
 
         return {
           committed: Promise.resolve(currentEntry),
@@ -167,8 +175,12 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
 
     updateCurrentEntry: vi.fn((options: { state: unknown }) => {
       currentEntry.__updateState(options.state);
-      // Dispatch currententrychange event to notify subscribers
-      dispatchEvent("currententrychange", new Event("currententrychange"));
+      // Dispatch currententrychange event with navigationType: null (state-only update)
+      const event = Object.assign(new Event("currententrychange"), {
+        navigationType: null,
+        from: currentEntry,
+      });
+      dispatchEvent("currententrychange", event);
     }),
 
     addEventListener: vi.fn(
@@ -212,6 +224,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
         event,
         proceed: () => {
           if (!event.defaultPrevented) {
+            const previousEntry = currentEntry;
             // Dispose entries after current position (browser behavior)
             const currentIndex = entries.indexOf(currentEntry);
             while (entries.length > currentIndex + 1) {
@@ -226,10 +239,11 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
             entries.push(newEntry);
             currentEntry = newEntry;
             mockNavigation.currentEntry = currentEntry;
-            dispatchEvent(
-              "currententrychange",
-              new Event("currententrychange"),
-            );
+            const changeEvent = Object.assign(new Event("currententrychange"), {
+              navigationType: "push" as const,
+              from: previousEntry,
+            });
+            dispatchEvent("currententrychange", changeEvent);
           }
         },
       };
@@ -241,9 +255,14 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       if (entryIndex < 0 || entryIndex >= entries.length) {
         throw new Error(`Invalid entry index: ${entryIndex}`);
       }
+      const previousEntry = currentEntry;
       currentEntry = entries[entryIndex];
       mockNavigation.currentEntry = currentEntry;
-      dispatchEvent("currententrychange", new Event("currententrychange"));
+      const event = Object.assign(new Event("currententrychange"), {
+        navigationType: "traverse" as const,
+        from: previousEntry,
+      });
+      dispatchEvent("currententrychange", event);
     },
 
     // Test helper to get listeners

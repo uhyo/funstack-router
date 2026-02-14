@@ -392,6 +392,99 @@ describe("Navigation State Management", () => {
     });
   });
 
+  describe("isPending behavior", () => {
+    it("setStateSync does not trigger isPending", () => {
+      type PageState = { count: number };
+      const isPendingValues: boolean[] = [];
+
+      function Page({
+        state,
+        setStateSync,
+        isPending,
+      }: RouteComponentProps<Record<string, never>, PageState>) {
+        isPendingValues.push(isPending);
+        return (
+          <div>
+            <span>Count: {state?.count ?? 0}</span>
+            <span>Pending: {isPending ? "yes" : "no"}</span>
+            <button onClick={() => setStateSync({ count: 5 })}>Set 5</button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(screen.getByText("Pending: no")).toBeInTheDocument();
+
+      // Clear recorded values before the action
+      isPendingValues.length = 0;
+
+      act(() => {
+        fireEvent.click(screen.getByRole("button"));
+      });
+
+      expect(screen.getByText("Count: 5")).toBeInTheDocument();
+      expect(screen.getByText("Pending: no")).toBeInTheDocument();
+      // isPending should never have been true during the update
+      expect(isPendingValues.every((v) => v === false)).toBe(true);
+    });
+
+    it("resetState does not trigger isPending", () => {
+      type PageState = { count: number };
+      const isPendingValues: boolean[] = [];
+
+      function Page({
+        state,
+        setStateSync,
+        resetState,
+        isPending,
+      }: RouteComponentProps<Record<string, never>, PageState>) {
+        isPendingValues.push(isPending);
+        return (
+          <div>
+            <span>Count: {state?.count ?? "none"}</span>
+            <span>Pending: {isPending ? "yes" : "no"}</span>
+            <button onClick={() => setStateSync({ count: 10 })}>Set</button>
+            <button onClick={resetState}>Reset</button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+
+      // Set some state first
+      act(() => {
+        fireEvent.click(screen.getByText("Set"));
+      });
+      expect(screen.getByText("Count: 10")).toBeInTheDocument();
+
+      // Clear recorded values before reset
+      isPendingValues.length = 0;
+
+      act(() => {
+        fireEvent.click(screen.getByText("Reset"));
+      });
+
+      expect(screen.getByText("Count: none")).toBeInTheDocument();
+      expect(screen.getByText("Pending: no")).toBeInTheDocument();
+      // isPending should never have been true during the reset
+      expect(isPendingValues.every((v) => v === false)).toBe(true);
+    });
+  });
+
   describe("backward compatibility", () => {
     it("routes without state type still work", () => {
       function Page({ params }: { params: { id: string } }) {

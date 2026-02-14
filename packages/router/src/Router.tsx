@@ -99,12 +99,17 @@ export function Router({
     setLocationEntry(initialEntry);
   }
 
-  // Subscribe to navigation changes (wrapped in transition)
+  // Subscribe to navigation changes (conditionally wrapped in transition)
   useEffect(() => {
-    return adapter.subscribe(() => {
-      startTransition(() => {
+    return adapter.subscribe((changeType) => {
+      if (changeType === "navigation") {
+        startTransition(() => {
+          setLocationEntry(adapter.getSnapshot());
+        });
+      } else {
+        // State-only update: apply synchronously, no transition
         setLocationEntry(adapter.getSnapshot());
-      });
+      }
     });
   }, [adapter, startTransition]);
 

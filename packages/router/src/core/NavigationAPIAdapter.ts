@@ -1,4 +1,8 @@
-import type { RouterAdapter, LocationEntry } from "./RouterAdapter.js";
+import type {
+  RouterAdapter,
+  LocationEntry,
+  EntryChangeType,
+} from "./RouterAdapter.js";
 import type {
   InternalRouteDefinition,
   NavigateOptions,
@@ -59,11 +63,21 @@ export class NavigationAPIAdapter implements RouterAdapter {
     return this.#cachedSnapshot;
   }
 
-  subscribe(callback: () => void): () => void {
+  subscribe(callback: (changeType: EntryChangeType) => void): () => void {
     const controller = new AbortController();
-    navigation.addEventListener("currententrychange", callback, {
-      signal: controller.signal,
-    });
+    navigation.addEventListener(
+      "currententrychange",
+      (event) => {
+        // NavigationCurrentEntryChangeEvent.navigationType is null
+        // when the change was caused by updateCurrentEntry()
+        const changeType: EntryChangeType =
+          (event as NavigationCurrentEntryChangeEvent).navigationType === null
+            ? "state"
+            : "navigation";
+        callback(changeType);
+      },
+      { signal: controller.signal },
+    );
 
     // Subscribe to dispose events on all existing entries
     this.#subscribeToDisposeEvents(controller.signal);

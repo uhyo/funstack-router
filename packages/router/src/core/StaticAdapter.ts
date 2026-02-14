@@ -1,4 +1,8 @@
-import type { RouterAdapter, LocationEntry } from "./RouterAdapter.js";
+import type {
+  RouterAdapter,
+  LocationEntry,
+  EntryChangeType,
+} from "./RouterAdapter.js";
 import type {
   InternalRouteDefinition,
   NavigateOptions,
@@ -31,7 +35,7 @@ export class StaticAdapter implements RouterAdapter {
     return this.#cachedSnapshot;
   }
 
-  subscribe(_callback: () => void): () => void {
+  subscribe(_callback: (changeType: EntryChangeType) => void): () => void {
     // Static mode never fires location change events
     return () => {};
   }
