@@ -48,11 +48,21 @@ type Props = {
           <li>
             <code>setState</code> - Async method that returns a Promise. Uses
             replace navigation internally, ensuring the state update goes
-            through the full navigation cycle.
+            through the full navigation cycle. Because it performs a navigation,
+            it is wrapped in a React transition and may set{" "}
+            <code>isPending</code> to <code>true</code>.
           </li>
           <li>
             <code>setStateSync</code> - Synchronous method that updates state
-            immediately using <code>navigation.updateCurrentEntry()</code>.
+            immediately using <code>navigation.updateCurrentEntry()</code>. This
+            is <strong>not</strong> a navigation, so it bypasses React
+            transitions and will never set <code>isPending</code> to{" "}
+            <code>true</code>.
+          </li>
+          <li>
+            <code>resetState</code> - Clears navigation state. Like{" "}
+            <code>setStateSync</code>, this bypasses React transitions and will
+            never set <code>isPending</code> to <code>true</code>.
           </li>
         </ul>
       </article>

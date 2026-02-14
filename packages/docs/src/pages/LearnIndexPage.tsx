@@ -79,8 +79,10 @@ export function LearnIndexPage() {
         <p>
           Learn how FUNSTACK Router uses React transitions to keep the old UI
           visible during navigation. Discover how to show pending indicators
-          with <code>useIsPending</code> and how to opt out of transitions by
-          keying Suspense boundaries.
+          with <code>useIsPending</code>, why state-only updates via{" "}
+          <code>setStateSync</code> bypass transitions for instant
+          responsiveness, and how to opt out of transitions by keying Suspense
+          boundaries.
         </p>
       </section>
     </div>

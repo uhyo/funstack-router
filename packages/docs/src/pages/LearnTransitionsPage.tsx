@@ -6,21 +6,22 @@ export function LearnTransitionsPage() {
       <h2>Controlling Transitions</h2>
 
       <p className="page-intro">
-        FUNSTACK Router wraps every navigation in React's{" "}
+        FUNSTACK Router wraps URL navigations in React's{" "}
         <code>startTransition</code>, which means the old UI may stay visible
-        while the new route loads. This page explains how this works and how to
-        control it.
+        while the new route loads. State-only updates (<code>setStateSync</code>{" "}
+        and <code>resetState</code>) bypass transitions entirely for immediate
+        responsiveness. This page explains how this works and how to control it.
       </p>
 
       <section>
-        <h3>Navigations as Transitions</h3>
+        <h3>URL Navigations as Transitions</h3>
         <p>
-          When the user navigates, the Router updates its location state inside{" "}
-          <code>startTransition()</code>. This means React treats every
-          navigation as a transition: if an existing Suspense boundary suspends
-          (e.g., a component loading data with <code>use()</code>), React keeps
-          the old UI visible instead of immediately showing the fallback. This
-          behavior is{" "}
+          When the user navigates to a different URL, the Router updates its
+          location state inside <code>startTransition()</code>. This means React
+          treats URL navigations as transitions: if an existing Suspense
+          boundary suspends (e.g., a component loading data with{" "}
+          <code>use()</code>), React keeps the old UI visible instead of
+          immediately showing the fallback. This behavior is{" "}
           <a href="https://react.dev/reference/react/useTransition#building-a-suspense-enabled-router">
             what React recommends for Suspense-enabled routers
           </a>
@@ -94,6 +95,55 @@ function Layout() {
     </div>
   );
 }`}</CodeBlock>
+      </section>
+
+      <section>
+        <h3>State-Only Updates Bypass Transitions</h3>
+        <p>
+          Not every state change needs the transition treatment.{" "}
+          <code>setStateSync</code> and <code>resetState</code> use the
+          Navigation API's <code>updateCurrentEntry()</code> method, which
+          changes state without performing a navigation. The router detects this
+          and applies the update synchronously &mdash; outside of{" "}
+          <code>startTransition</code>. As a result:
+        </p>
+        <ul>
+          <li>
+            The update is reflected in the UI immediately &mdash; there is no
+            pending phase.
+          </li>
+          <li>
+            <code>useIsPending()</code> (and the <code>isPending</code> prop)
+            will <strong>not</strong> become <code>true</code>.
+          </li>
+        </ul>
+        <p>
+          This makes <code>setStateSync</code> ideal for high-frequency or
+          low-latency updates such as tracking scroll position, toggling UI
+          elements, or updating form state that is stored in navigation state.
+        </p>
+        <CodeBlock language="tsx">{`function ProductList({ state, setStateSync }: Props) {
+  const sortBy = state?.sortBy ?? "name";
+
+  return (
+    <select
+      value={sortBy}
+      onChange={(e) =>
+        // Synchronous, no transition, no isPending flicker
+        setStateSync({ sortBy: e.target.value })
+      }
+    >
+      <option value="name">Sort by Name</option>
+      <option value="price">Sort by Price</option>
+    </select>
+  );
+}`}</CodeBlock>
+        <p>
+          In contrast, <code>setState</code> performs a replace navigation
+          internally, so it <em>does</em> go through{" "}
+          <code>startTransition</code> and may set <code>isPending</code> to{" "}
+          <code>true</code> if the resulting render suspends.
+        </p>
       </section>
 
       <section>

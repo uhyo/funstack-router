@@ -204,11 +204,15 @@ const productRoute = routeState<{ filter: string }>()({
           <li>
             <code>setState</code> - Async method that uses replace navigation.
             Returns a Promise that resolves when the navigation completes.
+            Because it performs a navigation, the update is wrapped in a React
+            transition (may set <code>isPending</code> to <code>true</code>).
           </li>
           <li>
             <code>setStateSync</code> - Sync method that uses{" "}
             <code>navigation.updateCurrentEntry()</code>. Updates state
-            immediately without waiting.
+            immediately without waiting. This is not a navigation, so it
+            bypasses React transitions entirely (<code>isPending</code> stays{" "}
+            <code>false</code>).
           </li>
         </ul>
         <p>Navigation state characteristics:</p>

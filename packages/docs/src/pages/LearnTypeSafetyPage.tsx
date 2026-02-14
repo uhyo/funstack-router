@@ -225,14 +225,18 @@ const productListRoute = routeState<ProductListState>()(
           </li>
           <li>
             <code>setState</code> &mdash; Navigate to the same URL with new
-            state (creates a new history entry)
+            state (creates a new history entry). Goes through a React
+            transition, so it may set <code>isPending</code> to{" "}
+            <code>true</code>.
           </li>
           <li>
             <code>setStateSync</code> &mdash; Update state synchronously without
-            creating a new history entry
+            creating a new history entry. Bypasses React transitions, so{" "}
+            <code>isPending</code> stays <code>false</code>.
           </li>
           <li>
-            <code>resetState</code> &mdash; Clear the navigation state
+            <code>resetState</code> &mdash; Clear the navigation state. Like{" "}
+            <code>setStateSync</code>, bypasses React transitions.
           </li>
         </ul>
 

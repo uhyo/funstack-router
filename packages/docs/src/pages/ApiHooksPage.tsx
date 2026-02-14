@@ -163,9 +163,15 @@ function MyComponent() {
         <ul>
           <li>
             This hook is powered by React's <code>useTransition</code>. The
-            router wraps navigation state updates in{" "}
-            <code>startTransition</code>, so React defers rendering suspended
-            routes and keeps the current UI visible.
+            router wraps URL navigations in <code>startTransition</code>, so
+            React defers rendering suspended routes and keeps the current UI
+            visible.
+          </li>
+          <li>
+            State-only updates via <code>setStateSync</code> and{" "}
+            <code>resetState</code> bypass transitions entirely, so{" "}
+            <code>isPending</code> will <strong>not</strong> become{" "}
+            <code>true</code> for those updates.
           </li>
           <li>
             The same <code>isPending</code> value is also available as a prop on
