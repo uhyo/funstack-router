@@ -168,7 +168,7 @@ function MyComponent() {
           </li>
           <li>
             Sync state updates via <code>setStateSync</code> and{" "}
-            <code>resetState</code> bypass transitions entirely, so{" "}
+            <code>resetStateSync</code> bypass transitions entirely, so{" "}
             <code>isPending</code> will <strong>not</strong> become{" "}
             <code>true</code> for those updates.
           </li>

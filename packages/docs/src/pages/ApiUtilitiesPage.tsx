@@ -17,8 +17,9 @@ export function ApiUtilitiesPage() {
           always receives a <code>params</code> prop with types inferred from
           the path pattern. When a <code>loader</code> is defined, the component
           also receives a <code>data</code> prop. Components also receive{" "}
-          <code>state</code>, <code>setState</code>, <code>setStateSync</code>,
-          and <code>resetState</code> props for navigation state management.
+          <code>state</code>, <code>setState</code>, <code>setStateSync</code>,{" "}
+          <code>resetState</code>, and <code>resetStateSync</code> props for
+          navigation state management.
         </p>
         <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 

@@ -20,6 +20,7 @@ export function CounterPage({
   setState,
   setStateSync,
   resetState,
+  resetStateSync,
 }: Props) {
   const count = state?.count ?? 0;
   const lastUpdated = state?.lastUpdated ?? "Never";
@@ -77,7 +78,8 @@ export function CounterPage({
         <button onClick={incrementAsync}>+ Async (setState)</button>
         <button onClick={incrementSync}>+ Sync (setStateSync)</button>
         <button onClick={decrementSync}>- Sync (setStateSync)</button>
-        <button onClick={resetState}>Reset (resetState)</button>
+        <button onClick={() => void resetState()}>Reset (resetState)</button>
+        <button onClick={resetStateSync}>Reset Sync (resetStateSync)</button>
       </div>
 
       <div
@@ -97,7 +99,11 @@ export function CounterPage({
             <code>setStateSync</code> - Sync, uses updateCurrentEntry
           </li>
           <li>
-            <code>resetState</code> - Clears state back to undefined
+            <code>resetState</code> - Async, clears state via replace navigation
+          </li>
+          <li>
+            <code>resetStateSync</code> - Sync, clears state via
+            updateCurrentEntry
           </li>
         </ul>
         <h4>Route definition with typed state:</h4>

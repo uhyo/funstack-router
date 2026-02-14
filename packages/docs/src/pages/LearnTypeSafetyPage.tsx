@@ -235,8 +235,14 @@ const productListRoute = routeState<ProductListState>()(
             <code>isPending</code> stays <code>false</code>.
           </li>
           <li>
-            <code>resetState</code> &mdash; Clear the navigation state. Like{" "}
-            <code>setStateSync</code>, bypasses React transitions.
+            <code>resetState</code> &mdash; Clear the navigation state
+            asynchronously via replace navigation. Like <code>setState</code>,
+            goes through React transitions.
+          </li>
+          <li>
+            <code>resetStateSync</code> &mdash; Clear the navigation state
+            synchronously. Like <code>setStateSync</code>, bypasses React
+            transitions.
           </li>
         </ul>
 

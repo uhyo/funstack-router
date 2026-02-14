@@ -9,8 +9,9 @@ export function LearnTransitionsPage() {
         FUNSTACK Router wraps navigations in React's{" "}
         <code>startTransition</code>, which means the old UI may stay visible
         while the new route loads. Sync state updates (<code>setStateSync</code>{" "}
-        and <code>resetState</code>) bypass transitions entirely for immediate
-        responsiveness. This page explains how this works and how to control it.
+        and <code>resetStateSync</code>) bypass transitions entirely for
+        immediate responsiveness. This page explains how this works and how to
+        control it.
       </p>
 
       <section>
@@ -101,7 +102,7 @@ function Layout() {
         <h3>Sync State Updates Bypass Transitions</h3>
         <p>
           Not every state change needs the transition treatment.{" "}
-          <code>setStateSync</code> and <code>resetState</code> use the
+          <code>setStateSync</code> and <code>resetStateSync</code> use the
           Navigation API's <code>updateCurrentEntry()</code> method, which
           changes state without performing a navigation. The router detects this
           and applies the update synchronously &mdash; outside of{" "}

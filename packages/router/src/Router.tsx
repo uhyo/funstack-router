@@ -282,8 +282,8 @@ function RouteRenderer({
     [locationEntry?.state, index, url, navigateAsync],
   );
 
-  // Create stable resetState callback
-  const resetState = useCallback(() => {
+  // Create stable resetStateSync callback (synchronous via updateCurrentEntry)
+  const resetStateSync = useCallback(() => {
     if (locationEntry === null) return;
     const currentStates =
       (locationEntry.state as InternalRouteState | undefined)?.__routeStates ??
@@ -292,6 +292,21 @@ function RouteRenderer({
     newStates[index] = undefined;
     updateCurrentEntryState({ __routeStates: newStates });
   }, [locationEntry?.state, index, updateCurrentEntryState]);
+
+  // Create stable resetState callback (async via replace navigation)
+  const resetState = useCallback(async (): Promise<void> => {
+    if (locationEntry === null || url === null) return;
+    const currentStates =
+      (locationEntry.state as InternalRouteState | undefined)?.__routeStates ??
+      [];
+    const newStates = [...currentStates];
+    newStates[index] = undefined;
+
+    await navigateAsync(url.href, {
+      replace: true,
+      state: { __routeStates: newStates },
+    });
+  }, [locationEntry?.state, index, url, navigateAsync]);
 
   // Create outlet for child routes
   const outlet =
@@ -336,6 +351,7 @@ function RouteRenderer({
       setState,
       setStateSync,
       resetState,
+      resetStateSync,
     };
 
     // Ephemeral info from the current navigation
@@ -351,7 +367,8 @@ function RouteRenderer({
         state: unknown;
         setState: (s: unknown | ((prev: unknown) => unknown)) => Promise<void>;
         setStateSync: (s: unknown | ((prev: unknown) => unknown)) => void;
-        resetState: () => void;
+        resetState: () => Promise<void>;
+        resetStateSync: () => void;
         info: unknown;
         isPending: boolean;
       }>;
@@ -370,7 +387,8 @@ function RouteRenderer({
       state: unknown;
       setState: (s: unknown | ((prev: unknown) => unknown)) => Promise<void>;
       setStateSync: (s: unknown | ((prev: unknown) => unknown)) => void;
-      resetState: () => void;
+      resetState: () => Promise<void>;
+      resetStateSync: () => void;
       info: unknown;
       isPending: boolean;
     }>;

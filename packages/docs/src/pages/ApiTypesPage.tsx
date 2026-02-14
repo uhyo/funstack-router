@@ -37,7 +37,10 @@ type Props = {
     state: { scrollPosition: number } |
            ((prev: { scrollPosition: number } | undefined) => { scrollPosition: number })
   ) => void;
-  resetState: () => void;
+  // Async reset via replace navigation
+  resetState: () => Promise<void>;
+  // Sync reset via updateCurrentEntry
+  resetStateSync: () => void;
   info: unknown; // Ephemeral navigation info
   isPending: boolean; // Whether a navigation transition is pending
 };`}</CodeBlock>
@@ -60,9 +63,15 @@ type Props = {
             <code>true</code>.
           </li>
           <li>
-            <code>resetState</code> - Clears navigation state. Like{" "}
-            <code>setStateSync</code>, this bypasses React transitions and will
-            never set <code>isPending</code> to <code>true</code>.
+            <code>resetState</code> - Async method that clears navigation state
+            via replace navigation. Like <code>setState</code>, it goes through
+            a React transition and may set <code>isPending</code> to{" "}
+            <code>true</code>.
+          </li>
+          <li>
+            <code>resetStateSync</code> - Clears navigation state synchronously.
+            Like <code>setStateSync</code>, this bypasses React transitions and
+            will never set <code>isPending</code> to <code>true</code>.
           </li>
         </ul>
       </article>
@@ -90,7 +99,8 @@ type Props = {
   state: { selectedTab: string } | undefined;
   setState: (state: ...) => Promise<void>;  // async
   setStateSync: (state: ...) => void;       // sync
-  resetState: () => void;
+  resetState: () => Promise<void>;          // async
+  resetStateSync: () => void;               // sync
   info: unknown; // Ephemeral navigation info
   isPending: boolean; // Whether a navigation transition is pending
 };`}</CodeBlock>
@@ -248,8 +258,9 @@ type SettingsPageProps = RouteComponentPropsOf<typeof settingsRoute>;
             <code>component: UserPage</code>): Router automatically injects
             props (<code>params</code>, <code>state</code>,{" "}
             <code>setState</code>, <code>setStateSync</code>,{" "}
-            <code>resetState</code>, <code>info</code>, <code>isPending</code>,
-            and <code>data</code> when a loader is defined).
+            <code>resetState</code>, <code>resetStateSync</code>,{" "}
+            <code>info</code>, <code>isPending</code>, and <code>data</code>{" "}
+            when a loader is defined).
           </li>
           <li>
             <strong>JSX element</strong> (e.g.,{" "}

@@ -50,7 +50,8 @@ export type InternalRouteDefinition = {
           state: unknown | ((prev: unknown) => unknown),
         ) => Promise<void>;
         setStateSync?: (state: unknown | ((prev: unknown) => unknown)) => void;
-        resetState?: () => void;
+        resetState?: () => Promise<void>;
+        resetStateSync?: () => void;
         info?: unknown;
       }>
     | ReactNode;

@@ -53,8 +53,10 @@ export interface RouteComponentProps<
   setStateSync: (
     state: TState | ((prev: TState | undefined) => TState),
   ) => void;
-  /** Reset navigation state to undefined */
-  resetState: () => void;
+  /** Reset navigation state to undefined asynchronously via replace navigation */
+  resetState: () => Promise<void>;
+  /** Reset navigation state to undefined synchronously via updateCurrentEntry */
+  resetStateSync: () => void;
   /** Ephemeral navigation info (only available during navigation, not persisted) */
   info: unknown;
   /** Whether a navigation transition is pending */

@@ -229,8 +229,8 @@ describe("Navigation State Management", () => {
     });
   });
 
-  describe("resetState", () => {
-    it("clears state to undefined", () => {
+  describe("resetState (async)", () => {
+    it("clears state to undefined", async () => {
       type PageState = { count: number };
 
       function Page({
@@ -242,7 +242,92 @@ describe("Navigation State Management", () => {
           <div>
             <span>Count: {state?.count ?? "none"}</span>
             <button onClick={() => setStateSync({ count: 10 })}>Set</button>
-            <button onClick={resetState}>Reset</button>
+            <button onClick={() => void resetState()}>Reset</button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+
+      act(() => {
+        fireEvent.click(screen.getByText("Set"));
+      });
+      expect(screen.getByText("Count: 10")).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(screen.getByText("Reset"));
+      });
+      expect(screen.getByText("Count: none")).toBeInTheDocument();
+    });
+
+    it("returns a Promise", async () => {
+      type PageState = { count: number };
+      let resetPromise: Promise<void> | undefined;
+
+      function Page({
+        state,
+        setStateSync,
+        resetState,
+      }: RouteComponentProps<Record<string, never>, PageState>) {
+        return (
+          <div>
+            <span>Count: {state?.count ?? "none"}</span>
+            <button onClick={() => setStateSync({ count: 10 })}>Set</button>
+            <button
+              onClick={() => {
+                resetPromise = resetState();
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+
+      act(() => {
+        fireEvent.click(screen.getByText("Set"));
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByText("Reset"));
+        expect(resetPromise).toBeInstanceOf(Promise);
+        await resetPromise;
+      });
+
+      expect(screen.getByText("Count: none")).toBeInTheDocument();
+    });
+  });
+
+  describe("resetStateSync", () => {
+    it("clears state to undefined synchronously", () => {
+      type PageState = { count: number };
+
+      function Page({
+        state,
+        setStateSync,
+        resetStateSync,
+      }: RouteComponentProps<Record<string, never>, PageState>) {
+        return (
+          <div>
+            <span>Count: {state?.count ?? "none"}</span>
+            <button onClick={() => setStateSync({ count: 10 })}>Set</button>
+            <button onClick={resetStateSync}>Reset</button>
           </div>
         );
       }
@@ -435,14 +520,14 @@ describe("Navigation State Management", () => {
       expect(isPendingValues.every((v) => v === false)).toBe(true);
     });
 
-    it("resetState does not trigger isPending", () => {
+    it("resetStateSync does not trigger isPending", () => {
       type PageState = { count: number };
       const isPendingValues: boolean[] = [];
 
       function Page({
         state,
         setStateSync,
-        resetState,
+        resetStateSync,
         isPending,
       }: RouteComponentProps<Record<string, never>, PageState>) {
         isPendingValues.push(isPending);
@@ -451,7 +536,7 @@ describe("Navigation State Management", () => {
             <span>Count: {state?.count ?? "none"}</span>
             <span>Pending: {isPending ? "yes" : "no"}</span>
             <button onClick={() => setStateSync({ count: 10 })}>Set</button>
-            <button onClick={resetState}>Reset</button>
+            <button onClick={resetStateSync}>Reset</button>
           </div>
         );
       }
