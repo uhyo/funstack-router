@@ -163,9 +163,8 @@ function MyComponent() {
         <ul>
           <li>
             This hook is powered by React's <code>useTransition</code>. The
-            router wraps URL navigations in <code>startTransition</code>, so
-            React defers rendering suspended routes and keeps the current UI
-            visible.
+            router wraps navigations in <code>startTransition</code>, so React
+            defers rendering suspended routes and keeps the current UI visible.
           </li>
           <li>
             Sync state updates via <code>setStateSync</code> and{" "}

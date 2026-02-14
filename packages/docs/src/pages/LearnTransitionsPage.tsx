@@ -6,7 +6,7 @@ export function LearnTransitionsPage() {
       <h2>Controlling Transitions</h2>
 
       <p className="page-intro">
-        FUNSTACK Router wraps URL navigations in React's{" "}
+        FUNSTACK Router wraps navigations in React's{" "}
         <code>startTransition</code>, which means the old UI may stay visible
         while the new route loads. Sync state updates (<code>setStateSync</code>{" "}
         and <code>resetState</code>) bypass transitions entirely for immediate
@@ -14,14 +14,14 @@ export function LearnTransitionsPage() {
       </p>
 
       <section>
-        <h3>URL Navigations as Transitions</h3>
+        <h3>Navigations as Transitions</h3>
         <p>
-          When the user navigates to a different URL, the Router updates its
-          location state inside <code>startTransition()</code>. This means React
-          treats URL navigations as transitions: if an existing Suspense
-          boundary suspends (e.g., a component loading data with{" "}
-          <code>use()</code>), React keeps the old UI visible instead of
-          immediately showing the fallback. This behavior is{" "}
+          When the user navigates, the Router updates its location state inside{" "}
+          <code>startTransition()</code>. This means React treats navigations as
+          transitions: if an existing Suspense boundary suspends (e.g., a
+          component loading data with <code>use()</code>), React keeps the old
+          UI visible instead of immediately showing the fallback. This behavior
+          is{" "}
           <a href="https://react.dev/reference/react/useTransition#building-a-suspense-enabled-router">
             what React recommends for Suspense-enabled routers
           </a>
