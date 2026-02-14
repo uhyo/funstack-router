@@ -8,7 +8,7 @@ export function LearnTransitionsPage() {
       <p className="page-intro">
         FUNSTACK Router wraps URL navigations in React's{" "}
         <code>startTransition</code>, which means the old UI may stay visible
-        while the new route loads. State-only updates (<code>setStateSync</code>{" "}
+        while the new route loads. Sync state updates (<code>setStateSync</code>{" "}
         and <code>resetState</code>) bypass transitions entirely for immediate
         responsiveness. This page explains how this works and how to control it.
       </p>
@@ -98,7 +98,7 @@ function Layout() {
       </section>
 
       <section>
-        <h3>State-Only Updates Bypass Transitions</h3>
+        <h3>Sync State Updates Bypass Transitions</h3>
         <p>
           Not every state change needs the transition treatment.{" "}
           <code>setStateSync</code> and <code>resetState</code> use the
