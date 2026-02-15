@@ -87,6 +87,20 @@ const myRoute = route({
             </tr>
             <tr>
               <td>
+                <code>action</code>
+              </td>
+              <td>
+                <code>(args: ActionArgs) =&gt; T</code>
+              </td>
+              <td>
+                Function to handle form submissions (POST navigations). Receives
+                a <code>Request</code> with <code>FormData</code> body. The
+                return value is passed to the loader as{" "}
+                <code>actionResult</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>
                 <code>loader</code>
               </td>
               <td>
@@ -281,8 +295,9 @@ const routes = [
             <code>routeState</code> - Route definition helper with typed state
           </li>
           <li>
-            Types: <code>LoaderArgs</code>, <code>RouteDefinition</code>,{" "}
-            <code>PathParams</code>, <code>RouteComponentProps</code>,{" "}
+            Types: <code>ActionArgs</code>, <code>LoaderArgs</code>,{" "}
+            <code>RouteDefinition</code>, <code>PathParams</code>,{" "}
+            <code>RouteComponentProps</code>,{" "}
             <code>RouteComponentPropsWithData</code>
           </li>
         </ul>

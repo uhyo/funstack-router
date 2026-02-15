@@ -291,13 +291,40 @@ routeState<{ tab: string }>()({
 
       <article className="api-item">
         <h3>
-          <code>LoaderArgs</code>
+          <code>ActionArgs</code>
         </h3>
-        <CodeBlock language="typescript">{`interface LoaderArgs {
-  params: Record<string, string>;
-  request: Request;
+        <p>
+          Arguments passed to route action functions. The <code>request</code>{" "}
+          carries the POST method and <code>FormData</code> body from the form
+          submission.
+        </p>
+        <CodeBlock language="typescript">{`interface ActionArgs<Params> {
+  params: Params;
+  request: Request;  // method: "POST", body: FormData
   signal: AbortSignal;
 }`}</CodeBlock>
+      </article>
+
+      <article className="api-item">
+        <h3>
+          <code>LoaderArgs</code>
+        </h3>
+        <p>
+          Arguments passed to route loader functions. The optional{" "}
+          <code>actionResult</code> parameter contains the return value of the
+          route's action when the loader runs after a form submission.
+        </p>
+        <CodeBlock language="typescript">{`interface LoaderArgs<Params, ActionResult = undefined> {
+  params: Params;
+  request: Request;
+  signal: AbortSignal;
+  actionResult: ActionResult | undefined;
+}`}</CodeBlock>
+        <p>
+          On normal navigations, <code>actionResult</code> is{" "}
+          <code>undefined</code>. After a form submission, it contains the
+          action's return value (awaited if the action is async).
+        </p>
       </article>
 
       <article className="api-item">

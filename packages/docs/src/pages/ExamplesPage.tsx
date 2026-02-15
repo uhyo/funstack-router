@@ -191,6 +191,90 @@ const userPostsRoute = route({
       </section>
 
       <section>
+        <h2>Form Submissions</h2>
+        <p>
+          Handle form POST submissions with route actions. The action receives
+          the form data, and its return value flows to the loader via{" "}
+          <code>actionResult</code>. Native <code>&lt;form&gt;</code> elements
+          work out of the box — no wrapper component needed.
+        </p>
+        <CodeBlock language="tsx">{`import { route, type RouteComponentPropsOf } from "@funstack/router";
+
+// Define a route with both action and loader
+const editUserRoute = route({
+  id: "editUser",
+  path: "/users/:userId/edit",
+  action: async ({ request, params, signal }) => {
+    const formData = await request.formData();
+    const response = await fetch(\`/api/users/\${params.userId}\`, {
+      method: "PUT",
+      body: formData,
+      signal,
+    });
+    return response.json() as Promise<{ success: boolean; error?: string }>;
+  },
+  loader: async ({ params, signal, actionResult }) => {
+    const user = await fetchUser(params.userId, signal);
+    return {
+      user,
+      // actionResult is undefined on normal navigation,
+      // contains the action's return value after form submission
+      updateResult: actionResult ?? null,
+    };
+  },
+  component: EditUserPage,
+});
+
+// Component receives data from the loader (which includes the action result)
+function EditUserPage({ data, isPending }: RouteComponentPropsOf<typeof editUserRoute>) {
+  return (
+    <form method="post">
+      {data.updateResult?.error && (
+        <p className="error">{data.updateResult.error}</p>
+      )}
+      {data.updateResult?.success && (
+        <p className="success">User updated successfully!</p>
+      )}
+      <input name="name" defaultValue={data.user.name} />
+      <input name="email" defaultValue={data.user.email} />
+      <button type="submit" disabled={isPending}>
+        {isPending ? "Saving..." : "Save"}
+      </button>
+    </form>
+  );
+}
+
+// Route with action only (pure side effect, no data for component)
+const deleteRoute = route({
+  path: "/users/:userId/delete",
+  action: async ({ params, signal }) => {
+    await fetch(\`/api/users/\${params.userId}\`, {
+      method: "DELETE",
+      signal,
+    });
+  },
+  component: DeleteConfirmation,
+});`}</CodeBlock>
+        <p>Key behaviors:</p>
+        <ul>
+          <li>
+            Actions handle POST form submissions; loaders handle GET navigations
+          </li>
+          <li>Action results are never cached — each submission runs fresh</li>
+          <li>
+            After an action completes, all matched loaders are revalidated
+          </li>
+          <li>
+            POST submissions to routes without an action are not intercepted
+            (browser handles normally)
+          </li>
+          <li>
+            The deepest matched route with an action handles the submission
+          </li>
+        </ul>
+      </section>
+
+      <section>
         <h2>Search Parameters</h2>
         <p>Work with URL query parameters:</p>
         <CodeBlock language="tsx">{`import { useSearchParams } from "@funstack/router";
