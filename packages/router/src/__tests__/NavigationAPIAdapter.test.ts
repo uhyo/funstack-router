@@ -40,6 +40,7 @@ describe("setupInterception", () => {
       expect(onNavigate).toHaveBeenCalledWith(event, {
         matches: [],
         intercepting: false,
+        formData: null,
       });
     });
 

@@ -5,6 +5,7 @@ import type {
 } from "./RouterAdapter.js";
 import type {
   InternalRouteDefinition,
+  MatchedRoute,
   NavigateOptions,
   OnNavigateCallback,
 } from "../types.js";
@@ -12,6 +13,7 @@ import { matchRoutes } from "./matchRoutes.js";
 import {
   executeLoaders,
   createLoaderRequest,
+  createActionRequest,
   clearLoaderCacheForEntry,
 } from "./loaderCache.js";
 
@@ -159,7 +161,11 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Only intercept same-origin navigations
       if (!event.canIntercept) {
-        onNavigate?.(event, { matches: [], intercepting: false });
+        onNavigate?.(event, {
+          matches: [],
+          intercepting: false,
+          formData: event.formData,
+        });
         return;
       }
 
@@ -167,13 +173,33 @@ export class NavigationAPIAdapter implements RouterAdapter {
       const url = new URL(event.destination.url);
       const matched = matchRoutes(routes, url.pathname);
 
+      const isFormSubmission = event.formData !== null;
+
+      // For POST form submissions, don't intercept if no matched route has an action
+      if (isFormSubmission && matched !== null) {
+        const hasAction = matched.some((m) => m.route.action);
+        if (!hasAction) {
+          // Don't intercept — let browser submit the form normally
+          onNavigate?.(event, {
+            matches: matched,
+            intercepting: false,
+            formData: event.formData,
+          });
+          return;
+        }
+      }
+
       // Compute whether we will intercept this navigation (before user's preventDefault)
       const willIntercept =
         matched !== null && !event.hashChange && event.downloadRequest === null;
 
       // Call onNavigate callback if provided (regardless of route match)
       if (onNavigate) {
-        onNavigate(event, { matches: matched, intercepting: willIntercept });
+        onNavigate(event, {
+          matches: matched,
+          intercepting: willIntercept,
+          formData: event.formData,
+        });
         if (event.defaultPrevented) {
           return; // Do not intercept, allow browser default
         }
@@ -193,11 +219,6 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       event.intercept({
         handler: async () => {
-          const request = createLoaderRequest(url);
-
-          // Note: in response to `currententrychange` event, <Router> should already
-          // have dispatched data loaders and the results should be cached.
-          // Here we run executeLoader to retrieve cached results.
           const currentEntry = navigation.currentEntry;
           if (!currentEntry) {
             throw new Error(
@@ -205,11 +226,35 @@ export class NavigationAPIAdapter implements RouterAdapter {
             );
           }
 
+          let actionResult: unknown = undefined;
+
+          if (isFormSubmission) {
+            // Find the deepest matched route with an action
+            const actionRoute = findActionRoute(matched);
+            if (actionRoute) {
+              const actionRequest = createActionRequest(url, event.formData!);
+              actionResult = await actionRoute.route.action!({
+                params: actionRoute.params,
+                request: actionRequest,
+                signal: event.signal,
+              });
+            }
+            // Revalidate loaders after action — clear cache so loaders re-execute
+            clearLoaderCacheForEntry(currentEntry.id);
+          }
+
+          const request = createLoaderRequest(url);
+
+          // Note: in response to `currententrychange` event, <Router> should already
+          // have dispatched data loaders and the results should be cached.
+          // Here we run executeLoader to retrieve cached results.
+          // For form submissions, cache was cleared above so loaders re-execute with actionResult.
           const results = executeLoaders(
             matched,
             currentEntry.id,
             request,
             event.signal,
+            actionResult,
           );
 
           // Delay navigation until async loaders complete
@@ -238,4 +283,17 @@ export class NavigationAPIAdapter implements RouterAdapter {
     navigation.updateCurrentEntry({ state });
     // Note: updateCurrentEntry fires currententrychange, so subscribers are notified automatically
   }
+}
+
+/**
+ * Find the deepest matched route that has an action defined.
+ * Iterates from deepest to shallowest.
+ */
+function findActionRoute(matched: MatchedRoute[]): MatchedRoute | undefined {
+  for (let i = matched.length - 1; i >= 0; i--) {
+    if (matched[i].route.action) {
+      return matched[i];
+    }
+  }
+  return undefined;
 }

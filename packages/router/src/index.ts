@@ -33,6 +33,7 @@ export type {
 export type { LocationEntry } from "./core/RouterAdapter.js";
 
 export type {
+  ActionArgs,
   LoaderArgs,
   RouteDefinition,
   PathParams,

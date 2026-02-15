@@ -19,7 +19,7 @@ function getOrCreateLoaderResult(
   entryId: string,
   matchIndex: number,
   route: InternalRouteDefinition,
-  args: LoaderArgs<Record<string, string>>,
+  args: LoaderArgs<Record<string, string>, unknown>,
 ): unknown | undefined {
   if (!route.loader) {
     return undefined;
@@ -44,6 +44,16 @@ export function createLoaderRequest(url: URL): Request {
 }
 
 /**
+ * Create a Request object for action args (POST with FormData body).
+ */
+export function createActionRequest(url: URL, formData: FormData): Request {
+  return new Request(url.href, {
+    method: "POST",
+    body: formData,
+  });
+}
+
+/**
  * Execute loaders for matched routes and return routes with data.
  * Results are cached by navigation entry id to prevent duplicate execution.
  */
@@ -52,13 +62,15 @@ export function executeLoaders(
   entryId: string,
   request: Request,
   signal: AbortSignal,
+  actionResult?: unknown,
 ): MatchedRouteWithData[] {
   return matchedRoutes.map((match, index) => {
     const { route, params } = match;
-    const args: LoaderArgs<Record<string, string>> = {
+    const args: LoaderArgs<Record<string, string>, unknown> = {
       params,
       request,
       signal,
+      actionResult,
     };
     const data = getOrCreateLoaderResult(entryId, index, route, args);
 

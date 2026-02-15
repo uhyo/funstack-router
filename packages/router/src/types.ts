@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import type { LoaderArgs, RouteDefinition } from "./route.js";
+import type { ActionArgs, LoaderArgs, RouteDefinition } from "./route.js";
 
 const InternalRouteDefinitionSymbol = Symbol();
 
@@ -38,8 +38,10 @@ export type InternalRouteDefinition = {
   // Note: `loader` and `component` may both exist or both not exist.
   // Also, `unknown`s may actually be more specific types. They are guaranteed
   // to be the same type by the `route` helper function.
+  /** Action function for handling form submissions (POST navigations) */
+  action?: (args: ActionArgs<Record<string, string>>) => unknown;
   /** Data loader function for this route */
-  loader?: (args: LoaderArgs<Record<string, string>>) => unknown;
+  loader?: (args: LoaderArgs<Record<string, string>, unknown>) => unknown;
   /** Component to render when this route matches */
   component?:
     | ComponentType<{
@@ -98,6 +100,8 @@ export type OnNavigateInfo = {
   matches: readonly MatchedRoute[] | null;
   /** Whether the router will intercept this navigation (before user's preventDefault() call) */
   intercepting: boolean;
+  /** FormData from the NavigateEvent, or null for non-POST navigations */
+  formData: FormData | null;
 };
 
 /**

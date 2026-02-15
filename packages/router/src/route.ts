@@ -22,15 +22,33 @@ export type PathParams<T extends string> = [ExtractParams<T>] extends [never]
   : { [K in ExtractParams<T>]: string };
 
 /**
+ * Arguments passed to action functions.
+ * The request carries the POST method and FormData body.
+ */
+export type ActionArgs<Params extends Record<string, string>> = {
+  /** Extracted path parameters */
+  params: Params;
+  /** Request object with method POST and FormData body */
+  request: Request;
+  /** AbortSignal for cancellation */
+  signal: AbortSignal;
+};
+
+/**
  * Arguments passed to loader functions.
  */
-export type LoaderArgs<Params extends Record<string, string>> = {
+export type LoaderArgs<
+  Params extends Record<string, string>,
+  ActionResult = undefined,
+> = {
   /** Extracted path parameters */
   params: Params;
   /** Request object with URL and headers */
   request: Request;
   /** AbortSignal for cancellation on navigation */
   signal: AbortSignal;
+  /** Result from the action, if this load was triggered by a form submission */
+  actionResult: ActionResult | undefined;
 };
 
 /**
@@ -193,6 +211,53 @@ export type RouteDefinition =
     };
 
 /**
+ * Route definition with action and loader.
+ * Action result flows to loader via actionResult parameter.
+ */
+type RouteWithActionAndLoader<
+  TPath extends string,
+  TActionResult,
+  TData,
+  TState,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path: TPath;
+  action: (args: ActionArgs<PathParams<TPath>>) => TActionResult;
+  loader: (
+    args: LoaderArgs<PathParams<TPath>, Awaited<TActionResult>>,
+  ) => TData;
+  component:
+    | ComponentType<
+        RouteComponentPropsWithData<PathParams<TPath>, TData, TState>
+      >
+    | ReactNode;
+  children?: RouteDefinition[];
+  exact?: boolean;
+  requireChildren?: boolean;
+};
+
+/**
+ * Route definition with action only (no loader).
+ * Action executes as a pure side effect.
+ */
+type RouteWithActionOnly<
+  TPath extends string,
+  TState,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path: TPath;
+  action: (args: ActionArgs<PathParams<TPath>>) => unknown;
+  component?:
+    | ComponentType<RouteComponentProps<PathParams<TPath>, TState>>
+    | ReactNode;
+  children?: RouteDefinition[];
+  exact?: boolean;
+  requireChildren?: boolean;
+};
+
+/**
  * Route definition with loader - infers TData from loader return type.
  * TPath is used to infer params type from the path pattern.
  * TState is the type of navigation state for this route.
@@ -304,6 +369,33 @@ type PathlessRouteWithoutLoader<
  * });
  * ```
  */
+// Overload with id + action + loader → TypefulOpaqueRouteDefinition
+export function route<
+  TId extends string,
+  const TPath extends string,
+  TActionResult,
+  TData,
+>(
+  definition: RouteWithActionAndLoader<
+    TPath,
+    TActionResult,
+    TData,
+    undefined,
+    TId
+  > & { id: TId },
+): TypefulOpaqueRouteDefinition<TId, PathParams<TPath>, undefined, TData>;
+// Overload with id + action only → TypefulOpaqueRouteDefinition
+export function route<TId extends string, const TPath extends string>(
+  definition: RouteWithActionOnly<TPath, undefined, TId> & { id: TId },
+): TypefulOpaqueRouteDefinition<TId, PathParams<TPath>, undefined, undefined>;
+// Overload with action + loader (no id)
+export function route<const TPath extends string, TActionResult, TData>(
+  definition: RouteWithActionAndLoader<TPath, TActionResult, TData, undefined>,
+): OpaqueRouteDefinition;
+// Overload with action only (no id)
+export function route<const TPath extends string>(
+  definition: RouteWithActionOnly<TPath, undefined>,
+): OpaqueRouteDefinition;
 // Pathless overload with id + loader → TypefulOpaqueRouteDefinition
 export function route<TId extends string, TData>(
   definition: PathlessRouteWithLoader<TData, undefined, TId> & { id: TId },
@@ -342,20 +434,7 @@ export function route<const TPath extends string>(
   definition: RouteWithoutLoader<TPath, undefined>,
 ): OpaqueRouteDefinition;
 // Implementation
-export function route<TId extends string, const TPath extends string, TData>(
-  definition:
-    | (PathlessRouteWithLoader<TData, undefined, TId> & { id: TId })
-    | (PathlessRouteWithoutLoader<undefined, TId> & { id: TId })
-    | PathlessRouteWithLoader<TData, undefined>
-    | PathlessRouteWithoutLoader<undefined>
-    | (RouteWithLoader<TPath, TData, undefined, TId> & { id: TId })
-    | (RouteWithoutLoader<TPath, undefined, TId> & { id: TId })
-    | RouteWithLoader<TPath, TData, undefined>
-    | RouteWithoutLoader<TPath, undefined>,
-):
-  | TypefulOpaqueRouteDefinition<TId, PathParams<TPath>, undefined, TData>
-  | TypefulOpaqueRouteDefinition<TId, Record<string, never>, undefined, TData>
-  | OpaqueRouteDefinition {
+export function route(definition: object): OpaqueRouteDefinition {
   return definition as unknown as OpaqueRouteDefinition;
 }
 
@@ -384,6 +463,28 @@ export function route<TId extends string, const TPath extends string, TData>(
  * ```
  */
 export function routeState<TState>(): {
+  // Overload with id + action + loader → TypefulOpaqueRouteDefinition
+  <TId extends string, TPath extends string, TActionResult, TData>(
+    definition: RouteWithActionAndLoader<
+      TPath,
+      TActionResult,
+      TData,
+      TState,
+      TId
+    > & { id: TId },
+  ): TypefulOpaqueRouteDefinition<TId, PathParams<TPath>, TState, TData>;
+  // Overload with id + action only → TypefulOpaqueRouteDefinition
+  <TId extends string, TPath extends string>(
+    definition: RouteWithActionOnly<TPath, TState, TId> & { id: TId },
+  ): TypefulOpaqueRouteDefinition<TId, PathParams<TPath>, TState, undefined>;
+  // Overload with action + loader (no id)
+  <TPath extends string, TActionResult, TData>(
+    definition: RouteWithActionAndLoader<TPath, TActionResult, TData, TState>,
+  ): OpaqueRouteDefinition;
+  // Overload with action only (no id)
+  <TPath extends string>(
+    definition: RouteWithActionOnly<TPath, TState>,
+  ): OpaqueRouteDefinition;
   // Pathless overload with id + loader → TypefulOpaqueRouteDefinition
   <TId extends string, TData>(
     definition: PathlessRouteWithLoader<TData, TState, TId> & { id: TId },

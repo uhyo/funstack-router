@@ -10,6 +10,8 @@ import type {
   RouteComponentPropsOf,
   RouteComponentProps,
   RouteComponentPropsWithData,
+  ActionArgs,
+  LoaderArgs,
 } from "../route.js";
 import { useRouteParams } from "../hooks/useRouteParams.js";
 import { useRouteState } from "../hooks/useRouteState.js";
@@ -394,5 +396,199 @@ describe("RouteComponentPropsOf utility type", () => {
 
     // @ts-expect-error - RouteComponentPropsOf requires a route with id
     type _Props = RouteComponentPropsOf<typeof noIdRoute>;
+  });
+});
+
+describe("route() with action type inference", () => {
+  it("route with action and loader infers data type from loader", () => {
+    const r = route({
+      id: "editUser",
+      path: "/users/:userId/edit",
+      action: async ({ request }) => {
+        const formData = await request.formData();
+        return { success: true, name: formData.get("name") as string };
+      },
+      loader: ({ actionResult }) => ({
+        user: { name: "John" },
+        updateResult: actionResult ?? null,
+      }),
+      component: () => null,
+    });
+
+    expectTypeOf(r).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<
+        "editUser",
+        { userId: string },
+        undefined,
+        {
+          user: { name: string };
+          updateResult: { success: boolean; name: string } | null;
+        }
+      >
+    >();
+  });
+
+  it("route with action only returns TypefulOpaqueRouteDefinition with undefined data", () => {
+    const r = route({
+      id: "deleteUser",
+      path: "/users/:userId/delete",
+      action: async ({ params }) => {
+        return { deleted: params.userId };
+      },
+      component: () => null,
+    });
+
+    expectTypeOf(r).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<
+        "deleteUser",
+        { userId: string },
+        undefined,
+        undefined
+      >
+    >();
+  });
+
+  it("route with action and loader (no id) returns OpaqueRouteDefinition", () => {
+    const r = route({
+      path: "/submit",
+      action: async () => "ok",
+      loader: ({ actionResult }) => ({ result: actionResult }),
+      component: () => null,
+    });
+
+    expectTypeOf(r).toEqualTypeOf<OpaqueRouteDefinition>();
+  });
+
+  it("route with action only (no id) returns OpaqueRouteDefinition", () => {
+    const r = route({
+      path: "/submit",
+      action: async () => "ok",
+      component: () => null,
+    });
+
+    expectTypeOf(r).toEqualTypeOf<OpaqueRouteDefinition>();
+  });
+
+  it("action receives correctly typed params from path", () => {
+    route({
+      id: "test",
+      path: "/users/:userId/posts/:postId",
+      action: (args) => {
+        expectTypeOf(args).toEqualTypeOf<
+          ActionArgs<{ userId: string; postId: string }>
+        >();
+        return null;
+      },
+      component: () => null,
+    });
+  });
+
+  it("loader receives actionResult typed from action return", () => {
+    type ActionResult = { success: boolean; id: number };
+
+    route({
+      id: "test",
+      path: "/submit",
+      action: async (): Promise<ActionResult> => ({
+        success: true,
+        id: 42,
+      }),
+      loader: (args) => {
+        expectTypeOf(args.actionResult).toEqualTypeOf<
+          ActionResult | undefined
+        >();
+        return { data: args.actionResult };
+      },
+      component: () => null,
+    });
+  });
+
+  it("RouteComponentPropsOf works with action+loader route", () => {
+    const r = route({
+      id: "edit",
+      path: "/edit/:id",
+      action: async () => ({ saved: true }),
+      loader: ({ actionResult }) => ({
+        item: "test",
+        saveResult: actionResult ?? null,
+      }),
+      component: () => null,
+    });
+
+    type Props = RouteComponentPropsOf<typeof r>;
+    expectTypeOf<Props>().toEqualTypeOf<
+      RouteComponentPropsWithData<
+        { id: string },
+        { item: string; saveResult: { saved: boolean } | null },
+        undefined
+      >
+    >();
+  });
+
+  it("RouteComponentPropsOf works with action-only route (no data)", () => {
+    const r = route({
+      id: "delete",
+      path: "/delete/:id",
+      action: async () => ({ deleted: true }),
+      component: () => null,
+    });
+
+    type Props = RouteComponentPropsOf<typeof r>;
+    expectTypeOf<Props>().toEqualTypeOf<
+      RouteComponentProps<{ id: string }, undefined>
+    >();
+  });
+});
+
+describe("routeState() with action type inference", () => {
+  it("routeState with action and loader returns correct types", () => {
+    type MyState = { expanded: boolean };
+    const r = routeState<MyState>()({
+      id: "edit",
+      path: "/edit/:id",
+      action: async () => ({ saved: true }),
+      loader: ({ actionResult }) => ({
+        item: "test",
+        saveResult: actionResult ?? null,
+      }),
+      component: () => null,
+    });
+
+    expectTypeOf(r).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<
+        "edit",
+        { id: string },
+        MyState,
+        { item: string; saveResult: { saved: boolean } | null }
+      >
+    >();
+  });
+
+  it("routeState with action only returns correct types", () => {
+    type MyState = { confirmed: boolean };
+    const r = routeState<MyState>()({
+      id: "delete",
+      path: "/delete/:id",
+      action: async () => ({ deleted: true }),
+      component: () => null,
+    });
+
+    expectTypeOf(r).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<"delete", { id: string }, MyState, undefined>
+    >();
+  });
+});
+
+describe("LoaderArgs actionResult backwards compatibility", () => {
+  it("LoaderArgs without ActionResult type param has actionResult: undefined", () => {
+    type Args = LoaderArgs<{ id: string }>;
+    expectTypeOf<Args["actionResult"]>().toEqualTypeOf<undefined>();
+  });
+
+  it("LoaderArgs with ActionResult type param has typed actionResult", () => {
+    type Args = LoaderArgs<{ id: string }, { success: boolean }>;
+    expectTypeOf<Args["actionResult"]>().toEqualTypeOf<
+      { success: boolean } | undefined
+    >();
   });
 });

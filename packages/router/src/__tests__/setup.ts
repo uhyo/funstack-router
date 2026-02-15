@@ -73,6 +73,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
   const createMockNavigateEvent = (
     destinationUrl: string,
     eventInfo?: unknown,
+    eventFormData?: FormData | null,
   ): NavigateEvent & { defaultPrevented: boolean } => {
     let defaultPrevented = false;
     return {
@@ -90,7 +91,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       navigationType: "push",
       userInitiated: false,
       signal: new AbortController().signal,
-      formData: null,
+      formData: eventFormData ?? null,
       downloadRequest: null,
       info: eventInfo,
       hasUAVisualTransition: false,
@@ -207,13 +208,17 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     // This allows testing of onNavigate callback behavior
     __simulateNavigationWithEvent(
       url: string,
-      options?: { info?: unknown },
+      options?: { info?: unknown; formData?: FormData },
     ): {
       event: NavigateEvent & { defaultPrevented: boolean };
       proceed: () => void;
     } {
       const newUrl = new URL(url, currentEntry.url).href;
-      const event = createMockNavigateEvent(newUrl, options?.info);
+      const event = createMockNavigateEvent(
+        newUrl,
+        options?.info,
+        options?.formData,
+      );
 
       // Dispatch navigate event first (allows onNavigate to be called)
       dispatchEvent("navigate", event);
