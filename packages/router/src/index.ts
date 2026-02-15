@@ -22,15 +22,12 @@ export { route, routeState } from "./route.js";
 // Types
 export type {
   MatchedRoute,
-  MatchedRouteWithData,
   NavigateOptions,
   Location,
   OnNavigateCallback,
   OnNavigateInfo,
   FallbackMode,
 } from "./types.js";
-
-export type { LocationEntry } from "./core/RouterAdapter.js";
 
 export type {
   ActionArgs,
