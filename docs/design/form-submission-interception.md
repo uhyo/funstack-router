@@ -9,7 +9,7 @@ This document describes the design for intercepting and handling HTML form submi
 1. **Route-level actions**: Allow routes to define `action` functions that handle form submissions, mirroring the existing `loader` pattern
 2. **Type safety**: Provide typed `ActionArgs` and typed action data access via hooks, consistent with the existing `LoaderArgs` / `useRouteData` pattern
 3. **Loader revalidation**: Automatically re-run loaders after an action completes, so the UI reflects server-side changes
-4. **Progressive enhancement friendly**: Provide a `<Form>` component that submits via the Navigation API in SPA mode and falls back to native form submission when the Navigation API is unavailable
+4. **Works with native `<form>`**: No wrapper component needed — the Navigation API fires `navigate` events for standard `<form>` submissions, which the router intercepts
 
 ## Background: Navigation API and Form Submissions
 
@@ -308,41 +308,7 @@ function CreateUserPage() {
 }
 ```
 
-### 9. `<Form>` Component
-
-A `<Form>` component that integrates with the router:
-
-```typescript
-export function Form({
-  action,
-  method = "post",
-  children,
-  onSubmit,
-  ...rest
-}: FormProps): ReactNode {
-  return (
-    <form action={action} method={method} onSubmit={onSubmit} {...rest}>
-      {children}
-    </form>
-  );
-}
-
-export type FormProps = React.FormHTMLAttributes<HTMLFormElement> & {
-  /** Target URL. Defaults to the current URL. */
-  action?: string;
-  /** HTTP method. Defaults to "post". */
-  method?: "get" | "post";
-};
-```
-
-When the Navigation API is available, the browser fires a `navigate` event for form submissions, which the router intercepts. No special JavaScript is needed — a standard `<form>` element works. The `<Form>` component's main value is:
-
-1. **Defaults**: `method="post"` and `action` defaults to current URL
-2. **Future extensibility**: Potential for `navigate` options (e.g., `replace`, `info`), submission state tracking, etc.
-
-Native `<form>` elements work identically with the router's interception. `<Form>` is a convenience, not a requirement.
-
-### 10. Handling Routes Without Actions
+### 9. Handling Routes Without Actions
 
 When a POST form submission matches a route that has no `action` defined, the router has two reasonable options:
 
@@ -367,7 +333,7 @@ Intercept as a normal navigation (current behavior). The form data is lost, but 
 
 Option A is recommended because it avoids silently discarding form data.
 
-### 11. GET Form Submissions
+### 10. GET Form Submissions
 
 GET form submissions encode data in the URL query string. The Navigation API does **not** set `event.formData` for GET submissions — they are indistinguishable from normal navigations at the API level.
 
@@ -375,7 +341,7 @@ The router already handles these correctly: it intercepts the navigation, matche
 
 No special handling is needed for GET form submissions.
 
-### 12. Action Target Resolution
+### 11. Action Target Resolution
 
 When a form is submitted, which route's action should execute? The rule:
 
@@ -404,7 +370,7 @@ function findActionRoute(matched: MatchedRoute[]): MatchedRoute | undefined {
 }
 ```
 
-### 13. `onNavigate` Callback Extension
+### 12. `onNavigate` Callback Extension
 
 The existing `OnNavigateInfo` type should be extended to indicate form submissions:
 
@@ -433,6 +399,19 @@ This allows users to inspect or prevent form submission interception via the `on
 ```
 
 ## Considerations
+
+### History Traversals and Form Data
+
+The Navigation API does **not** store or replay form data in the history. When the user navigates back/forward to a history entry that was originally created by a POST form submission, the `navigate` event fires with `navigationType: "traverse"` and `formData: null`.
+
+This means:
+
+- Back/forward to a "post result" page runs **loaders only** — the action is never re-executed
+- The ephemeral action result from the original submission is also gone (cleared on the next navigation)
+- This naturally avoids the "resubmit form?" problem that plagues traditional MPAs
+- If a component needs to display action results after a traversal, the action should have persisted that data server-side, and the loader should fetch it
+
+No special handling is needed — `formData: null` on traversals means the existing loader-only code path runs.
 
 ### Action Errors
 
@@ -562,7 +541,7 @@ This is an additive, non-breaking change:
 1. Existing routes without `action` continue to work identically
 2. POST form submissions to routes without `action` are no longer intercepted (behavior change, but the previous behavior was silently discarding form data, which was a bug)
 3. New routes can opt into action handling by adding an `action` field
-4. The `<Form>` component is optional — native `<form>` elements work
+4. Native `<form>` elements work out of the box — no wrapper component needed
 
 ## Implementation Order
 
@@ -573,9 +552,8 @@ This is an additive, non-breaking change:
 5. **Action result storage** — ephemeral store for action results
 6. **Component props injection** — pass `actionData` to components
 7. **`useActionData` hook** — type-safe hook
-8. **`<Form>` component** — convenience wrapper
-9. **Tests** — action execution, revalidation, error handling, concurrent submissions
-10. **`onNavigate` info extension** — add `formData` to `OnNavigateInfo`
+8. **Tests** — action execution, revalidation, error handling, concurrent submissions
+9. **`onNavigate` info extension** — add `formData` to `OnNavigateInfo`
 
 ## References
 
