@@ -8,6 +8,7 @@ import { searchRoute } from "./features/search";
 import { editFormRoute } from "./features/edit-form";
 import { counterRoute } from "./features/counter";
 import { navigationOptionsRoute } from "./features/navigation-options";
+import { guestbookRoute } from "./features/guestbook";
 import { settingsRoute } from "./features/settings";
 
 const routes = [
@@ -22,6 +23,7 @@ const routes = [
       editFormRoute,
       counterRoute,
       navigationOptionsRoute,
+      guestbookRoute,
       settingsRoute,
     ],
   }),

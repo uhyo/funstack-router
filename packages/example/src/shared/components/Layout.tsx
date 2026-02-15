@@ -19,6 +19,7 @@ export function Layout() {
         <NavLink href="/edit">Edit Form</NavLink>
         <NavLink href="/counter">Counter</NavLink>
         <NavLink href="/nav-options">Nav Options</NavLink>
+        <NavLink href="/guestbook">Guestbook</NavLink>
         <NavLink href="/settings" match="prefix">
           Settings
         </NavLink>

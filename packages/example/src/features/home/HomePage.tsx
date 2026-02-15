@@ -39,6 +39,11 @@ export function HomePage() {
           <code>state</code>, <code>info</code> options
         </li>
         <li>
+          <a href="/guestbook">Form Actions</a> - Native{" "}
+          <code>&lt;form method=&quot;post&quot;&gt;</code> with route{" "}
+          <code>action</code>
+        </li>
+        <li>
           <a href="/settings/profile">Nested Routing</a> - Multi-level layouts
           with <code>&lt;Outlet&gt;</code>
         </li>
