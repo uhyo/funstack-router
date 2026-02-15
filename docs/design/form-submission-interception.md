@@ -7,7 +7,7 @@ This document describes the design for intercepting and handling HTML form submi
 ## Goals
 
 1. **Route-level actions**: Allow routes to define `action` functions that handle form submissions, mirroring the existing `loader` pattern
-2. **Type safety**: Provide typed `ActionArgs` and typed action data access via hooks, consistent with the existing `LoaderArgs` / `useRouteData` pattern
+2. **Action results flow through loaders**: After an action completes, its return value is passed to the loader as a parameter, keeping the loader as the single source of truth for component data
 3. **Loader revalidation**: Automatically re-run loaders after an action completes, so the UI reflects server-side changes
 4. **Works with native `<form>`**: No wrapper component needed — the Navigation API fires `navigate` events for standard `<form>` submissions, which the router intercepts
 
@@ -34,17 +34,22 @@ Add an `action` field to route definitions alongside the existing `loader`:
 
 ```typescript
 route({
-  id: "createUser",
-  path: "users/new",
-  loader: async ({ params, signal }) => {
-    return fetchFormOptions(signal);
-  },
+  id: "editUser",
+  path: "users/:userId/edit",
   action: async ({ request, params, signal }) => {
     const formData = await request.formData();
-    const result = await createUser(formData, signal);
-    return result;
+    return updateUser(params.userId, formData, signal);
   },
-  component: CreateUserPage,
+  loader: async ({ params, signal, actionResult }) => {
+    // actionResult is the return value of the action (undefined on normal navigation)
+    const user = await fetchUser(params.userId, signal);
+    return {
+      user,
+      // Include the action result in loader data so the component can display it
+      updateResult: actionResult ?? null,
+    };
+  },
+  component: EditUserPage,
 });
 ```
 
@@ -52,6 +57,7 @@ route({
 
 - Loaders handle GET navigations and their results are cached per history entry
 - Actions handle POST form submissions and their results are **never cached**
+- After an action completes, its return value is passed to the loader via `actionResult`
 
 ### 2. ActionArgs Type
 
@@ -81,22 +87,47 @@ function createActionRequest(url: URL, formData: FormData): Request {
 
 This follows the same convention as `createLoaderRequest`, but with `method: "POST"` and the form data as the body. Actions that need the raw `FormData` can call `request.formData()`. Actions that don't need it can ignore the body entirely.
 
-### 3. Action Execution Flow
+### 3. LoaderArgs Extension
+
+Add an optional `actionResult` field to `LoaderArgs`:
+
+```typescript
+export type LoaderArgs<
+  Params extends Record<string, string>,
+  ActionResult = undefined,
+> = {
+  /** Extracted path parameters */
+  params: Params;
+  /** Request object with URL and headers */
+  request: Request;
+  /** AbortSignal for cancellation on navigation */
+  signal: AbortSignal;
+  /** Result from the action, if this load was triggered by a form submission */
+  actionResult: ActionResult | undefined;
+};
+```
+
+On normal navigations (GET, traversal), `actionResult` is `undefined`. After a form submission, it contains the action's return value.
+
+The `ActionResult` type parameter defaults to `undefined` for backwards compatibility — existing loaders that don't use `actionResult` are unaffected.
+
+### 4. Action Execution Flow
 
 When a navigation event has `formData !== null` and the matched route has an `action`:
 
 1. The router detects `event.formData !== null` in `handleNavigate`
 2. Inside `event.intercept()`, the router constructs a POST `Request` with the form data
 3. The action is executed (not cached)
-4. After the action completes, loaders for the matched routes are **revalidated** (cache entries cleared and loaders re-executed)
-5. The action result and refreshed loader data are made available to the component
+4. The action result is passed to the loader via `actionResult`
+5. Loaders for the matched routes are **revalidated** (cache entries cleared and loaders re-executed with the action result)
+6. The loader returns data that incorporates the action result as needed
 
 ```
 [Form Submit] → [Navigate Event] → [Match Routes] → [Execute Action]
-    → [Revalidate Loaders] → [Update UI with action result + fresh data]
+    → [Pass actionResult to Loader] → [Loader returns merged data] → [Component renders via data prop]
 ```
 
-### 4. NavigationAPIAdapter Changes
+### 5. NavigationAPIAdapter Changes
 
 The `handleNavigate` function needs to differentiate between regular navigations and form submissions:
 
@@ -121,30 +152,32 @@ const handleNavigate = (event: NavigateEvent) => {
         throw new Error("...");
       }
 
+      let actionResult: unknown = undefined;
+
       if (isFormSubmission) {
         // Find the deepest matched route with an action
         const actionRoute = findActionRoute(matched);
         if (actionRoute) {
           const actionRequest = createActionRequest(url, event.formData!);
-          const actionResult = await actionRoute.route.action({
+          actionResult = await actionRoute.route.action({
             params: actionRoute.params,
             request: actionRequest,
             signal: event.signal,
           });
-          // Store action result (see Section 6)
-          storeActionResult(currentEntry.id, actionResult);
         }
         // Revalidate loaders after action
         clearLoaderCacheForEntry(currentEntry.id);
       }
 
       // Execute loaders (either fresh run or from cache)
+      // actionResult is passed through so loaders can incorporate it
       const request = createLoaderRequest(url);
       const results = executeLoaders(
         matched,
         currentEntry.id,
         request,
         event.signal,
+        actionResult,
       );
       await Promise.all(results.map((r) => r.data));
     },
@@ -152,7 +185,35 @@ const handleNavigate = (event: NavigateEvent) => {
 };
 ```
 
-### 5. Route Definition Types
+### 6. Loader Cache Changes
+
+The `executeLoaders` function needs to pass `actionResult` through to loaders:
+
+```typescript
+export function executeLoaders(
+  matchedRoutes: MatchedRoute[],
+  entryId: string,
+  request: Request,
+  signal: AbortSignal,
+  actionResult?: unknown,
+): MatchedRouteWithData[] {
+  return matchedRoutes.map((match, index) => {
+    const { route, params } = match;
+    const args: LoaderArgs<Record<string, string>> = {
+      params,
+      request,
+      signal,
+      actionResult,
+    };
+    const data = getOrCreateLoaderResult(entryId, index, route, args);
+    return { ...match, data };
+  });
+}
+```
+
+Since loader results are cached by entry ID and the cache is cleared after an action (`clearLoaderCacheForEntry`), the loader will always re-execute after an action and receive the `actionResult`. On subsequent renders from cache, the loader is not re-executed, so `actionResult` is irrelevant — the cached result already incorporates it.
+
+### 7. Route Definition Types
 
 #### Internal Route Definition Extension
 
@@ -170,26 +231,39 @@ export type InternalRouteDefinition = {
 New route definition types that include action:
 
 ```typescript
-type RouteWithAction<
+type RouteWithActionAndLoader<
   TPath extends string,
-  TActionData,
+  TActionResult,
   TData,
   TState,
   TId extends string | undefined = undefined,
 > = {
   id?: TId;
   path: TPath;
-  action: (args: ActionArgs<PathParams<TPath>>) => TActionData;
-  loader?: (args: LoaderArgs<PathParams<TPath>>) => TData;
+  action: (args: ActionArgs<PathParams<TPath>>) => TActionResult;
+  loader: (
+    args: LoaderArgs<PathParams<TPath>, Awaited<TActionResult>>,
+  ) => TData;
   component:
     | ComponentType<
-        RouteComponentPropsWithAction<
-          PathParams<TPath>,
-          TActionData,
-          TData,
-          TState
-        >
+        RouteComponentPropsWithData<PathParams<TPath>, TData, TState>
       >
+    | ReactNode;
+  children?: RouteDefinition[];
+  exact?: boolean;
+  requireChildren?: boolean;
+};
+
+type RouteWithActionOnly<
+  TPath extends string,
+  TState,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path: TPath;
+  action: (args: ActionArgs<PathParams<TPath>>) => unknown;
+  component?:
+    | ComponentType<RouteComponentProps<PathParams<TPath>, TState>>
     | ReactNode;
   children?: RouteDefinition[];
   exact?: boolean;
@@ -197,118 +271,9 @@ type RouteWithAction<
 };
 ```
 
-#### TypefulOpaqueRouteDefinition Extension
+Note: `TypefulOpaqueRouteDefinition` does **not** need an `ActionData` type parameter. The action result type is captured in the loader's `actionResult` parameter and flows into the loader's return type (`Data`). The component only sees `data`, which already has full type information.
 
-Add an `ActionData` type parameter:
-
-```typescript
-export interface TypefulOpaqueRouteDefinition<
-  Id extends string,
-  Params extends Record<string, string>,
-  State,
-  Data,
-  ActionData = undefined,
-> {
-  [routeDefinitionSymbol]: {
-    id: Id;
-    params: Params;
-    state: State;
-    data: Data;
-    actionData: ActionData;
-  };
-  // ... existing fields ...
-}
-```
-
-Note: the new `ActionData` type parameter defaults to `undefined`, so this is backwards compatible with existing route definitions.
-
-### 6. Action Result Storage
-
-Unlike loader data which is cached per history entry, action results are **ephemeral** — they exist for the current render cycle after a form submission and are cleared on the next navigation.
-
-#### Approach: Ephemeral action result store
-
-```typescript
-// Simple in-memory store, not tied to history entries
-let currentActionResult: { entryId: string; data: unknown } | null = null;
-
-function storeActionResult(entryId: string, data: unknown): void {
-  currentActionResult = { entryId, data };
-}
-
-function getActionResult(entryId: string): unknown | undefined {
-  if (currentActionResult?.entryId === entryId) {
-    return currentActionResult.data;
-  }
-  return undefined;
-}
-
-function clearActionResult(): void {
-  currentActionResult = null;
-}
-```
-
-Action results are cleared when the user navigates away from the page (i.e., on the next non-form-submission navigation). This prevents stale action data from appearing when the user navigates back.
-
-### 7. Component Props
-
-A new props interface extends the existing ones with `actionData`:
-
-```typescript
-export interface RouteComponentPropsWithAction<
-  TParams extends Record<string, string>,
-  TActionData,
-  TData,
-  TState = undefined,
-> extends RouteComponentPropsWithData<TParams, TData, TState> {
-  /** Data returned from the action (undefined if no form was submitted) */
-  actionData: TActionData | undefined;
-}
-```
-
-When no action has been submitted, `actionData` is `undefined`. After a form submission, it contains the action's return value.
-
-### 8. Hooks
-
-#### `useActionData`
-
-A type-safe hook for accessing action data, following the same pattern as `useRouteData`:
-
-```typescript
-export function useActionData<
-  T extends TypefulOpaqueRouteDefinition<
-    string,
-    Record<string, string>,
-    unknown,
-    unknown,
-    unknown
-  >,
->(route: T): ExtractRouteActionData<T> | undefined {
-  // Look up route context by id, return action data
-}
-```
-
-Usage:
-
-```typescript
-const createUserRoute = route({
-  id: "createUser",
-  path: "users/new",
-  action: async ({ request }) => {
-    const formData = await request.formData();
-    return createUser(formData);
-  },
-  component: CreateUserPage,
-});
-
-// In a component:
-function CreateUserPage() {
-  const actionData = useActionData(createUserRoute);
-  // actionData is typed as the return type of the action, or undefined
-}
-```
-
-### 9. Handling Routes Without Actions
+### 8. Handling Routes Without Actions
 
 When a POST form submission matches a route that has no `action` defined, the router has two reasonable options:
 
@@ -333,7 +298,7 @@ Intercept as a normal navigation (current behavior). The form data is lost, but 
 
 Option A is recommended because it avoids silently discarding form data.
 
-### 10. GET Form Submissions
+### 9. GET Form Submissions
 
 GET form submissions encode data in the URL query string. The Navigation API does **not** set `event.formData` for GET submissions — they are indistinguishable from normal navigations at the API level.
 
@@ -341,7 +306,7 @@ The router already handles these correctly: it intercepts the navigation, matche
 
 No special handling is needed for GET form submissions.
 
-### 11. Action Target Resolution
+### 10. Action Target Resolution
 
 When a form is submitted, which route's action should execute? The rule:
 
@@ -370,7 +335,7 @@ function findActionRoute(matched: MatchedRoute[]): MatchedRoute | undefined {
 }
 ```
 
-### 12. `onNavigate` Callback Extension
+### 11. `onNavigate` Callback Extension
 
 The existing `OnNavigateInfo` type should be extended to indicate form submissions:
 
@@ -407,9 +372,9 @@ The Navigation API does **not** store or replay form data in the history. When t
 This means:
 
 - Back/forward to a "post result" page runs **loaders only** — the action is never re-executed
-- The ephemeral action result from the original submission is also gone (cleared on the next navigation)
+- The loader receives `actionResult: undefined` on traversals, just like on normal GET navigations
 - This naturally avoids the "resubmit form?" problem that plagues traditional MPAs
-- If a component needs to display action results after a traversal, the action should have persisted that data server-side, and the loader should fetch it
+- If a component needs to display action-related data after a traversal, the loader should fetch it from the server (where the action persisted it)
 
 No special handling is needed — `formData: null` on traversals means the existing loader-only code path runs.
 
@@ -419,7 +384,7 @@ When an action throws, the error should be surfaced to the component rather than
 
 1. **Let it propagate**: The error propagates through the `event.intercept()` handler, and the navigation fails. The browser stays on the current page. This is the simplest approach but gives the component no chance to render error UI.
 
-2. **Catch and store as action result**: Catch the error, store it as the action result, and let the component decide how to render it. This requires a convention for distinguishing success from error in `actionData`.
+2. **Catch and pass to loader**: Catch the error and pass it as `actionResult` so the loader can incorporate error information into its return value.
 
 **Recommendation**: Start with approach 1 (let errors propagate). Add error boundaries or a structured error mechanism in a future iteration. The `onNavigate` callback provides an escape hatch for custom error handling.
 
@@ -436,7 +401,7 @@ action: async ({ request, params, signal }) => {
 };
 ```
 
-Whether to support a `redirect()` helper as a first-class concept is deferred to implementation. The user can always call `navigate()` after the action completes, or handle it in the component based on `actionData`.
+Whether to support a `redirect()` helper as a first-class concept is deferred to implementation. The user can always call `navigate()` after the action completes, or handle the redirect in the loader based on `actionResult`.
 
 ### Action Caching
 
@@ -448,13 +413,17 @@ After an action completes, which loaders should revalidate?
 
 **Option A (Recommended): Revalidate all matched route loaders**
 
-Clear the loader cache for the current entry and re-execute all loaders in the matched route stack. This is simple and safe.
+Clear the loader cache for the current entry and re-execute all loaders in the matched route stack. This is simple and safe. All loaders receive the same `actionResult` — loaders that don't care about it simply ignore the parameter.
 
 **Option B: Selective revalidation**
 
 Allow actions to declare which routes need revalidation. This is more efficient but adds complexity.
 
 Start with Option A. Selective revalidation can be added later as an optimization.
+
+### Routes with Action but No Loader
+
+A route can define an `action` without a `loader`. In this case, the action executes as a pure side effect (e.g., sending data to a server). The action result has nowhere to flow, and that's fine — the component doesn't need to see it. The action's purpose is the server-side mutation, and subsequent navigations will pick up the changed data through their own loaders.
 
 ### StaticAdapter and NullAdapter
 
@@ -475,34 +444,38 @@ If a user submits a form while a previous action is still in progress, the Navig
 
 ### SSR
 
-Actions are a client-side concept in this router. During SSR (when `pathname === null`), no action execution occurs. The `actionData` prop is always `undefined` during SSR.
+Actions are a client-side concept in this router. During SSR (when `pathname === null`), no action execution occurs. Loaders always receive `actionResult: undefined` during SSR.
 
 ## API Summary
 
 ### Route Definition
 
 ```typescript
-// Route with action only
-route({
-  id: "createUser",
-  path: "users/new",
-  action: async ({ request, params, signal }) => {
-    const formData = await request.formData();
-    return createUser(formData, signal);
-  },
-  component: CreateUserPage,
-});
-
-// Route with both loader and action
+// Route with action and loader — action result flows to loader
 route({
   id: "editUser",
   path: "users/:userId/edit",
-  loader: async ({ params, signal }) => fetchUser(params.userId, signal),
   action: async ({ request, params, signal }) => {
     const formData = await request.formData();
     return updateUser(params.userId, formData, signal);
   },
+  loader: async ({ params, signal, actionResult }) => {
+    const user = await fetchUser(params.userId, signal);
+    return {
+      user,
+      updateResult: actionResult ?? null,
+    };
+  },
   component: EditUserPage,
+});
+
+// Route with action only — pure side effect, no data for component
+route({
+  path: "users/:userId/delete",
+  action: async ({ request, params, signal }) => {
+    await deleteUser(params.userId, signal);
+  },
+  component: DeleteConfirmation,
 });
 ```
 
@@ -510,15 +483,16 @@ route({
 
 ```typescript
 function EditUserPage({
-  data,       // from loader
-  actionData, // from action (undefined until form is submitted)
+  data,   // { user, updateResult } — from loader, includes action result
   params,
   isPending,
 }: RouteComponentPropsOf<typeof editUserRoute>) {
   return (
     <form method="post">
-      {actionData?.error && <p className="error">{actionData.error}</p>}
-      <input name="name" defaultValue={data.name} />
+      {data.updateResult?.error && (
+        <p className="error">{data.updateResult.error}</p>
+      )}
+      <input name="name" defaultValue={data.user.name} />
       <button type="submit" disabled={isPending}>
         {isPending ? "Saving..." : "Save"}
       </button>
@@ -527,33 +501,26 @@ function EditUserPage({
 }
 ```
 
-### Hooks
-
-```typescript
-// Type-safe action data access
-const actionData = useActionData(editUserRoute);
-```
-
 ## Migration Path
 
 This is an additive, non-breaking change:
 
 1. Existing routes without `action` continue to work identically
-2. POST form submissions to routes without `action` are no longer intercepted (behavior change, but the previous behavior was silently discarding form data, which was a bug)
-3. New routes can opt into action handling by adding an `action` field
-4. Native `<form>` elements work out of the box — no wrapper component needed
+2. Existing loaders receive `actionResult: undefined` — no behavior change since the parameter is optional
+3. POST form submissions to routes without `action` are no longer intercepted (behavior change, but the previous behavior was silently discarding form data, which was a bug)
+4. New routes can opt into action handling by adding an `action` field
+5. Native `<form>` elements work out of the box — no wrapper component needed
 
 ## Implementation Order
 
 1. **`ActionArgs` type and `createActionRequest` helper** — foundation types
-2. **`InternalRouteDefinition` and route definition types** — add `action` field
-3. **`route()` helper overloads** — new overloads for routes with action
-4. **`NavigationAPIAdapter.setupInterception()`** — detect `formData`, execute action, revalidate loaders
-5. **Action result storage** — ephemeral store for action results
-6. **Component props injection** — pass `actionData` to components
-7. **`useActionData` hook** — type-safe hook
-8. **Tests** — action execution, revalidation, error handling, concurrent submissions
-9. **`onNavigate` info extension** — add `formData` to `OnNavigateInfo`
+2. **`LoaderArgs` extension** — add optional `actionResult` parameter
+3. **`InternalRouteDefinition` and route definition types** — add `action` field
+4. **`route()` helper overloads** — new overloads for routes with action
+5. **`executeLoaders` and `loaderCache`** — pass `actionResult` through to loaders
+6. **`NavigationAPIAdapter.setupInterception()`** — detect `formData`, execute action, revalidate loaders
+7. **Tests** — action execution, revalidation, actionResult in loaders, error handling, concurrent submissions
+8. **`onNavigate` info extension** — add `formData` to `OnNavigateInfo`
 
 ## References
 
