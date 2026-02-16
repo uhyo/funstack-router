@@ -8,10 +8,12 @@
     "test": "turbo run test",
     "test:run": "turbo run test:run",
     "typecheck": "turbo run typecheck",
+    "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "oxlint": "^1.48.0",
     "prettier": "^3.8.1",
     "turbo": "^2.8.6"
   },

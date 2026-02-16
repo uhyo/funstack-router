@@ -4,7 +4,7 @@ import { Router } from "../Router.js";
 import { Outlet } from "../Outlet.js";
 import { route, type LoaderArgs } from "../route.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
-import { internalRoutes, type InternalRouteDefinition } from "../types.js";
+import { internalRoutes } from "../types.js";
 import { clearLoaderCache } from "../core/loaderCache.js";
 
 describe("Data Loader", () => {
@@ -500,7 +500,7 @@ describe("Data Loader", () => {
         }),
       ];
 
-      const { rerender } = render(<Router routes={routes} />);
+      const { rerender: _rerender } = render(<Router routes={routes} />);
       expect(loaderSpy).toHaveBeenCalledTimes(1);
 
       // Navigate to page2

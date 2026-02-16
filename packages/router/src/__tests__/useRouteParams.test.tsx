@@ -59,7 +59,7 @@ describe("useRouteParams", () => {
   });
 
   it("throws when route ID does not match", () => {
-    const userRoute = route({
+    const _userRoute = route({
       id: "user",
       path: "/users/:userId",
       component: () => null,
@@ -145,7 +145,7 @@ describe("useRouteState", () => {
 
   it("throws when route ID does not match", () => {
     type CounterState = { count: number };
-    const counterRoute = routeState<CounterState>()({
+    const _counterRoute = routeState<CounterState>()({
       id: "counter",
       path: "/counter",
       component: () => null,
@@ -236,7 +236,7 @@ describe("useRouteData", () => {
   });
 
   it("throws when route ID does not match", () => {
-    const userRoute = route({
+    const _userRoute = route({
       id: "user",
       path: "/users/:userId",
       loader: () => ({ name: "John" }),

@@ -40,7 +40,7 @@ export class StaticAdapter implements RouterAdapter {
     return () => {};
   }
 
-  navigate(to: string, _options?: NavigateOptions): void {
+  navigate(_to: string, _options?: NavigateOptions): void {
     console.warn(
       "FUNSTACK Router: navigate() called in static fallback mode. " +
         "Navigation API is not available in this browser. " +
