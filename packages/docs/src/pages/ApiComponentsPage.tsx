@@ -55,6 +55,40 @@ export function ApiComponentsPage() {
                 the router will intercept the navigation.
               </td>
             </tr>
+            <tr>
+              <td>
+                <code>fallback</code>
+              </td>
+              <td>
+                <code>{'"none" | "static"'}</code>
+              </td>
+              <td>
+                Fallback mode when Navigation API is unavailable.{" "}
+                <code>"none"</code> (default) renders nothing;{" "}
+                <code>"static"</code> renders matched routes using{" "}
+                <code>window.location</code> without navigation interception
+                (MPA behavior).
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <code>ssrPathname</code>
+              </td>
+              <td>
+                <code>string</code>
+              </td>
+              <td>
+                Pathname to use for route matching during SSR. When provided,
+                path-based routes match against this pathname on the server.
+                Routes with loaders are always skipped during SSR. Once the
+                client hydrates, the real URL from the Navigation API takes
+                over. See the{" "}
+                <a href="/funstack-router/learn/server-side-rendering">
+                  SSR guide
+                </a>{" "}
+                for details.
+              </td>
+            </tr>
           </tbody>
         </table>
       </article>

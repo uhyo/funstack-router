@@ -252,6 +252,22 @@ export default function App() {
           components. The route definitions are constructed on the server and
           passed into <code>Router</code>, which acts as the client boundary.
         </p>
+        <p>
+          If the server knows the requested pathname, you can pass it via the{" "}
+          <code>ssrPathname</code> prop so that path-based routes render during
+          SSR (see the{" "}
+          <a href="/funstack-router/learn/server-side-rendering">SSR guide</a>{" "}
+          for details):
+        </p>
+        <CodeBlock language="tsx">{`export default function App({ pathname }: { pathname: string }) {
+  return (
+    <Router
+      routes={routes}
+      fallback="static"
+      ssrPathname={pathname}
+    />
+  );
+}`}</CodeBlock>
       </section>
 
       <section>
