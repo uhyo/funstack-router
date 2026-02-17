@@ -249,3 +249,132 @@ describe("Fallback Mode", () => {
     });
   });
 });
+
+describe("ssrPathname", () => {
+  beforeEach(() => {
+    // Ensure Navigation API is not available for SSR tests
+    delete (globalThis as Record<string, unknown>).navigation;
+    clearLoaderCache();
+  });
+
+  afterEach(() => {
+    delete (globalThis as Record<string, unknown>).navigation;
+  });
+
+  it("matches path-based routes during SSR when ssrPathname is provided", () => {
+    const routes: RouteDefinition[] = [
+      { path: "/", component: () => <div>Home Page</div> },
+      { path: "/about", component: () => <div>About Page</div> },
+    ];
+
+    render(<Router routes={routes} ssrPathname="/about" />);
+    expect(screen.getByText("About Page")).toBeInTheDocument();
+  });
+
+  it("matches root route with ssrPathname='/'", () => {
+    const routes: RouteDefinition[] = [
+      { path: "/", component: () => <div>Home Page</div> },
+      { path: "/about", component: () => <div>About Page</div> },
+    ];
+
+    render(<Router routes={routes} ssrPathname="/" />);
+    expect(screen.getByText("Home Page")).toBeInTheDocument();
+  });
+
+  it("renders nothing when ssrPathname does not match any route", () => {
+    const routes: RouteDefinition[] = [
+      { path: "/", component: () => <div>Home Page</div> },
+    ];
+
+    const { container } = render(
+      <Router routes={routes} ssrPathname="/nonexistent" />,
+    );
+    expect(container.textContent).toBe("");
+  });
+
+  it("extracts route params from ssrPathname", () => {
+    const routes = [
+      route({
+        path: "/users/:id",
+        component: ({ params }) => <div>User {params.id}</div>,
+      }),
+    ];
+
+    render(<Router routes={routes} ssrPathname="/users/42" />);
+    expect(screen.getByText("User 42")).toBeInTheDocument();
+  });
+
+  it("matches nested routes with ssrPathname", () => {
+    function Layout() {
+      return (
+        <div>
+          <header>Layout</header>
+          <Outlet />
+        </div>
+      );
+    }
+
+    const routes: RouteDefinition[] = [
+      {
+        path: "/",
+        component: Layout,
+        children: [
+          { path: "", component: () => <div>Home</div> },
+          { path: "about", component: () => <div>About</div> },
+        ],
+      },
+    ];
+
+    render(<Router routes={routes} ssrPathname="/about" />);
+    expect(screen.getByText("Layout")).toBeInTheDocument();
+    expect(screen.getByText("About")).toBeInTheDocument();
+  });
+
+  it("does not execute loaders during SSR even with ssrPathname", () => {
+    const loader = vi.fn(() => ({ message: "loaded" }));
+
+    function MyComponent({ data }: { data: { message: string } }) {
+      return <div>{data?.message ?? "no data"}</div>;
+    }
+
+    const routes = [
+      route({
+        path: "/about",
+        loader,
+        component: MyComponent,
+      }),
+    ];
+
+    render(<Router routes={routes} ssrPathname="/about" />);
+    expect(loader).not.toHaveBeenCalled();
+  });
+
+  it("falls back to pathless-only matching when ssrPathname is not provided", () => {
+    const routes: RouteDefinition[] = [
+      { path: "/about", component: () => <div>About Page</div> },
+    ];
+
+    const { container } = render(<Router routes={routes} />);
+    expect(container.textContent).toBe("");
+  });
+
+  it("pathless route wrapping path-based children works with ssrPathname", () => {
+    const routes: RouteDefinition[] = [
+      {
+        component: () => (
+          <div>
+            Shell <Outlet />
+          </div>
+        ),
+        children: [
+          { path: "/about", component: () => <span>About</span> },
+          { path: "/contact", component: () => <span>Contact</span> },
+        ],
+      },
+    ];
+
+    render(<Router routes={routes} ssrPathname="/contact" />);
+    expect(screen.getByText(/Shell/)).toBeInTheDocument();
+    expect(screen.getByText("Contact")).toBeInTheDocument();
+  });
+});

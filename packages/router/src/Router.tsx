@@ -45,6 +45,23 @@ export type RouterProps = {
    * - `"static"`: Render matched routes without navigation capabilities (MPA behavior)
    */
   fallback?: FallbackMode;
+  /**
+   * Pathname to use for route matching during SSR.
+   *
+   * By default, during SSR only pathless routes match. When this prop is provided,
+   * the router uses this pathname to match path-based routes during SSR as well.
+   * Loaders are not executed during SSR regardless of this setting.
+   *
+   * This prop is only used when the location entry is not available (during SSR
+   * or hydration). Once the client hydrates, the real URL from the Navigation API
+   * takes over.
+   *
+   * @example
+   * ```tsx
+   * <Router routes={routes} ssrPathname="/about" />
+   * ```
+   */
+  ssrPathname?: string;
 };
 
 /**
@@ -60,6 +77,7 @@ export function Router({
   routes: inputRoutes,
   onNavigate,
   fallback = "none",
+  ssrPathname,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
@@ -150,8 +168,10 @@ export function Router({
     // Match routes and execute loaders
     const matchedRoutesWithData = (() => {
       if (locationEntry === null) {
-        // SSR/hydration: match only pathless routes, skip loaders
-        const matched = matchRoutes(routes, null);
+        // SSR/hydration: match routes without executing loaders.
+        // When ssrPathname is provided, path-based routes can match;
+        // otherwise only pathless routes match (null pathname).
+        const matched = matchRoutes(routes, ssrPathname ?? null);
         if (!matched) return null;
         return matched.map((m) => ({ ...m, data: undefined }));
       }
@@ -195,6 +215,7 @@ export function Router({
     routes,
     adapter,
     blockerRegistry,
+    ssrPathname,
   ]);
 }
 
