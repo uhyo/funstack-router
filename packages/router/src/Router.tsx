@@ -171,7 +171,10 @@ export function Router({
         // SSR/hydration: match routes without executing loaders.
         // When ssrPathname is provided, path-based routes can match;
         // otherwise only pathless routes match (null pathname).
-        const matched = matchRoutes(routes, ssrPathname ?? null);
+        // Routes with loaders are always skipped during SSR.
+        const matched = matchRoutes(routes, ssrPathname ?? null, {
+          skipLoaders: ssrPathname !== undefined,
+        });
         if (!matched) return null;
         return matched.map((m) => ({ ...m, data: undefined }));
       }

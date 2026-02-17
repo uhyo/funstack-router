@@ -581,4 +581,140 @@ describe("matchRoutes", () => {
       expect(result![0].route.loader).toBeDefined();
     });
   });
+
+  describe("skipLoaders option", () => {
+    it("skips path-based route with loader when skipLoaders is true", () => {
+      const routes = [
+        {
+          path: "/about",
+          component: () => null,
+          loader: () => "data",
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      expect(matchRoutes(routes, "/about", { skipLoaders: true })).toBeNull();
+    });
+
+    it("matches path-based route without loader when skipLoaders is true", () => {
+      const routes = internalRoutes([
+        { path: "/about", component: () => null },
+      ]);
+
+      const result = matchRoutes(routes, "/about", { skipLoaders: true });
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBe("/about");
+    });
+
+    it("skips pathless route with loader when skipLoaders is true", () => {
+      const routes = [
+        {
+          component: () => null,
+          loader: () => "data",
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      expect(matchRoutes(routes, "/about", { skipLoaders: true })).toBeNull();
+    });
+
+    it("skips route with loader and falls back to sibling", () => {
+      const routes = [
+        {
+          path: "/about",
+          component: () => null,
+          loader: () => "data",
+        },
+        {
+          path: "/*",
+          component: () => null,
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      const result = matchRoutes(routes, "/about", { skipLoaders: true });
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBe("/*");
+    });
+
+    it("skips child route with loader, parent renders as shell", () => {
+      const routes = [
+        {
+          path: "/",
+          component: () => null,
+          children: [
+            {
+              path: "dashboard",
+              component: () => null,
+              loader: () => "data",
+            },
+          ],
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      const result = matchRoutes(routes, "/dashboard", { skipLoaders: true });
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBe("/");
+    });
+
+    it("pathless wrapper with path-based children skips children with loaders", () => {
+      const routes = [
+        {
+          component: () => null,
+          children: [
+            {
+              path: "/about",
+              component: () => null,
+              loader: () => "data",
+            },
+          ],
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      // Pathless route matches alone as SSR shell since child with loader is skipped
+      const result = matchRoutes(routes, "/about", { skipLoaders: true });
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBeUndefined();
+    });
+
+    it("does not affect matching when skipLoaders is false", () => {
+      const routes = [
+        {
+          path: "/about",
+          component: () => null,
+          loader: () => "data",
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      const result = matchRoutes(routes, "/about", { skipLoaders: false });
+      expect(result).toHaveLength(1);
+    });
+
+    it("extracts params from path-based routes without loaders", () => {
+      const routes = internalRoutes([
+        { path: "/users/:id", component: () => null },
+      ]);
+
+      const result = matchRoutes(routes, "/users/42", { skipLoaders: true });
+      expect(result).toHaveLength(1);
+      expect(result![0].params).toEqual({ id: "42" });
+    });
+
+    it("matches nested routes where only leaf has no loader", () => {
+      const routes = [
+        {
+          path: "/",
+          component: () => null,
+          children: [
+            {
+              path: "users",
+              component: () => null,
+              children: [{ path: ":id", component: () => null }],
+            },
+          ],
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      const result = matchRoutes(routes, "/users/42", { skipLoaders: true });
+      expect(result).toHaveLength(3);
+      expect(result![2].params).toEqual({ id: "42" });
+    });
+  });
 });

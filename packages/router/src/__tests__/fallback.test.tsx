@@ -330,7 +330,7 @@ describe("ssrPathname", () => {
     expect(screen.getByText("About")).toBeInTheDocument();
   });
 
-  it("does not execute loaders during SSR even with ssrPathname", () => {
+  it("does not match routes with loaders during SSR with ssrPathname", () => {
     const loader = vi.fn(() => ({ message: "loaded" }));
 
     function MyComponent({ data }: { data: { message: string } }) {
@@ -345,8 +345,56 @@ describe("ssrPathname", () => {
       }),
     ];
 
-    render(<Router routes={routes} ssrPathname="/about" />);
+    const { container } = render(
+      <Router routes={routes} ssrPathname="/about" />,
+    );
     expect(loader).not.toHaveBeenCalled();
+    expect(container.textContent).toBe("");
+  });
+
+  it("skips route with loader and matches sibling without loader", () => {
+    const routes: RouteDefinition[] = [
+      {
+        path: "/about",
+        component: () => <div>About with loader</div>,
+        // Using cast to add loader since RouteDefinition union doesn't expose it directly
+      },
+      { path: "/*", component: () => <div>Catch All</div> },
+    ];
+
+    // Manually add loader to first route to test skipping
+    (routes[0] as Record<string, unknown>).loader = () => "data";
+
+    render(<Router routes={routes} ssrPathname="/about" />);
+    expect(screen.getByText("Catch All")).toBeInTheDocument();
+  });
+
+  it("renders parent shell when all children have loaders", () => {
+    function Layout() {
+      return (
+        <div>
+          <header>Shell</header>
+          <Outlet />
+        </div>
+      );
+    }
+
+    const childRoute = {
+      path: "dashboard",
+      component: () => <div>Dashboard</div>,
+    };
+    (childRoute as Record<string, unknown>).loader = () => "data";
+
+    const routes: RouteDefinition[] = [
+      {
+        path: "/",
+        component: Layout,
+        children: [childRoute],
+      },
+    ];
+
+    render(<Router routes={routes} ssrPathname="/dashboard" />);
+    expect(screen.getByText("Shell")).toBeInTheDocument();
   });
 
   it("falls back to pathless-only matching when ssrPathname is not provided", () => {

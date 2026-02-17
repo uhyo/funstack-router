@@ -1,5 +1,13 @@
 import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
 
+export type MatchRoutesOptions = {
+  /**
+   * When true, routes with loaders are skipped during matching.
+   * Used during SSR where loaders cannot be executed.
+   */
+  skipLoaders?: boolean;
+};
+
 /**
  * Match a pathname against a route tree, returning the matched route stack.
  * Returns null if no match is found.
@@ -7,9 +15,10 @@ import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
 export function matchRoutes(
   routes: InternalRouteDefinition[],
   pathname: string | null,
+  options?: MatchRoutesOptions,
 ): MatchedRoute[] | null {
   for (const route of routes) {
-    const matched = matchRoute(route, pathname);
+    const matched = matchRoute(route, pathname, options);
     if (matched) {
       return matched;
     }
@@ -23,15 +32,18 @@ export function matchRoutes(
 function matchRoute(
   route: InternalRouteDefinition,
   pathname: string | null,
+  options?: MatchRoutesOptions,
 ): MatchedRoute[] | null {
   const hasChildren = Boolean(route.children?.length);
+  const skipLoaders = options?.skipLoaders ?? false;
+
+  // Routes with loaders can't render during SSR (no request context)
+  if ((pathname === null || skipLoaders) && route.loader) {
+    return null;
+  }
 
   // Handle pathless routes - always match, consume nothing
   if (route.path === undefined) {
-    // Pathless routes with loaders can't render during SSR (no request context)
-    if (pathname === null && route.loader) {
-      return null;
-    }
     const result: MatchedRoute = {
       route,
       params: {},
@@ -40,7 +52,7 @@ function matchRoute(
 
     if (hasChildren) {
       for (const child of route.children!) {
-        const childMatch = matchRoute(child, pathname);
+        const childMatch = matchRoute(child, pathname, options);
         if (childMatch) {
           return [result, ...childMatch];
         }
@@ -49,8 +61,8 @@ function matchRoute(
       if (route.component && route.requireChildren === false) {
         return [result];
       }
-      // When pathname is null, pathless route with component matches alone (SSR shell)
-      if (pathname === null && route.component) {
+      // During SSR, pathless route with component matches alone (SSR shell)
+      if ((pathname === null || skipLoaders) && route.component) {
         return [result];
       }
       return null;
@@ -94,7 +106,7 @@ function matchRoute(
     }
 
     for (const child of route.children!) {
-      const childMatch = matchRoute(child, remainingPathname);
+      const childMatch = matchRoute(child, remainingPathname, options);
       if (childMatch) {
         // Merge params from parent into children
         return [
@@ -109,6 +121,11 @@ function matchRoute(
 
     // If no children matched - only valid if requireChildren is false and route has a component
     if (route.component && route.requireChildren === false) {
+      return [result];
+    }
+
+    // During SSR, path-based route with component matches alone (SSR shell)
+    if (skipLoaders && route.component) {
       return [result];
     }
 
