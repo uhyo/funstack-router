@@ -173,7 +173,7 @@ export function Router({
         // otherwise only pathless routes match (null pathname).
         // Routes with loaders are always skipped during SSR.
         const matched = matchRoutes(routes, ssrPathname ?? null, {
-          skipLoaders: ssrPathname !== undefined,
+          skipLoaders: true,
         });
         if (!matched) return null;
         return matched.map((m) => ({ ...m, data: undefined }));
