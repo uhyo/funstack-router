@@ -12,32 +12,7 @@ export default function Root({ children }: { children: ReactNode }) {
           content="Modern React router built on the Navigation API"
         />
       </head>
-      <body>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-// GitHub Pages SPA redirect hack - restore URL from query params
-// See: https://github.com/rafgraph/spa-github-pages
-(function (l) {
-  if (l.search[1] === "p") {
-    var decoded = decodeURIComponent(l.search.slice(3))
-      .split("&")
-      .map(function (s) {
-        return s.replace(/~and~/g, "&");
-      })
-      .join("?");
-    window.history.replaceState(
-      null,
-      "",
-      l.pathname.slice(0, -1) + "/" + decoded + l.hash,
-    );
-  }
-})(window.location);
-`,
-          }}
-        />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
