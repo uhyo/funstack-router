@@ -72,17 +72,19 @@ export function ApiComponentsPage() {
             </tr>
             <tr>
               <td>
-                <code>ssrPathname</code>
+                <code>ssr</code>
               </td>
               <td>
-                <code>string</code>
+                <code>SSRConfig</code>
               </td>
               <td>
-                Pathname to use for route matching during SSR. When provided,
-                path-based routes match against this pathname on the server.
-                Routes with loaders are always skipped during SSR. Once the
-                client hydrates, the real URL from the Navigation API takes
-                over. See the{" "}
+                SSR configuration for route matching during server-side
+                rendering. Accepts an object with <code>path</code> (the
+                pathname to match against) and an optional{" "}
+                <code>runLoaders</code> boolean (defaults to <code>false</code>
+                ). When <code>runLoaders</code> is <code>false</code>, routes
+                with loaders are skipped during SSR. Once the client hydrates,
+                the real URL from the Navigation API takes over. See the{" "}
                 <a href="/learn/server-side-rendering">SSR guide</a> for
                 details.
               </td>

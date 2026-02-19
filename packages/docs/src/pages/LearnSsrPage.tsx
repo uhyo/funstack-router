@@ -150,8 +150,8 @@ function HomePage() {
         <h3>Static Site Generation</h3>
         <p>
           If your server or static site generator knows the URL being rendered,
-          you can use the <code>ssrPathname</code> prop to match path-based
-          routes during SSR for richer server-rendered output. See the{" "}
+          you can use the <code>ssr</code> prop to match path-based routes
+          during SSR for richer server-rendered output. See the{" "}
           <a href="/learn/static-site-generation">Static Site Generation</a>{" "}
           guide for details.
         </p>

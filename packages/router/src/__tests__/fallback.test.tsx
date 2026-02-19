@@ -250,7 +250,7 @@ describe("Fallback Mode", () => {
   });
 });
 
-describe("ssrPathname", () => {
+describe("ssr", () => {
   beforeEach(() => {
     // Ensure Navigation API is not available for SSR tests
     delete (globalThis as Record<string, unknown>).navigation;
@@ -261,38 +261,38 @@ describe("ssrPathname", () => {
     delete (globalThis as Record<string, unknown>).navigation;
   });
 
-  it("matches path-based routes during SSR when ssrPathname is provided", () => {
+  it("matches path-based routes during SSR when ssr.path is provided", () => {
     const routes: RouteDefinition[] = [
       { path: "/", component: () => <div>Home Page</div> },
       { path: "/about", component: () => <div>About Page</div> },
     ];
 
-    render(<Router routes={routes} ssrPathname="/about" />);
+    render(<Router routes={routes} ssr={{ path: "/about" }} />);
     expect(screen.getByText("About Page")).toBeInTheDocument();
   });
 
-  it("matches root route with ssrPathname='/'", () => {
+  it("matches root route with ssr.path='/'", () => {
     const routes: RouteDefinition[] = [
       { path: "/", component: () => <div>Home Page</div> },
       { path: "/about", component: () => <div>About Page</div> },
     ];
 
-    render(<Router routes={routes} ssrPathname="/" />);
+    render(<Router routes={routes} ssr={{ path: "/" }} />);
     expect(screen.getByText("Home Page")).toBeInTheDocument();
   });
 
-  it("renders nothing when ssrPathname does not match any route", () => {
+  it("renders nothing when ssr.path does not match any route", () => {
     const routes: RouteDefinition[] = [
       { path: "/", component: () => <div>Home Page</div> },
     ];
 
     const { container } = render(
-      <Router routes={routes} ssrPathname="/nonexistent" />,
+      <Router routes={routes} ssr={{ path: "/nonexistent" }} />,
     );
     expect(container.textContent).toBe("");
   });
 
-  it("extracts route params from ssrPathname", () => {
+  it("extracts route params from ssr.path", () => {
     const routes = [
       route({
         path: "/users/:id",
@@ -300,11 +300,11 @@ describe("ssrPathname", () => {
       }),
     ];
 
-    render(<Router routes={routes} ssrPathname="/users/42" />);
+    render(<Router routes={routes} ssr={{ path: "/users/42" }} />);
     expect(screen.getByText("User 42")).toBeInTheDocument();
   });
 
-  it("matches nested routes with ssrPathname", () => {
+  it("matches nested routes with ssr.path", () => {
     function Layout() {
       return (
         <div>
@@ -325,12 +325,12 @@ describe("ssrPathname", () => {
       },
     ];
 
-    render(<Router routes={routes} ssrPathname="/about" />);
+    render(<Router routes={routes} ssr={{ path: "/about" }} />);
     expect(screen.getByText("Layout")).toBeInTheDocument();
     expect(screen.getByText("About")).toBeInTheDocument();
   });
 
-  it("does not match routes with loaders during SSR with ssrPathname", () => {
+  it("does not match routes with loaders during SSR by default", () => {
     const loader = vi.fn(() => ({ message: "loaded" }));
 
     function MyComponent({ data }: { data: { message: string } }) {
@@ -346,10 +346,34 @@ describe("ssrPathname", () => {
     ];
 
     const { container } = render(
-      <Router routes={routes} ssrPathname="/about" />,
+      <Router routes={routes} ssr={{ path: "/about" }} />,
     );
     expect(loader).not.toHaveBeenCalled();
     expect(container.textContent).toBe("");
+  });
+
+  it("matches routes with loaders during SSR when runLoaders is true", () => {
+    const loader = vi.fn(() => ({ message: "loaded" }));
+
+    function MyComponent({ data }: { data: { message: string } }) {
+      return <div>{data?.message ?? "no data"}</div>;
+    }
+
+    const routes = [
+      route({
+        path: "/about",
+        loader,
+        component: MyComponent,
+      }),
+    ];
+
+    render(
+      <Router routes={routes} ssr={{ path: "/about", runLoaders: true }} />,
+    );
+    // Loader is not called (no request context during SSR), but route matches
+    expect(loader).not.toHaveBeenCalled();
+    // Component renders with undefined data
+    expect(screen.getByText("no data")).toBeInTheDocument();
   });
 
   it("skips route with loader and matches sibling without loader", () => {
@@ -365,7 +389,7 @@ describe("ssrPathname", () => {
     // Manually add loader to first route to test skipping
     (routes[0] as Record<string, unknown>).loader = () => "data";
 
-    render(<Router routes={routes} ssrPathname="/about" />);
+    render(<Router routes={routes} ssr={{ path: "/about" }} />);
     expect(screen.getByText("Catch All")).toBeInTheDocument();
   });
 
@@ -393,11 +417,11 @@ describe("ssrPathname", () => {
       },
     ];
 
-    render(<Router routes={routes} ssrPathname="/dashboard" />);
+    render(<Router routes={routes} ssr={{ path: "/dashboard" }} />);
     expect(screen.getByText("Shell")).toBeInTheDocument();
   });
 
-  it("falls back to pathless-only matching when ssrPathname is not provided", () => {
+  it("falls back to pathless-only matching when ssr is not provided", () => {
     const routes: RouteDefinition[] = [
       { path: "/about", component: () => <div>About Page</div> },
     ];
@@ -406,7 +430,7 @@ describe("ssrPathname", () => {
     expect(container.textContent).toBe("");
   });
 
-  it("pathless route wrapping path-based children works with ssrPathname", () => {
+  it("pathless route wrapping path-based children works with ssr.path", () => {
     const routes: RouteDefinition[] = [
       {
         component: () => (
@@ -421,7 +445,7 @@ describe("ssrPathname", () => {
       },
     ];
 
-    render(<Router routes={routes} ssrPathname="/contact" />);
+    render(<Router routes={routes} ssr={{ path: "/contact" }} />);
     expect(screen.getByText(/Shell/)).toBeInTheDocument();
     expect(screen.getByText("Contact")).toBeInTheDocument();
   });

@@ -254,8 +254,8 @@ export default function App() {
         </p>
         <p>
           If the server knows the requested pathname, you can pass it via the{" "}
-          <code>ssrPathname</code> prop so that path-based routes render during
-          SSR (see the{" "}
+          <code>ssr</code> prop so that path-based routes render during SSR (see
+          the{" "}
           <a href="/learn/static-site-generation">
             Static Site Generation guide
           </a>{" "}
@@ -266,7 +266,7 @@ export default function App() {
     <Router
       routes={routes}
       fallback="static"
-      ssrPathname={pathname}
+      ssr={{ path: pathname }}
     />
   );
 }`}</CodeBlock>

@@ -3,7 +3,7 @@
 // FUNSTACK Router - A modern React router based on the Navigation API
 
 // Components
-export { Router, type RouterProps } from "./Router.js";
+export { Router, type RouterProps, type SSRConfig } from "./Router.js";
 export { Outlet } from "./Outlet.js";
 
 // Hooks

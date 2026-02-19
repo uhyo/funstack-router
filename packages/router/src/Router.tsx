@@ -28,6 +28,31 @@ import { createAdapter } from "./core/createAdapter.js";
 import { executeLoaders, createLoaderRequest } from "./core/loaderCache.js";
 import type { RouteDefinition } from "./route.js";
 
+/**
+ * SSR configuration for the router.
+ */
+export type SSRConfig = {
+  /**
+   * Pathname to use for route matching during SSR.
+   *
+   * The router uses this pathname to match path-based routes during SSR.
+   * Route params are extracted normally.
+   */
+  path: string;
+  /**
+   * Whether to run loaders during SSR.
+   *
+   * - When `false` or omitted, routes with loaders are skipped during SSR
+   *   and the parent route renders as a shell.
+   * - When `true`, routes with loaders are matched during SSR. The loader
+   *   results are not available during SSR, but the route's component will
+   *   render.
+   *
+   * @default false
+   */
+  runLoaders?: boolean;
+};
+
 export type RouterProps = {
   routes: RouteDefinition[];
   /**
@@ -46,11 +71,11 @@ export type RouterProps = {
    */
   fallback?: FallbackMode;
   /**
-   * Pathname to use for route matching during SSR.
+   * SSR configuration for the router.
    *
-   * By default, during SSR only pathless routes match. When this prop is provided,
-   * the router uses this pathname to match path-based routes during SSR as well.
-   * Loaders are not executed during SSR regardless of this setting.
+   * By default (no `ssr` prop), during SSR only pathless routes match.
+   * When provided, the router uses the given pathname to match path-based
+   * routes during SSR as well.
    *
    * This prop is only used when the location entry is not available (during SSR
    * or hydration). Once the client hydrates, the real URL from the Navigation API
@@ -58,10 +83,14 @@ export type RouterProps = {
    *
    * @example
    * ```tsx
-   * <Router routes={routes} ssrPathname="/about" />
+   * // SSG: match path-based routes, skip loaders
+   * <Router routes={routes} ssr={{ path: "/about" }} />
+   *
+   * // SSR with loaders: match path-based routes including those with loaders
+   * <Router routes={routes} ssr={{ path: "/about", runLoaders: true }} />
    * ```
    */
-  ssrPathname?: string;
+  ssr?: SSRConfig;
 };
 
 /**
@@ -77,7 +106,7 @@ export function Router({
   routes: inputRoutes,
   onNavigate,
   fallback = "none",
-  ssrPathname,
+  ssr,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
@@ -168,12 +197,12 @@ export function Router({
     // Match routes and execute loaders
     const matchedRoutesWithData = (() => {
       if (locationEntry === null) {
-        // SSR/hydration: match routes without executing loaders.
-        // When ssrPathname is provided, path-based routes can match;
+        // SSR/hydration: match routes based on ssr config.
+        // When ssr.path is provided, path-based routes can match;
         // otherwise only pathless routes match (null pathname).
-        // Routes with loaders are always skipped during SSR.
-        const matched = matchRoutes(routes, ssrPathname ?? null, {
-          skipLoaders: true,
+        // Routes with loaders are skipped unless ssr.runLoaders is true.
+        const matched = matchRoutes(routes, ssr?.path ?? null, {
+          skipLoaders: !ssr?.runLoaders,
         });
         if (!matched) return null;
         return matched.map((m) => ({ ...m, data: undefined }));
@@ -218,7 +247,7 @@ export function Router({
     routes,
     adapter,
     blockerRegistry,
-    ssrPathname,
+    ssr,
   ]);
 }
 

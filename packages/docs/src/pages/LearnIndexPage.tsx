@@ -60,10 +60,9 @@ export function LearnIndexPage() {
           <a href="/learn/static-site-generation">Static Site Generation</a>
         </h2>
         <p>
-          Use the <code>ssrPathname</code> prop to match path-based routes
-          during SSR for richer server-rendered output. This guide covers how to
-          pre-render pages at known paths for static site generation and
-          improved SEO.
+          Use the <code>ssr</code> prop to match path-based routes during SSR
+          for richer server-rendered output. This guide covers how to pre-render
+          pages at known paths for static site generation and improved SEO.
         </p>
       </section>
       <section className="learn-category">
