@@ -255,8 +255,11 @@ export default function App() {
         <p>
           If the server knows the requested pathname, you can pass it via the{" "}
           <code>ssrPathname</code> prop so that path-based routes render during
-          SSR (see the <a href="/learn/server-side-rendering">SSR guide</a> for
-          details):
+          SSR (see the{" "}
+          <a href="/learn/static-site-generation">
+            Static Site Generation guide
+          </a>{" "}
+          for details):
         </p>
         <CodeBlock language="tsx">{`export default function App({ pathname }: { pathname: string }) {
   return (

@@ -51,8 +51,19 @@ export function LearnIndexPage() {
         <p>
           Learn how FUNSTACK Router behaves during server-side rendering.
           Pathless routes without loaders render on the server to produce an app
-          shell. Use <code>ssrPathname</code> to also match path-based routes
-          during SSR for richer server-rendered content.
+          shell, while path-based routes and loaders activate only after client
+          hydration.
+        </p>
+      </section>
+      <section className="learn-category">
+        <h2>
+          <a href="/learn/static-site-generation">Static Site Generation</a>
+        </h2>
+        <p>
+          Use the <code>ssrPathname</code> prop to match path-based routes
+          during SSR for richer server-rendered output. This guide covers how to
+          pre-render pages at known paths for static site generation and
+          improved SEO.
         </p>
       </section>
       <section className="learn-category">

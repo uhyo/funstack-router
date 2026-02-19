@@ -11,6 +11,10 @@ const learnNavItems = [
     label: "Server-Side Rendering",
   },
   {
+    path: "/learn/static-site-generation",
+    label: "Static Site Generation",
+  },
+  {
     path: "/learn/react-server-components",
     label: "React Server Components",
   },

@@ -38,6 +38,9 @@ const LearnTypeSafetyPage = lazy(() =>
 const LearnSsrPage = lazy(() =>
   import("./pages/LearnSsrPage.js").then((m) => ({ default: m.LearnSsrPage })),
 );
+const LearnSsgPage = lazy(() =>
+  import("./pages/LearnSsgPage.js").then((m) => ({ default: m.LearnSsgPage })),
+);
 const LearnRscPage = lazy(() =>
   import("./pages/LearnRscPage.js").then((m) => ({ default: m.LearnRscPage })),
 );
@@ -136,6 +139,12 @@ const routes = [
                 path: "/server-side-rendering",
                 component: defer(<LearnSsrPage />, {
                   name: "LearnSsrPage",
+                }),
+              }),
+              route({
+                path: "/static-site-generation",
+                component: defer(<LearnSsgPage />, {
+                  name: "LearnSsgPage",
                 }),
               }),
               route({
