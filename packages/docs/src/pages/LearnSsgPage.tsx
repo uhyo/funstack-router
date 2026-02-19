@@ -65,9 +65,9 @@ export function LearnSsgPage() {
           When <code>runLoaders</code> is <code>false</code> (the default),
           routes with loaders are skipped and the parent route renders as a
           shell. When <code>runLoaders</code> is <code>true</code>, those routes
-          are matched during SSR. The route components render with{" "}
-          <code>undefined</code> data during SSR; the actual loader data fills
-          in after hydration.
+          are matched and their loaders are executed during SSR. The loader
+          results are passed to components as the <code>data</code> prop, so
+          server-rendered HTML includes loader content.
         </p>
       </section>
 

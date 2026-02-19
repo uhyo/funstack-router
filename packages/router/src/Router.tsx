@@ -44,9 +44,9 @@ export type SSRConfig = {
    *
    * - When `false` or omitted, routes with loaders are skipped during SSR
    *   and the parent route renders as a shell.
-   * - When `true`, routes with loaders are matched during SSR. The loader
-   *   results are not available during SSR, but the route's component will
-   *   render.
+   * - When `true`, routes with loaders are matched and their loaders are
+   *   executed during SSR. The loader results are passed to components as
+   *   the `data` prop, so server-rendered HTML includes loader content.
    *
    * @default false
    */
@@ -205,6 +205,25 @@ export function Router({
           skipLoaders: !ssr?.runLoaders,
         });
         if (!matched) return null;
+
+        if (ssr?.runLoaders) {
+          // Execute loaders during SSR with a synthetic request
+          const url = new URL(ssr.path, "http://localhost");
+          const request = createLoaderRequest(url);
+          const controller = new AbortController();
+          return matched.map((match) => {
+            const data = match.route.loader
+              ? match.route.loader({
+                  params: match.params,
+                  request,
+                  signal: controller.signal,
+                  actionResult: undefined,
+                })
+              : undefined;
+            return { ...match, data };
+          });
+        }
+
         return matched.map((m) => ({ ...m, data: undefined }));
       }
 

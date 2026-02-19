@@ -370,10 +370,18 @@ describe("ssr", () => {
     render(
       <Router routes={routes} ssr={{ path: "/about", runLoaders: true }} />,
     );
-    // Loader is not called (no request context during SSR), but route matches
-    expect(loader).not.toHaveBeenCalled();
-    // Component renders with undefined data
-    expect(screen.getByText("no data")).toBeInTheDocument();
+    // Loader is called during SSR with a synthetic request
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(loader).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: {},
+        request: expect.any(Request),
+        signal: expect.any(AbortSignal),
+        actionResult: undefined,
+      }),
+    );
+    // Component renders with actual loader data
+    expect(screen.getByText("loaded")).toBeInTheDocument();
   });
 
   it("skips route with loader and matches sibling without loader", () => {
