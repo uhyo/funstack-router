@@ -107,6 +107,14 @@ export function LearnSsgPage() {
           time, see the <a href="/learn/ssr/with-loaders">SSR with Loaders</a>{" "}
           guide.
         </p>
+        <p>
+          If you only need loaders to run at build time (not on the client),
+          consider using{" "}
+          <a href="/learn/react-server-components">React Server Components</a>{" "}
+          with SSG. RSC lets you fetch data on the server during the build and
+          send the result as static HTML, without shipping loader code to the
+          client.
+        </p>
       </section>
 
       <section>
