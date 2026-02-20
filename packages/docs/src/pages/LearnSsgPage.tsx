@@ -17,26 +17,25 @@ export function LearnSsgPage() {
           How the <code>ssr</code> Prop Works
         </h3>
         <p>
-          As described in the{" "}
-          <a href="/learn/server-side-rendering">Server-Side Rendering</a>{" "}
-          guide, the router normally has no URL during SSR and only renders
-          pathless routes. The <code>ssr</code> prop provides a pathname so
-          path-based routes can also match during SSR:
+          As described in the <a href="/learn/ssr">How SSR Works</a> guide, the
+          router normally has no URL during SSR and only renders pathless
+          routes. The <code>ssr</code> prop provides a pathname so path-based
+          routes can also match during SSR:
         </p>
         <CodeBlock language="tsx">{`// Server knows the requested URL and passes it to the router
 <Router routes={routes} ssr={{ path: "/about" }} />`}</CodeBlock>
         <p>
           When <code>ssr</code> is provided, the router matches path-based
           routes against <code>ssr.path</code> just as it would match against
-          the real URL on the client. Route params are extracted normally. By
-          default, routes with loaders are skipped during SSR &mdash; set{" "}
-          <code>runLoaders: true</code> to include them (see below).
+          the real URL on the client. Route params are extracted normally.
+          Routes with loaders are skipped by default &mdash; the parent route
+          renders as a shell, and loader content fills in after hydration.
         </p>
         <p>
           Once the client hydrates, the real URL from the Navigation API takes
           over and <code>ssr</code> is ignored.
         </p>
-        <CodeBlock language="tsx">{`// What renders at each stage with ssr (default, no runLoaders):
+        <CodeBlock language="tsx">{`// What renders at each stage with ssr:
 
 // Stage 1 (Server)                   Stage 2 (Client)
 // ───────────────────────────        ─────────────────
@@ -44,31 +43,6 @@ export function LearnSsgPage() {
 // ✓ Path routes match                ✓ Path routes match
 //   (against ssr.path)                 (against real URL)
 // ✗ No loaders                       ✓ Loaders execute`}</CodeBlock>
-      </section>
-
-      <section>
-        <h3>
-          The <code>runLoaders</code> Option
-        </h3>
-        <p>
-          By default, routes with loaders are skipped during SSR. If your server
-          can provide loader data (e.g., in a full SSR setup), set{" "}
-          <code>runLoaders: true</code> to include those routes in the SSR
-          output:
-        </p>
-        <CodeBlock language="tsx">{`// SSG: skip routes with loaders (default)
-<Router routes={routes} ssr={{ path: "/about" }} />
-
-// SSR: include routes with loaders
-<Router routes={routes} ssr={{ path: "/about", runLoaders: true }} />`}</CodeBlock>
-        <p>
-          When <code>runLoaders</code> is <code>false</code> (the default),
-          routes with loaders are skipped and the parent route renders as a
-          shell. When <code>runLoaders</code> is <code>true</code>, those routes
-          are matched and their loaders are executed during SSR. The loader
-          results are passed to components as the <code>data</code> prop, so
-          server-rendered HTML includes loader content.
-        </p>
       </section>
 
       <section>
@@ -86,7 +60,7 @@ export function LearnSsgPage() {
       route({
         path: "/dashboard",
         component: DashboardPage,
-        loader: dashboardLoader, // Skipped during SSR (has loader, runLoaders not set)
+        loader: dashboardLoader, // Skipped during SSR (has loader)
       }),
     ],
   }),
@@ -96,7 +70,7 @@ export function LearnSsgPage() {
 // - AppShell renders (pathless, no loader) ✓
 // - AboutPage renders (path matches, no loader) ✓
 // - DashboardPage would NOT render with ssr={{ path: "/dashboard" }}
-//   because it has a loader (unless runLoaders: true)`}</CodeBlock>
+//   because it has a loader`}</CodeBlock>
       </section>
 
       <section>
@@ -123,10 +97,15 @@ export function LearnSsgPage() {
             path
           </li>
         </ul>
+      </section>
+
+      <section>
+        <h3>Routes with Loaders</h3>
         <p>
-          If your routes have loaders and <code>runLoaders</code> is not set,
-          those routes will still be skipped during SSR. The parent route
-          renders as a shell, and the loader content fills in after hydration.
+          Routes with loaders are skipped by default during SSR. If your
+          application has a server runtime that can execute loaders at request
+          time, see the <a href="/learn/ssr/with-loaders">SSR with Loaders</a>{" "}
+          guide.
         </p>
       </section>
 
@@ -138,8 +117,8 @@ export function LearnSsgPage() {
             for richer server-rendered output
           </li>
           <li>
-            By default, routes with loaders are skipped during SSR; set{" "}
-            <code>runLoaders: true</code> to include them
+            Routes with loaders are skipped during SSR by default; the parent
+            route renders as a shell and loader content fills in after hydration
           </li>
           <li>
             After hydration, the real URL from the Navigation API takes over and{" "}

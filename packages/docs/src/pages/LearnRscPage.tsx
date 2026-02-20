@@ -256,7 +256,7 @@ export default function App() {
           If the server knows the requested pathname, you can pass it via the{" "}
           <code>ssr</code> prop so that path-based routes render during SSR (see
           the{" "}
-          <a href="/learn/static-site-generation">
+          <a href="/learn/ssr/static-site-generation">
             Static Site Generation guide
           </a>{" "}
           for details):
@@ -298,9 +298,8 @@ export default function App() {
             depending on whether they need browser APIs or hooks
           </li>
           <li>
-            See also the{" "}
-            <a href="/learn/server-side-rendering">Server-Side Rendering</a>{" "}
-            guide for how the router handles SSR and hydration
+            See also the <a href="/learn/ssr">Server-Side Rendering</a> guide
+            for how the router handles SSR and hydration
           </li>
         </ul>
       </section>

@@ -44,27 +44,34 @@ export function LearnIndexPage() {
           prop drilling.
         </p>
       </section>
+
       <section className="learn-category">
-        <h2>
-          <a href="/learn/server-side-rendering">Server-Side Rendering</a>
-        </h2>
+        <h2>Server-Side Rendering</h2>
         <p>
-          Learn how FUNSTACK Router behaves during server-side rendering.
-          Pathless routes without loaders render on the server to produce an app
-          shell, while path-based routes and loaders activate only after client
-          hydration.
+          FUNSTACK Router supports three SSR modes depending on your deployment
+          model. These guides cover each use case:
         </p>
+        <ul>
+          <li>
+            <a href="/learn/ssr">How SSR Works</a> &mdash; the default two-stage
+            model where pathless routes produce an app shell and path-based
+            routes activate after client hydration
+          </li>
+          <li>
+            <a href="/learn/ssr/static-site-generation">
+              Static Site Generation
+            </a>{" "}
+            &mdash; use the <code>ssr</code> prop to match path-based routes
+            during SSR for richer pre-rendered output
+          </li>
+          <li>
+            <a href="/learn/ssr/with-loaders">SSR with Loaders</a> &mdash; set{" "}
+            <code>runLoaders: true</code> for fully dynamic server-side
+            rendering including loader data
+          </li>
+        </ul>
       </section>
-      <section className="learn-category">
-        <h2>
-          <a href="/learn/static-site-generation">Static Site Generation</a>
-        </h2>
-        <p>
-          Use the <code>ssr</code> prop to match path-based routes during SSR
-          for richer server-rendered output. This guide covers how to pre-render
-          pages at known paths for static site generation and improved SEO.
-        </p>
-      </section>
+
       <section className="learn-category">
         <h2>
           <a href="/learn/react-server-components">React Server Components</a>

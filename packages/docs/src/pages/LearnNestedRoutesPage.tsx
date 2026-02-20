@@ -444,8 +444,7 @@ function TeamLayout(props: {
           Pathless routes also play a key role in server-side rendering. During
           SSR, only pathless routes render (since no URL is available on the
           server), making them ideal for defining the app shell. See the{" "}
-          <a href="/learn/server-side-rendering">Server-Side Rendering</a> page
-          for details.
+          <a href="/learn/ssr">Server-Side Rendering</a> page for details.
         </p>
       </section>
 

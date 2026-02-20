@@ -85,8 +85,7 @@ export function ApiComponentsPage() {
                 ). When <code>runLoaders</code> is <code>false</code>, routes
                 with loaders are skipped during SSR. Once the client hydrates,
                 the real URL from the Navigation API takes over. See the{" "}
-                <a href="/learn/server-side-rendering">SSR guide</a> for
-                details.
+                <a href="/learn/ssr">SSR guide</a> for details.
               </td>
             </tr>
           </tbody>

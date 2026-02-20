@@ -1,18 +1,34 @@
 "use client";
 
+import { Fragment } from "react";
 import { Outlet, useLocation } from "@funstack/router";
 
-const learnNavItems = [
+type NavItem = {
+  path: string;
+  label: string;
+};
+
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
+type NavEntry = NavItem | NavGroup;
+
+const learnNavItems: NavEntry[] = [
   { path: "/learn/navigation-api", label: "Navigation API" },
   { path: "/learn/nested-routes", label: "Nested Routes" },
   { path: "/learn/type-safety", label: "Type Safety" },
   {
-    path: "/learn/server-side-rendering",
-    label: "Server-Side Rendering",
-  },
-  {
-    path: "/learn/static-site-generation",
-    label: "Static Site Generation",
+    label: "SSR",
+    items: [
+      { path: "/learn/ssr", label: "How SSR Works" },
+      {
+        path: "/learn/ssr/static-site-generation",
+        label: "Static Site Generation",
+      },
+      { path: "/learn/ssr/with-loaders", label: "SSR with Loaders" },
+    ],
   },
   {
     path: "/learn/react-server-components",
@@ -20,6 +36,10 @@ const learnNavItems = [
   },
   { path: "/learn/transitions", label: "Transitions" },
 ];
+
+function isNavGroup(entry: NavEntry): entry is NavGroup {
+  return "items" in entry;
+}
 
 export function LearnPage() {
   const location = useLocation();
@@ -29,15 +49,33 @@ export function LearnPage() {
       <h1>Learn</h1>
 
       <nav className="api-nav">
-        {learnNavItems.map((item) => (
-          <a
-            key={item.path}
-            href={item.path}
-            className={location.pathname === item.path ? "active" : ""}
-          >
-            {item.label}
-          </a>
-        ))}
+        {learnNavItems.map((entry) => {
+          if (isNavGroup(entry)) {
+            return (
+              <Fragment key={entry.label}>
+                <span className="nav-group-label">{entry.label}</span>
+                {entry.items.map((item) => (
+                  <a
+                    key={item.path}
+                    href={item.path}
+                    className={location.pathname === item.path ? "active" : ""}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </Fragment>
+            );
+          }
+          return (
+            <a
+              key={entry.path}
+              href={entry.path}
+              className={location.pathname === entry.path ? "active" : ""}
+            >
+              {entry.label}
+            </a>
+          );
+        })}
       </nav>
 
       <Outlet />

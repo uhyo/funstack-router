@@ -1,9 +1,9 @@
 import { CodeBlock } from "../components/CodeBlock.js";
 
-export function LearnSsrPage() {
+export function LearnSsrBasicPage() {
   return (
     <div className="learn-content">
-      <h2>Server-Side Rendering</h2>
+      <h2>How SSR Works</h2>
 
       <p className="page-intro">
         FUNSTACK Router supports server-side rendering with a two-stage model.
@@ -13,7 +13,7 @@ export function LearnSsrPage() {
       </p>
 
       <section>
-        <h3>How SSR Works</h3>
+        <h3>Two-Stage Rendering</h3>
         <p>
           FUNSTACK Router uses a two-stage rendering model that separates what
           renders on the server from what renders on the client:
@@ -147,14 +147,25 @@ function HomePage() {
       </section>
 
       <section>
-        <h3>Static Site Generation</h3>
+        <h3>Going Beyond the App Shell</h3>
         <p>
-          If your server or static site generator knows the URL being rendered,
-          you can use the <code>ssr</code> prop to match path-based routes
-          during SSR for richer server-rendered output. See the{" "}
-          <a href="/learn/static-site-generation">Static Site Generation</a>{" "}
-          guide for details.
+          The default SSR behavior produces only the app shell. If your server
+          or build tool knows the URL being rendered, you can use the{" "}
+          <code>ssr</code> prop to match path-based routes during SSR for richer
+          output:
         </p>
+        <ul>
+          <li>
+            <a href="/learn/ssr/static-site-generation">
+              Static Site Generation
+            </a>{" "}
+            &mdash; pre-render pages at known paths without running loaders
+          </li>
+          <li>
+            <a href="/learn/ssr/with-loaders">SSR with Loaders</a> &mdash;
+            render pages with loader data on the server for fully dynamic SSR
+          </li>
+        </ul>
       </section>
 
       <section>

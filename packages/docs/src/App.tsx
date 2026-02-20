@@ -35,11 +35,18 @@ const LearnTypeSafetyPage = lazy(() =>
     default: m.LearnTypeSafetyPage,
   })),
 );
-const LearnSsrPage = lazy(() =>
-  import("./pages/LearnSsrPage.js").then((m) => ({ default: m.LearnSsrPage })),
+const LearnSsrBasicPage = lazy(() =>
+  import("./pages/LearnSsrBasicPage.js").then((m) => ({
+    default: m.LearnSsrBasicPage,
+  })),
 );
 const LearnSsgPage = lazy(() =>
   import("./pages/LearnSsgPage.js").then((m) => ({ default: m.LearnSsgPage })),
+);
+const LearnSsrWithLoadersPage = lazy(() =>
+  import("./pages/LearnSsrWithLoadersPage.js").then((m) => ({
+    default: m.LearnSsrWithLoadersPage,
+  })),
 );
 const LearnRscPage = lazy(() =>
   import("./pages/LearnRscPage.js").then((m) => ({ default: m.LearnRscPage })),
@@ -136,16 +143,28 @@ const routes = [
                 }),
               }),
               route({
-                path: "/server-side-rendering",
-                component: defer(<LearnSsrPage />, {
-                  name: "LearnSsrPage",
-                }),
-              }),
-              route({
-                path: "/static-site-generation",
-                component: defer(<LearnSsgPage />, {
-                  name: "LearnSsgPage",
-                }),
+                path: "/ssr",
+                component: <Outlet />,
+                children: [
+                  route({
+                    path: "/",
+                    component: defer(<LearnSsrBasicPage />, {
+                      name: "LearnSsrBasicPage",
+                    }),
+                  }),
+                  route({
+                    path: "/static-site-generation",
+                    component: defer(<LearnSsgPage />, {
+                      name: "LearnSsgPage",
+                    }),
+                  }),
+                  route({
+                    path: "/with-loaders",
+                    component: defer(<LearnSsrWithLoadersPage />, {
+                      name: "LearnSsrWithLoadersPage",
+                    }),
+                  }),
+                ],
               }),
               route({
                 path: "/react-server-components",

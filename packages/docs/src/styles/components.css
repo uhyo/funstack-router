@@ -104,6 +104,17 @@
   font-weight: 600;
 }
 
+.api-nav .nav-group-label {
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  align-self: center;
+  padding-left: 8px;
+  border-left: 2px solid var(--color-primary);
+}
+
 /* API Item */
 .api-item {
   padding: 24px 0;
