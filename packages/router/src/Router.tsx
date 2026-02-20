@@ -196,45 +196,30 @@ export function Router({
   return useMemo(() => {
     // Match routes and execute loaders
     const matchedRoutesWithData = (() => {
-      if (locationEntry === null) {
-        // SSR/hydration: match routes based on ssr config.
-        // When ssr.path is provided, path-based routes can match;
-        // otherwise only pathless routes match (null pathname).
-        // Routes with loaders are skipped unless ssr.runLoaders is true.
+      if (locationEntry === null && !ssr?.runLoaders) {
+        // SSR/hydration without loader execution: match routes, data is undefined.
+        // Routes with loaders are skipped (skipLoaders: true).
         const matched = matchRoutes(routes, ssr?.path ?? null, {
-          skipLoaders: !ssr?.runLoaders,
+          skipLoaders: true,
         });
         if (!matched) return null;
-
-        if (ssr?.runLoaders) {
-          // Execute loaders during SSR with a synthetic request
-          const url = new URL(ssr.path, "http://localhost");
-          const request = createLoaderRequest(url);
-          const controller = new AbortController();
-          return matched.map((match) => {
-            const data = match.route.loader
-              ? match.route.loader({
-                  params: match.params,
-                  request,
-                  signal: controller.signal,
-                  actionResult: undefined,
-                })
-              : undefined;
-            return { ...match, data };
-          });
-        }
-
         return matched.map((m) => ({ ...m, data: undefined }));
       }
 
-      const { url, key } = locationEntry;
+      // Unified path: SSR with loaders or client-side.
+      // Both cases match routes normally and execute loaders.
+      const url = locationEntry
+        ? locationEntry.url
+        : new URL(ssr!.path, "http://localhost");
       const matched = matchRoutes(routes, url.pathname);
       if (!matched) return null;
 
-      // Execute loaders (results are cached by location entry key)
+      const entryKey = locationEntry?.key ?? "ssr";
       const request = createLoaderRequest(url);
-      const signal = adapter.getIdleAbortSignal();
-      return executeLoaders(matched, key, request, signal);
+      const signal = locationEntry
+        ? adapter.getIdleAbortSignal()
+        : new AbortController().signal;
+      return executeLoaders(matched, entryKey, request, signal);
     })();
 
     const routerContextValue = {
