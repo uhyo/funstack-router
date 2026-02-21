@@ -221,6 +221,7 @@ const routes = [
             component: defer(<ExamplesPage />, { name: "ExamplesPage" }),
           }),
           route({
+            path: "/*",
             component: defer(<NotFoundPage />, { name: "NotFoundPage" }),
           }),
         ],

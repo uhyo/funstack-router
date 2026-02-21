@@ -394,14 +394,14 @@ const routes = [
         </ul>
         <h3>Catch-All Routes</h3>
         <p>
-          A pathless route at the end of a route list can serve as a catch-all
-          for unmatched paths:
+          Use <code>path: "/*"</code> at the end of a route list to catch any
+          unmatched paths:
         </p>
         <CodeBlock language="tsx">{`const routes = [
   route({ path: "/", component: HomePage }),
   route({ path: "/about", component: AboutPage }),
   // Catch-all: matches any unmatched path
-  route({ component: NotFoundPage }),
+  route({ path: "/*", component: NotFoundPage }),
 ];`}</CodeBlock>
       </section>
 
