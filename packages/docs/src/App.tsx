@@ -92,7 +92,7 @@ const NotFoundPage = lazy(() =>
   })),
 );
 
-const routes = [
+export const routes = [
   route({
     component: (
       // Note: somehow the Suspense here causes issues with hydration.
@@ -230,6 +230,6 @@ const routes = [
   }),
 ];
 
-export default function App() {
-  return <ClientApp routes={routes} />;
+export default function App({ ssrPath }: { ssrPath?: string }) {
+  return <ClientApp routes={routes} ssrPath={ssrPath} />;
 }

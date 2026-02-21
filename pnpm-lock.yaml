@@ -35,6 +35,9 @@ importers:
       shiki:
         specifier: ^3.22.0
         version: 3.22.0
+      urlpattern-polyfill:
+        specifier: ^10.1.0
+        version: 10.1.0
     devDependencies:
       '@types/react':
         specifier: ^19.2.14
