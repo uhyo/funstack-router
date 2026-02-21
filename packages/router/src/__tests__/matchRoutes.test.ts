@@ -616,7 +616,7 @@ describe("matchRoutes", () => {
       expect(matchRoutes(routes, "/about", { skipLoaders: true })).toBeNull();
     });
 
-    it("skips route with loader and falls back to sibling", () => {
+    it("skipped route with matching path prevents catch-all from matching", () => {
       const routes = [
         {
           path: "/about",
@@ -629,9 +629,10 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
+      // The /about route would match but is skipped due to loader;
+      // this should prevent the catch-all from matching
       const result = matchRoutes(routes, "/about", { skipLoaders: true });
-      expect(result).toHaveLength(1);
-      expect(result![0].route.path).toBe("/*");
+      expect(result).toBeNull();
     });
 
     it("skips child route with loader, parent renders as shell", () => {
@@ -715,6 +716,67 @@ describe("matchRoutes", () => {
       const result = matchRoutes(routes, "/users/42", { skipLoaders: true });
       expect(result).toHaveLength(3);
       expect(result![2].params).toEqual({ id: "42" });
+    });
+
+    it("non-matching loader route does not block siblings", () => {
+      const routes = [
+        {
+          path: "/about",
+          component: () => null,
+          loader: () => "data",
+        },
+        {
+          path: "/*",
+          component: () => null,
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      // /other does NOT match /about, so the loader route is not skipped (returns null).
+      // The catch-all should still match.
+      const result = matchRoutes(routes, "/other", { skipLoaders: true });
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBe("/*");
+    });
+
+    it("skipped child prevents catch-all sibling, parent renders as shell", () => {
+      const routes = [
+        {
+          component: () => null, // pathless layout
+          children: [
+            {
+              path: "/about",
+              component: () => null,
+              loader: () => "data",
+            },
+            {
+              component: () => null, // catch-all sibling
+            },
+          ],
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      // /about child would match but is skipped; catch-all sibling should NOT match.
+      // Parent pathless layout renders as shell.
+      const result = matchRoutes(routes, "/about", { skipLoaders: true });
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBeUndefined();
+      expect(result![0].route.loader).toBeUndefined();
+    });
+
+    it("skipped pathless loader route prevents catch-all sibling", () => {
+      const routes = [
+        {
+          component: () => null,
+          loader: () => "data",
+        },
+        {
+          component: () => null, // catch-all sibling
+        },
+      ] as unknown as InternalRouteDefinition[];
+
+      // Pathless route with loader would always match; should be SKIPPED, blocking siblings
+      const result = matchRoutes(routes, "/anything", { skipLoaders: true });
+      expect(result).toBeNull();
     });
   });
 });

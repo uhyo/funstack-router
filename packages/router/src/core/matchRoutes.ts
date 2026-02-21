@@ -1,5 +1,8 @@
 import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
 
+const SKIPPED = Symbol("skipped");
+type MatchRouteInternalResult = MatchedRoute[] | typeof SKIPPED | null;
+
 export type MatchRoutesOptions = {
   /**
    * When true, routes with loaders are skipped during matching.
@@ -19,6 +22,7 @@ export function matchRoutes(
 ): MatchedRoute[] | null {
   for (const route of routes) {
     const matched = matchRoute(route, pathname, options);
+    if (matched === SKIPPED) return null;
     if (matched) {
       return matched;
     }
@@ -33,12 +37,22 @@ function matchRoute(
   route: InternalRouteDefinition,
   pathname: string | null,
   options?: MatchRoutesOptions,
-): MatchedRoute[] | null {
+): MatchRouteInternalResult {
   const hasChildren = Boolean(route.children?.length);
   const skipLoaders = options?.skipLoaders ?? false;
 
   // Routes with loaders can't render during SSR (no request context)
   if ((pathname === null || skipLoaders) && route.loader) {
+    if (skipLoaders && pathname !== null) {
+      // This route can't render (loader skipped), but check if it would match.
+      // If it would, return SKIPPED to prevent fallback routes from matching.
+      if (route.path === undefined) {
+        return SKIPPED; // pathless always matches
+      }
+      const isExact = route.exact ?? !hasChildren;
+      const { matched } = matchPath(route.path, pathname, isExact);
+      if (matched) return SKIPPED;
+    }
     return null;
   }
 
@@ -51,11 +65,20 @@ function matchRoute(
     };
 
     if (hasChildren) {
+      let anySkipped = false;
       for (const child of route.children!) {
         const childMatch = matchRoute(child, pathname, options);
+        if (childMatch === SKIPPED) {
+          anySkipped = true;
+          break;
+        }
         if (childMatch) {
           return [result, ...childMatch];
         }
+      }
+      if (anySkipped) {
+        if (route.component) return [result]; // render as shell
+        return SKIPPED; // propagate
       }
       // No children matched - only valid if requireChildren is false and route has a component
       if (route.component && route.requireChildren === false) {
@@ -105,8 +128,13 @@ function matchRoute(
       remainingPathname = "/";
     }
 
+    let anyChildSkipped = false;
     for (const child of route.children!) {
       const childMatch = matchRoute(child, remainingPathname, options);
+      if (childMatch === SKIPPED) {
+        anyChildSkipped = true;
+        break;
+      }
       if (childMatch) {
         // Merge params from parent into children
         return [
@@ -117,6 +145,11 @@ function matchRoute(
           })),
         ];
       }
+    }
+
+    if (anyChildSkipped) {
+      if (route.component) return [result]; // render as shell
+      return SKIPPED; // propagate
     }
 
     // If no children matched - only valid if requireChildren is false and route has a component

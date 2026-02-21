@@ -384,12 +384,11 @@ describe("ssr", () => {
     expect(screen.getByText("loaded")).toBeInTheDocument();
   });
 
-  it("skips route with loader and matches sibling without loader", () => {
+  it("skips route with loader and does not fall back to catch-all sibling", () => {
     const routes: RouteDefinition[] = [
       {
         path: "/about",
         component: () => <div>About with loader</div>,
-        // Using cast to add loader since RouteDefinition union doesn't expose it directly
       },
       { path: "/*", component: () => <div>Catch All</div> },
     ];
@@ -397,8 +396,11 @@ describe("ssr", () => {
     // Manually add loader to first route to test skipping
     (routes[0] as Record<string, unknown>).loader = () => "data";
 
-    render(<Router routes={routes} ssr={{ path: "/about" }} />);
-    expect(screen.getByText("Catch All")).toBeInTheDocument();
+    const { container } = render(
+      <Router routes={routes} ssr={{ path: "/about" }} />,
+    );
+    // Skipped route blocks the catch-all, so nothing renders
+    expect(container.textContent).toBe("");
   });
 
   it("renders parent shell when all children have loaders", () => {
