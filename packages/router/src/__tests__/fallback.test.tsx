@@ -440,6 +440,26 @@ describe("ssr", () => {
     expect(container.textContent).toBe("");
   });
 
+  it("provides URL via useLocation during SSR with ssr.path", () => {
+    function Page() {
+      const location = useLocation();
+      return (
+        <div>
+          <span data-testid="pathname">{location.pathname}</span>
+          <span data-testid="search">{location.search}</span>
+          <span data-testid="hash">{location.hash}</span>
+        </div>
+      );
+    }
+
+    const routes: RouteDefinition[] = [{ path: "/about", component: Page }];
+
+    render(<Router routes={routes} ssr={{ path: "/about" }} />);
+    expect(screen.getByTestId("pathname").textContent).toBe("/about");
+    expect(screen.getByTestId("search").textContent).toBe("");
+    expect(screen.getByTestId("hash").textContent).toBe("");
+  });
+
   it("pathless route wrapping path-based children works with ssr.path", () => {
     const routes: RouteDefinition[] = [
       {

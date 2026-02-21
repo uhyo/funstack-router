@@ -224,7 +224,9 @@ export function Router({
 
     const routerContextValue = {
       locationEntry: locationEntry,
-      url: locationEntry?.url ?? null,
+      url:
+        locationEntry?.url ??
+        (ssr ? new URL(ssr.path, "http://localhost") : null),
       isPending,
       navigate,
       navigateAsync,
