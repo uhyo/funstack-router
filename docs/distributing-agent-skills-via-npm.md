@@ -106,13 +106,13 @@ For non-interactive environments (CI/CD), the `SKILL_INSTALL_PATH` environment v
 
 ### Consumer usage
 
-After installing your package, consumers run:
+Consumers run:
 
 ```sh
-npx my-package-skill-installer
+npx -p my-package my-package-skill-installer
 ```
 
-This copies the skill into their project so their AI agent can use it.
+The `-p` flag tells npx to use the package even if it's not installed locally yet. This copies the skill into their project so their AI agent can use it.
 
 ## Step 4 (Optional): Bundle AI-Friendly Documentation
 

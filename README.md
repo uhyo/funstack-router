@@ -19,10 +19,10 @@ npm install @funstack/router
 
 ## AI Coding Agent Support
 
-`@funstack/router` ships with an Agent skill that gives your coding assistant (Claude Code, Cursor, GitHub Copilot, etc.) knowledge about the router's API and best practices. After installing the package, run:
+`@funstack/router` ships with an Agent skill that gives your coding assistant (Claude Code, Cursor, GitHub Copilot, etc.) knowledge about the router's API and best practices. Run:
 
 ```bash
-npx funstack-router-skill-installer
+npx -p @funstack/router funstack-router-skill-installer
 ```
 
 The installer will guide you through setting up the skill for your preferred AI agent. Alternatively, if you prefer [npx skills](https://skills.sh/):
