@@ -23,6 +23,10 @@ npm install @funstack/router
 
 ```bash
 npx -p @funstack/router funstack-router-skill-installer
+# or
+pnpm dlx --package @funstack/router funstack-router-skill-installer
+# or
+yarn dlx -p @funstack/router funstack-router-skill-installer
 ```
 
 The installer will guide you through setting up the skill for your preferred AI agent. Alternatively, if you prefer [npx skills](https://skills.sh/):
