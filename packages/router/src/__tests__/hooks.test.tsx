@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { Suspense, type ReactNode } from "react";
-import { Router } from "../Router.js";
+import { Router } from "../Router/index.js";
 import { useNavigate } from "../hooks/useNavigate.js";
 import { useLocation } from "../hooks/useLocation.js";
 import { useSearchParams } from "../hooks/useSearchParams.js";

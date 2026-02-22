@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
-import { Router } from "../Router.js";
+import { Router } from "../Router/index.js";
 import { route, type RouteComponentProps } from "../route.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
 import { clearLoaderCache } from "../core/loaderCache.js";

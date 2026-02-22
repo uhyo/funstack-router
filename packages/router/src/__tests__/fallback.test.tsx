@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { Router } from "../Router.js";
+import { Router } from "../Router/index.js";
 import { Outlet } from "../Outlet.js";
 import { useLocation } from "../hooks/useLocation.js";
 import { useNavigate } from "../hooks/useNavigate.js";

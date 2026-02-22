@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, cleanup, act } from "@testing-library/react";
 import { useState, useCallback } from "react";
-import { Router } from "../Router.js";
+import { Router } from "../Router/index.js";
 import { Outlet } from "../Outlet.js";
 import { useBlocker } from "../hooks/useBlocker.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
