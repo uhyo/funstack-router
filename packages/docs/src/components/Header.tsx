@@ -1,7 +1,7 @@
 "use client";
 
+import { useLocation } from "@funstack/router";
 import { useState } from "react";
-import { useCurrentPath } from "../hooks/useCurrentPath";
 
 const navItems = [
   { path: "/", label: "Home" },
@@ -13,11 +13,10 @@ const navItems = [
 ];
 
 export function Header() {
-  const currentPath = useCurrentPath();
+  const { pathname: currentPath } = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
-    if (currentPath === null) return false;
     // Handle API Reference section (match any /api/* path)
     if (path === "/api") {
       return currentPath.startsWith("/api");
