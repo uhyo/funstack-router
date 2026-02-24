@@ -1,5 +1,6 @@
 import type {
   TypefulOpaqueRouteDefinition,
+  PartialRouteDefinition,
   ExtractRouteState,
 } from "../route.js";
 import { useRouteContext } from "./useRouteContext.js";
@@ -26,12 +27,14 @@ import { useRouteContext } from "./useRouteContext.js";
  * ```
  */
 export function useRouteState<
-  T extends TypefulOpaqueRouteDefinition<
-    string,
-    Record<string, string>,
-    unknown,
-    unknown
-  >,
+  T extends
+    | TypefulOpaqueRouteDefinition<
+        string,
+        Record<string, string>,
+        unknown,
+        unknown
+      >
+    | PartialRouteDefinition<string, Record<string, string>, unknown, unknown>,
 >(route: T): ExtractRouteState<T> | undefined {
   const routeId = (route as { id?: string }).id;
   const context = useRouteContext("useRouteState", routeId);

@@ -18,6 +18,7 @@ export { useIsPending } from "./hooks/useIsPending.js";
 
 // Route Definition Helpers
 export { route, routeState } from "./route.js";
+export { bindRoute } from "./bindRoute.js";
 
 // Types
 export type {
@@ -43,4 +44,5 @@ export type {
   ExtractRouteState,
   ExtractRouteData,
   RouteComponentPropsOf,
+  PartialRouteDefinition,
 } from "./route.js";

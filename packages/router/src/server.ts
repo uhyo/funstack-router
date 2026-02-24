@@ -3,6 +3,7 @@
 
 // Route Definition Helpers
 export { route, routeState } from "./route.js";
+export { bindRoute } from "./bindRoute.js";
 
 // Types
 export type {
@@ -11,4 +12,5 @@ export type {
   PathParams,
   RouteComponentProps,
   RouteComponentPropsWithData,
+  PartialRouteDefinition,
 } from "./route.js";

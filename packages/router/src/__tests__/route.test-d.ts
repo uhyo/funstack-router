@@ -3,6 +3,7 @@ import { route, routeState } from "../route.js";
 import type {
   TypefulOpaqueRouteDefinition,
   OpaqueRouteDefinition,
+  PartialRouteDefinition,
   ExtractRouteId,
   ExtractRouteParams,
   ExtractRouteState,
@@ -13,6 +14,7 @@ import type {
   ActionArgs,
   LoaderArgs,
 } from "../route.js";
+import { bindRoute } from "../bindRoute.js";
 import { useRouteParams } from "../hooks/useRouteParams.js";
 import { useRouteState } from "../hooks/useRouteState.js";
 import { useRouteData } from "../hooks/useRouteData.js";
@@ -590,5 +592,285 @@ describe("LoaderArgs actionResult backwards compatibility", () => {
     expectTypeOf<Args["actionResult"]>().toEqualTypeOf<
       { success: boolean } | undefined
     >();
+  });
+});
+
+describe("PartialRouteDefinition (two-phase route definition)", () => {
+  describe("route() without component returns PartialRouteDefinition", () => {
+    it("returns PartialRouteDefinition when id is provided but component is not", () => {
+      const r = route({ id: "user", path: "/users/:userId" });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<"user", { userId: string }, undefined, undefined>
+      >();
+    });
+
+    it("returns PartialRouteDefinition with loader data type", () => {
+      const r = route({
+        id: "user",
+        path: "/users/:userId",
+        loader: () => ({ name: "John" }),
+      });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<
+          "user",
+          { userId: string },
+          undefined,
+          { name: string }
+        >
+      >();
+    });
+
+    it("returns PartialRouteDefinition with action and loader", () => {
+      const r = route({
+        id: "edit",
+        path: "/edit/:id",
+        action: async () => ({ saved: true }),
+        loader: ({ actionResult }) => ({
+          item: "test",
+          saveResult: actionResult ?? null,
+        }),
+      });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<
+          "edit",
+          { id: string },
+          undefined,
+          { item: string; saveResult: { saved: boolean } | null }
+        >
+      >();
+    });
+
+    it("returns PartialRouteDefinition with action only", () => {
+      const r = route({
+        id: "delete",
+        path: "/delete/:id",
+        action: async () => ({ deleted: true }),
+      });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<"delete", { id: string }, undefined, undefined>
+      >();
+    });
+
+    it("returns PartialRouteDefinition for pathless route with loader", () => {
+      const r = route({
+        id: "layout",
+        loader: () => ({ theme: "dark" }),
+      });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<
+          "layout",
+          Record<string, never>,
+          undefined,
+          { theme: string }
+        >
+      >();
+    });
+
+    it("returns PartialRouteDefinition for pathless route without loader", () => {
+      const r = route({ id: "layout" });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<
+          "layout",
+          Record<string, never>,
+          undefined,
+          undefined
+        >
+      >();
+    });
+
+    it("returns OpaqueRouteDefinition when id is not provided and component is not provided", () => {
+      const r = route({ path: "/about" });
+      expectTypeOf(r).toEqualTypeOf<OpaqueRouteDefinition>();
+    });
+  });
+
+  describe("routeState() without component returns PartialRouteDefinition", () => {
+    it("returns PartialRouteDefinition with state type", () => {
+      type MyState = { tab: string };
+      const r = routeState<MyState>()({
+        id: "settings",
+        path: "/settings",
+      });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<
+          "settings",
+          Record<string, never>,
+          MyState,
+          undefined
+        >
+      >();
+    });
+
+    it("returns PartialRouteDefinition with state and loader", () => {
+      type MyState = { filter: string };
+      const r = routeState<MyState>()({
+        id: "products",
+        path: "/products/:category",
+        loader: () => ({ items: [] as string[] }),
+      });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<
+          "products",
+          { category: string },
+          MyState,
+          { items: string[] }
+        >
+      >();
+    });
+
+    it("returns PartialRouteDefinition for pathless route with state", () => {
+      type MyState = { expanded: boolean };
+      const r = routeState<MyState>()({ id: "layout" });
+      expectTypeOf(r).toEqualTypeOf<
+        PartialRouteDefinition<
+          "layout",
+          Record<string, never>,
+          MyState,
+          undefined
+        >
+      >();
+    });
+  });
+
+  describe("bindRoute() type inference", () => {
+    it("returns TypefulOpaqueRouteDefinition from PartialRouteDefinition", () => {
+      const partial = route({
+        id: "user",
+        path: "/users/:userId",
+        loader: () => ({ name: "John" }),
+      });
+      const bound = bindRoute(partial, { component: () => null });
+      expectTypeOf(bound).toEqualTypeOf<
+        TypefulOpaqueRouteDefinition<
+          "user",
+          { userId: string },
+          undefined,
+          { name: string }
+        >
+      >();
+    });
+
+    it("returns OpaqueRouteDefinition from OpaqueRouteDefinition", () => {
+      const opaque = route({ path: "/about" });
+      const bound = bindRoute(opaque, { component: () => null });
+      expectTypeOf(bound).toEqualTypeOf<OpaqueRouteDefinition>();
+    });
+
+    it("preserves state type through bindRoute", () => {
+      type MyState = { tab: string };
+      const partial = routeState<MyState>()({
+        id: "settings",
+        path: "/settings",
+      });
+      const bound = bindRoute(partial, { component: () => null });
+      expectTypeOf(bound).toEqualTypeOf<
+        TypefulOpaqueRouteDefinition<
+          "settings",
+          Record<string, never>,
+          MyState,
+          undefined
+        >
+      >();
+    });
+  });
+
+  describe("type extraction utilities with PartialRouteDefinition", () => {
+    it("ExtractRouteId works with PartialRouteDefinition", () => {
+      const r = route({ id: "user", path: "/users/:userId" });
+      type Id = ExtractRouteId<typeof r>;
+      expectTypeOf<Id>().toEqualTypeOf<"user">();
+    });
+
+    it("ExtractRouteParams works with PartialRouteDefinition", () => {
+      const r = route({ id: "user", path: "/users/:userId" });
+      type Params = ExtractRouteParams<typeof r>;
+      expectTypeOf<Params>().toEqualTypeOf<{ userId: string }>();
+    });
+
+    it("ExtractRouteState works with PartialRouteDefinition", () => {
+      type MyState = { scrollPos: number };
+      const r = routeState<MyState>()({
+        id: "scroll",
+        path: "/scroll",
+      });
+      type State = ExtractRouteState<typeof r>;
+      expectTypeOf<State>().toEqualTypeOf<MyState>();
+    });
+
+    it("ExtractRouteData works with PartialRouteDefinition", () => {
+      const r = route({
+        id: "user",
+        path: "/users/:userId",
+        loader: () => ({ name: "John", age: 30 }),
+      });
+      type Data = ExtractRouteData<typeof r>;
+      expectTypeOf<Data>().toEqualTypeOf<{ name: string; age: number }>();
+    });
+  });
+
+  describe("hooks accept PartialRouteDefinition", () => {
+    it("useRouteParams accepts PartialRouteDefinition", () => {
+      const r = route({ id: "user", path: "/users/:userId" });
+      const params = useRouteParams(r);
+      expectTypeOf(params).toEqualTypeOf<{ userId: string }>();
+    });
+
+    it("useRouteState accepts PartialRouteDefinition", () => {
+      type MyState = { scrollPos: number };
+      const r = routeState<MyState>()({
+        id: "scroll",
+        path: "/scroll",
+      });
+      const state = useRouteState(r);
+      expectTypeOf(state).toEqualTypeOf<MyState | undefined>();
+    });
+
+    it("useRouteData accepts PartialRouteDefinition", () => {
+      const r = route({
+        id: "user",
+        path: "/users/:userId",
+        loader: () => ({ name: "John", age: 30 }),
+      });
+      const data = useRouteData(r);
+      expectTypeOf(data).toEqualTypeOf<{ name: string; age: number }>();
+    });
+  });
+
+  describe("RouteComponentPropsOf with PartialRouteDefinition", () => {
+    it("extracts RouteComponentProps for partial route without loader", () => {
+      const r = route({ id: "user", path: "/users/:userId" });
+      type Props = RouteComponentPropsOf<typeof r>;
+      expectTypeOf<Props>().toEqualTypeOf<
+        RouteComponentProps<{ userId: string }, undefined>
+      >();
+    });
+
+    it("extracts RouteComponentPropsWithData for partial route with loader", () => {
+      const r = route({
+        id: "user",
+        path: "/users/:userId",
+        loader: () => ({ name: "John", age: 30 }),
+      });
+      type Props = RouteComponentPropsOf<typeof r>;
+      expectTypeOf<Props>().toEqualTypeOf<
+        RouteComponentPropsWithData<
+          { userId: string },
+          { name: string; age: number },
+          undefined
+        >
+      >();
+    });
+
+    it("extracts props with state type from routeState partial", () => {
+      type MyState = { scrollPos: number };
+      const r = routeState<MyState>()({
+        id: "scroll",
+        path: "/scroll",
+      });
+      type Props = RouteComponentPropsOf<typeof r>;
+      expectTypeOf<Props>().toEqualTypeOf<
+        RouteComponentProps<Record<string, never>, MyState>
+      >();
+    });
   });
 });

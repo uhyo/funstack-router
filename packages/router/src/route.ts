@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
 
 const routeDefinitionSymbol = Symbol();
+const partialRouteDefinitionSymbol = Symbol();
 
 /**
  * Extracts parameter names from a path pattern.
@@ -127,60 +128,111 @@ export interface TypefulOpaqueRouteDefinition<
   requireChildren?: boolean;
 }
 
-/** Extract the Id type from a TypefulOpaqueRouteDefinition */
+/**
+ * Partial route definition created by the `route` helper function when `id` is provided but `component` is not.
+ * Used for two-phase route definition in RSC: Phase 1 defines id, path, loader, action;
+ * Phase 2 uses `bindRoute()` to attach the component.
+ * This type carries type information for params, state, and data, enabling type-safe hooks.
+ */
+export interface PartialRouteDefinition<
+  Id extends string,
+  Params extends Record<string, string>,
+  State,
+  Data,
+> {
+  [partialRouteDefinitionSymbol]: {
+    id: Id;
+    params: Params;
+    state: State;
+    data: Data;
+  };
+  path?: string;
+}
+
+/** Extract the Id type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
 export type ExtractRouteId<T> =
-  T extends TypefulOpaqueRouteDefinition<
+  T extends PartialRouteDefinition<
     infer Id,
     infer _Params,
     infer _State,
     infer _Data
   >
     ? Id
-    : never;
+    : T extends TypefulOpaqueRouteDefinition<
+          infer Id,
+          infer _Params,
+          infer _State,
+          infer _Data
+        >
+      ? Id
+      : never;
 
-/** Extract the Params type from a TypefulOpaqueRouteDefinition */
+/** Extract the Params type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
 export type ExtractRouteParams<T> =
-  T extends TypefulOpaqueRouteDefinition<
+  T extends PartialRouteDefinition<
     infer _Id,
     infer Params,
     infer _State,
     infer _Data
   >
     ? Params
-    : never;
+    : T extends TypefulOpaqueRouteDefinition<
+          infer _Id,
+          infer Params,
+          infer _State,
+          infer _Data
+        >
+      ? Params
+      : never;
 
-/** Extract the State type from a TypefulOpaqueRouteDefinition */
+/** Extract the State type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
 export type ExtractRouteState<T> =
-  T extends TypefulOpaqueRouteDefinition<
+  T extends PartialRouteDefinition<
     infer _Id,
     infer _Params,
     infer State,
     infer _Data
   >
     ? State
-    : never;
+    : T extends TypefulOpaqueRouteDefinition<
+          infer _Id,
+          infer _Params,
+          infer State,
+          infer _Data
+        >
+      ? State
+      : never;
 
-/** Extract the Data type from a TypefulOpaqueRouteDefinition */
+/** Extract the Data type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
 export type ExtractRouteData<T> =
-  T extends TypefulOpaqueRouteDefinition<
+  T extends PartialRouteDefinition<
     infer _Id,
     infer _Params,
     infer _State,
     infer Data
   >
     ? Data
-    : never;
+    : T extends TypefulOpaqueRouteDefinition<
+          infer _Id,
+          infer _Params,
+          infer _State,
+          infer Data
+        >
+      ? Data
+      : never;
 
-/** Extract the component props type from a TypefulOpaqueRouteDefinition */
+/** Extract the component props type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
 export type RouteComponentPropsOf<
-  T extends TypefulOpaqueRouteDefinition<
-    string,
-    Record<string, string>,
-    unknown,
-    unknown
-  >,
+  T extends
+    | TypefulOpaqueRouteDefinition<
+        string,
+        Record<string, string>,
+        unknown,
+        unknown
+      >
+    | PartialRouteDefinition<string, Record<string, string>, unknown, unknown>,
 > =
-  T extends TypefulOpaqueRouteDefinition<
+  T extends PartialRouteDefinition<
     infer _Id,
     infer Params,
     infer State,
@@ -189,7 +241,16 @@ export type RouteComponentPropsOf<
     ? Data extends undefined
       ? RouteComponentProps<Params, State>
       : RouteComponentPropsWithData<Params, Data, State>
-    : never;
+    : T extends TypefulOpaqueRouteDefinition<
+          infer _Id,
+          infer Params,
+          infer State,
+          infer Data
+        >
+      ? Data extends undefined
+        ? RouteComponentProps<Params, State>
+        : RouteComponentPropsWithData<Params, Data, State>
+      : never;
 
 /**
  * Any route definition defined by user.
@@ -342,6 +403,106 @@ type PathlessRouteWithoutLoader<
 };
 
 /**
+ * Partial route definition with action and loader (no component).
+ * Used for two-phase route definition.
+ */
+type PartialRouteWithActionAndLoader<
+  TPath extends string,
+  TActionResult,
+  TData,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path: TPath;
+  action: (args: ActionArgs<PathParams<TPath>>) => TActionResult;
+  loader: (
+    args: LoaderArgs<PathParams<TPath>, Awaited<TActionResult>>,
+  ) => TData;
+  component?: never;
+  children?: never;
+  exact?: never;
+  requireChildren?: never;
+};
+
+/**
+ * Partial route definition with action only (no component, no loader).
+ */
+type PartialRouteWithActionOnly<
+  TPath extends string,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path: TPath;
+  action: (args: ActionArgs<PathParams<TPath>>) => unknown;
+  component?: never;
+  children?: never;
+  exact?: never;
+  requireChildren?: never;
+};
+
+/**
+ * Partial route definition with loader (no component).
+ */
+type PartialRouteWithLoader<
+  TPath extends string,
+  TData,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path: TPath;
+  loader: (args: LoaderArgs<PathParams<TPath>>) => TData;
+  component?: never;
+  children?: never;
+  exact?: never;
+  requireChildren?: never;
+};
+
+/**
+ * Partial route definition without loader or component.
+ */
+type PartialRouteWithoutLoader<
+  TPath extends string,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path: TPath;
+  component?: never;
+  children?: never;
+  exact?: never;
+  requireChildren?: never;
+};
+
+/**
+ * Partial pathless route definition with loader (no component).
+ */
+type PartialPathlessRouteWithLoader<
+  TData,
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path?: undefined;
+  loader: (args: LoaderArgs<Record<string, never>>) => TData;
+  component?: never;
+  children?: never;
+  exact?: never;
+  requireChildren?: never;
+};
+
+/**
+ * Partial pathless route definition without loader or component.
+ */
+type PartialPathlessRouteWithoutLoader<
+  TId extends string | undefined = undefined,
+> = {
+  id?: TId;
+  path?: undefined;
+  component?: never;
+  children?: never;
+  exact?: never;
+  requireChildren?: never;
+};
+
+/**
  * Helper function for creating type-safe route definitions.
  *
  * When a loader is provided, TypeScript infers the return type and ensures
@@ -369,6 +530,42 @@ type PathlessRouteWithoutLoader<
  * });
  * ```
  */
+// Partial overload: id + action + loader (no component) → PartialRouteDefinition
+export function route<
+  TId extends string,
+  const TPath extends string,
+  TActionResult,
+  TData,
+>(
+  definition: PartialRouteWithActionAndLoader<
+    TPath,
+    TActionResult,
+    TData,
+    TId
+  > & {
+    id: TId;
+  },
+): PartialRouteDefinition<TId, PathParams<TPath>, undefined, TData>;
+// Partial overload: id + action only (no component) → PartialRouteDefinition
+export function route<TId extends string, const TPath extends string>(
+  definition: PartialRouteWithActionOnly<TPath, TId> & { id: TId },
+): PartialRouteDefinition<TId, PathParams<TPath>, undefined, undefined>;
+// Partial overload: id + pathless + loader (no component) → PartialRouteDefinition
+export function route<TId extends string, TData>(
+  definition: PartialPathlessRouteWithLoader<TData, TId> & { id: TId },
+): PartialRouteDefinition<TId, Record<string, never>, undefined, TData>;
+// Partial overload: id + pathless + no loader (no component) → PartialRouteDefinition
+export function route<TId extends string>(
+  definition: PartialPathlessRouteWithoutLoader<TId> & { id: TId },
+): PartialRouteDefinition<TId, Record<string, never>, undefined, undefined>;
+// Partial overload: id + loader (no component) → PartialRouteDefinition
+export function route<TId extends string, const TPath extends string, TData>(
+  definition: PartialRouteWithLoader<TPath, TData, TId> & { id: TId },
+): PartialRouteDefinition<TId, PathParams<TPath>, undefined, TData>;
+// Partial overload: id + no loader (no component) → PartialRouteDefinition
+export function route<TId extends string, const TPath extends string>(
+  definition: PartialRouteWithoutLoader<TPath, TId> & { id: TId },
+): PartialRouteDefinition<TId, PathParams<TPath>, undefined, undefined>;
 // Overload with id + action + loader → TypefulOpaqueRouteDefinition
 export function route<
   TId extends string,
@@ -434,7 +631,11 @@ export function route<const TPath extends string>(
   definition: RouteWithoutLoader<TPath, undefined>,
 ): OpaqueRouteDefinition;
 // Implementation
-export function route(definition: object): OpaqueRouteDefinition {
+export function route(
+  definition: object,
+):
+  | OpaqueRouteDefinition
+  | PartialRouteDefinition<string, Record<string, string>, unknown, unknown> {
   return definition as unknown as OpaqueRouteDefinition;
 }
 
@@ -463,6 +664,35 @@ export function route(definition: object): OpaqueRouteDefinition {
  * ```
  */
 export function routeState<TState>(): {
+  // Partial overload: id + action + loader (no component) → PartialRouteDefinition
+  <TId extends string, TPath extends string, TActionResult, TData>(
+    definition: PartialRouteWithActionAndLoader<
+      TPath,
+      TActionResult,
+      TData,
+      TId
+    > & { id: TId },
+  ): PartialRouteDefinition<TId, PathParams<TPath>, TState, TData>;
+  // Partial overload: id + action only (no component) → PartialRouteDefinition
+  <TId extends string, TPath extends string>(
+    definition: PartialRouteWithActionOnly<TPath, TId> & { id: TId },
+  ): PartialRouteDefinition<TId, PathParams<TPath>, TState, undefined>;
+  // Partial overload: id + pathless + loader (no component) → PartialRouteDefinition
+  <TId extends string, TData>(
+    definition: PartialPathlessRouteWithLoader<TData, TId> & { id: TId },
+  ): PartialRouteDefinition<TId, Record<string, never>, TState, TData>;
+  // Partial overload: id + pathless + no loader (no component) → PartialRouteDefinition
+  <TId extends string>(
+    definition: PartialPathlessRouteWithoutLoader<TId> & { id: TId },
+  ): PartialRouteDefinition<TId, Record<string, never>, TState, undefined>;
+  // Partial overload: id + loader (no component) → PartialRouteDefinition
+  <TId extends string, TPath extends string, TData>(
+    definition: PartialRouteWithLoader<TPath, TData, TId> & { id: TId },
+  ): PartialRouteDefinition<TId, PathParams<TPath>, TState, TData>;
+  // Partial overload: id + no loader (no component) → PartialRouteDefinition
+  <TId extends string, TPath extends string>(
+    definition: PartialRouteWithoutLoader<TPath, TId> & { id: TId },
+  ): PartialRouteDefinition<TId, PathParams<TPath>, TState, undefined>;
   // Overload with id + action + loader → TypefulOpaqueRouteDefinition
   <TId extends string, TPath extends string, TActionResult, TData>(
     definition: RouteWithActionAndLoader<
