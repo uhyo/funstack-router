@@ -84,6 +84,20 @@ export function LearnIndexPage() {
       </section>
       <section className="learn-category">
         <h2>
+          <a href="/learn/route-definitions">Two-Phase Route Definitions</a>
+        </h2>
+        <p>
+          Learn how to split route definitions across the RSC module boundary.
+          Define routes in shared modules for type-safe hooks in client
+          components, then bind server components in your server module using{" "}
+          <code>bindRoute()</code>. This pattern enables full type safety for{" "}
+          <code>useRouteParams</code>, <code>useRouteData</code>, and{" "}
+          <code>useRouteState</code> across the server/client boundary.
+        </p>
+      </section>
+
+      <section className="learn-category">
+        <h2>
           <a href="/learn/transitions">Controlling Transitions</a>
         </h2>
         <p>

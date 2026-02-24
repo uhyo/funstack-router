@@ -1,0 +1,334 @@
+import { CodeBlock } from "../components/CodeBlock.js";
+
+export function LearnRouteDefinitionsPage() {
+  return (
+    <div className="learn-content">
+      <h2>Two-Phase Route Definitions</h2>
+
+      <p className="page-intro">
+        When using FUNSTACK Router with React Server Components, there is a
+        tension between type-safe routing and the RSC module boundary. Two-phase
+        route definitions solve this by splitting a route definition into a{" "}
+        <strong>shared part</strong> (importable by client components) and a{" "}
+        <strong>server part</strong> (where the component is attached).
+      </p>
+
+      <section>
+        <h3>The Problem</h3>
+        <p>
+          In an RSC architecture, server modules and client modules cannot
+          freely import from each other. This creates a dilemma for type-safe
+          routing:
+        </p>
+        <ul>
+          <li>
+            <strong>If routes live in a server module</strong> &mdash; they can
+            reference server components, but client components cannot import the
+            route objects for type-safe hooks like <code>useRouteParams</code>{" "}
+            or <code>useRouteData</code>.
+          </li>
+          <li>
+            <strong>If routes live in a shared module</strong> &mdash; client
+            components can import them, but server components cannot be
+            referenced (importing a server component makes a module
+            server-only).
+          </li>
+        </ul>
+        <p>
+          There is no single location where route objects can both reference
+          server components <em>and</em> be imported by client components.
+        </p>
+      </section>
+
+      <section>
+        <h3>The Key Insight</h3>
+        <p>
+          The only part of a route definition that is inherently server-specific
+          is the <strong>component</strong> (because it may be a server
+          component). Everything else &mdash; <code>id</code>, <code>path</code>
+          , <code>loader</code>, <code>action</code>, and navigation state
+          &mdash; is client-safe. Loaders and actions run in the browser during
+          navigation, so they can live in shared modules.
+        </p>
+        <p>
+          This means we can split a route definition at exactly one point: the
+          component reference. This is what two-phase route definitions do.
+        </p>
+      </section>
+
+      <section>
+        <h3>Phase 1: Define the Route (Shared Module)</h3>
+        <p>
+          Call <code>route()</code> <strong>without</strong> a{" "}
+          <code>component</code> property to create a partial route definition.
+          This object carries all type information and is safe to import from
+          client modules:
+        </p>
+        <CodeBlock language="typescript">{`// src/pages/user/route.ts — shared module (no "use client" directive)
+import { route } from "@funstack/router";
+import type { User } from "../../types";
+
+export const userRoute = route({
+  id: "user",
+  path: "/:userId",
+  loader: async ({ params, signal }) => {
+    const res = await fetch(\`/api/users/\${params.userId}\`, { signal });
+    return res.json() as Promise<User>;
+  },
+});
+// Inferred types:
+//   Params = { userId: string }  — from path
+//   Data   = User                — from loader return type`}</CodeBlock>
+        <p>
+          The <code>id</code> property is required for partial routes &mdash; it
+          is used at runtime to match the route context and at the type level to
+          carry type information for hooks.
+        </p>
+      </section>
+
+      <section>
+        <h3>Phase 2: Bind the Component (Server Module)</h3>
+        <p>
+          Use <code>bindRoute()</code> from <code>@funstack/router/server</code>{" "}
+          to attach a component to the partial route. This produces a full route
+          definition for <code>{"<Router />"}</code>:
+        </p>
+        <CodeBlock language="tsx">{`// src/App.tsx — Server Component
+import { bindRoute } from "@funstack/router/server";
+import { Router } from "@funstack/router";
+import { userRoute } from "./pages/user/route";
+import { UserProfile } from "./pages/user/UserProfile";
+
+const routes = [
+  bindRoute(userRoute, {
+    component: <UserProfile />,
+  }),
+];
+
+export default function App() {
+  return <Router routes={routes} />;
+}`}</CodeBlock>
+        <p>
+          Because <code>bindRoute()</code> lives in the server entry point, the
+          component can be a server component. The resulting route definition is
+          fully compatible with <code>{"<Router />"}</code> &mdash; it is the
+          same type as what <code>route()</code> with a component produces.
+        </p>
+        <p>
+          <code>bindRoute()</code> also accepts optional <code>children</code>,{" "}
+          <code>exact</code>, and <code>requireChildren</code> properties in the
+          second argument, just like the regular <code>route()</code> function.
+        </p>
+      </section>
+
+      <section>
+        <h3>Type-Safe Hooks in Client Components</h3>
+        <p>
+          The partial route object from Phase 1 can be imported in client
+          components and passed to hooks for full type safety:
+        </p>
+        <CodeBlock language="tsx">{`// src/pages/user/UserActions.tsx — "use client"
+import { useRouteParams, useRouteData } from "@funstack/router";
+import { userRoute } from "./route";
+
+export function UserActions() {
+  const { userId } = useRouteParams(userRoute);
+  // userId: string ✓
+
+  const user = useRouteData(userRoute);
+  // user: User ✓
+
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>User ID: {userId}</p>
+    </div>
+  );
+}`}</CodeBlock>
+        <p>
+          All typed hooks &mdash; <code>useRouteParams</code>,{" "}
+          <code>useRouteData</code>, and <code>useRouteState</code> &mdash;
+          accept both partial route definitions and full route definitions. The
+          type information flows naturally from path patterns, loader return
+          types, and <code>routeState</code>.
+        </p>
+      </section>
+
+      <section>
+        <h3>Navigation State</h3>
+        <p>
+          <code>routeState()</code> works with two-phase route definitions. When
+          called without a <code>component</code>, it produces a partial route
+          carrying the state type:
+        </p>
+        <CodeBlock language="typescript">{`// src/pages/settings/route.ts — shared module
+import { routeState } from "@funstack/router";
+
+type SettingsState = { tab: string };
+
+export const settingsRoute = routeState<SettingsState>()({
+  id: "settings",
+  path: "/settings",
+});
+// Params = {}, State = { tab: string }`}</CodeBlock>
+        <CodeBlock language="tsx">{`// src/pages/settings/SettingsPanel.tsx — "use client"
+import { useRouteState } from "@funstack/router";
+import { settingsRoute } from "./route";
+
+export function SettingsPanel() {
+  const state = useRouteState(settingsRoute);
+  // state: { tab: string } | undefined ✓
+  // ...
+}`}</CodeBlock>
+      </section>
+
+      <section>
+        <h3>Nested Routes</h3>
+        <p>
+          Partial routes use relative path segments, the same as regular routes.
+          Use <code>bindRoute()</code> with <code>children</code> to build
+          nested route trees:
+        </p>
+        <CodeBlock language="typescript">{`// src/pages/users/route.ts
+export const usersRoute = route({ id: "users", path: "/users" });
+
+// src/pages/users/profile/route.ts
+export const userProfileRoute = route({
+  id: "userProfile",
+  path: "/:userId",       // relative to parent
+  loader: fetchUser,
+});
+
+// src/pages/users/settings/route.ts
+export const userSettingsRoute = route({
+  id: "userSettings",
+  path: "/:userId/settings",  // relative to parent
+});`}</CodeBlock>
+        <CodeBlock language="tsx">{`// src/App.tsx
+const routes = [
+  bindRoute(usersRoute, {
+    component: <Outlet />,
+    children: [
+      bindRoute(userProfileRoute, {
+        component: <UserProfile />,
+      }),
+      bindRoute(userSettingsRoute, {
+        component: <UserSettings />,
+      }),
+    ],
+  }),
+];`}</CodeBlock>
+        <p>
+          For layout routes that don't need typed hooks, <code>id</code> is
+          optional. A route without <code>id</code> can still be used with{" "}
+          <code>bindRoute()</code>:
+        </p>
+        <CodeBlock language="typescript">{`const layout = route({ path: "/dashboard" });
+bindRoute(layout, { component: <Outlet />, children: [...] });`}</CodeBlock>
+      </section>
+
+      <section>
+        <h3>Recommended Project Structure</h3>
+        <p>
+          The two-phase pattern encourages <strong>collocating</strong> each
+          route definition with the page components that use it:
+        </p>
+        <CodeBlock language="bash">{`src/
+  pages/
+    user/
+      route.ts            ← Phase 1: id, path, loader (shared module)
+      UserProfile.tsx     ← Server component (the page)
+      UserActions.tsx     ← "use client" — imports ./route for hooks
+    settings/
+      route.ts            ← Phase 1: id, path, routeState (shared module)
+      Settings.tsx        ← Server component (the page)
+      SettingsPanel.tsx   ← "use client" — imports ./route for hooks
+  App.tsx                 ← Phase 2: bindRoute() assembles route tree`}</CodeBlock>
+        <p>This structure provides several benefits:</p>
+        <ul>
+          <li>
+            <strong>Locality</strong> &mdash; The route definition sits next to
+            the components that use it. Imports are short and obvious.
+          </li>
+          <li>
+            <strong>Encapsulation</strong> &mdash; Each page "owns" its route.
+            Adding a new page means adding a folder with a route and components,
+            then one <code>bindRoute()</code> call in <code>App.tsx</code>.
+          </li>
+          <li>
+            <strong>Local type safety</strong> &mdash; Path params and loader
+            data types are defined once in <code>route.ts</code> and consumed by
+            sibling client components. No separate type declarations needed.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Backwards Compatibility</h3>
+        <p>
+          The two-phase pattern is fully additive. The existing single-phase{" "}
+          <code>route()</code> API is unchanged:
+        </p>
+        <CodeBlock language="tsx">{`// Single-phase (existing) — still works
+route({
+  id: "user",
+  path: "/:userId",
+  component: <UserProfile />,
+  loader: fetchUser,
+});
+
+// Two-phase (new) — same route(), just without component
+const userRoute = route({
+  id: "user",
+  path: "/:userId",
+  loader: fetchUser,
+});
+bindRoute(userRoute, { component: <UserProfile /> });`}</CodeBlock>
+        <p>
+          Both patterns produce the same type of route definition and can
+          coexist in the same <code>routes</code> array. You can adopt the
+          two-phase pattern incrementally, one route at a time.
+        </p>
+      </section>
+
+      <section>
+        <h3>Migration Guide</h3>
+        <p>To migrate an existing route to the two-phase pattern:</p>
+        <h4>1. Extract the route definition</h4>
+        <p>
+          Move the non-component parts of the route to a colocated{" "}
+          <code>route.ts</code> file:
+        </p>
+        <CodeBlock language="tsx">{`// Before — everything in App.tsx (server module)
+export const userRoute = route({
+  id: "user",
+  path: "/:userId",
+  component: <UserProfile />,
+  loader: fetchUser,
+});
+
+// After:
+// pages/user/route.ts (shared module)
+export const userRoute = route({
+  id: "user",
+  path: "/:userId",
+  loader: fetchUser,
+});
+
+// App.tsx (server module)
+import { userRoute } from "./pages/user/route";
+bindRoute(userRoute, { component: <UserProfile /> });`}</CodeBlock>
+        <h4>2. Use the route object in client components</h4>
+        <CodeBlock language="tsx">{`// pages/user/UserActions.tsx — "use client"
+import { userRoute } from "./route";
+import { useRouteParams, useRouteData } from "@funstack/router";
+
+export function UserActions() {
+  const { userId } = useRouteParams(userRoute); // type-safe
+  const user = useRouteData(userRoute);          // type-safe
+  // ...
+}`}</CodeBlock>
+      </section>
+    </div>
+  );
+}

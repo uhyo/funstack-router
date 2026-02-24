@@ -34,6 +34,10 @@ const learnNavItems: NavEntry[] = [
     path: "/learn/react-server-components",
     label: "React Server Components",
   },
+  {
+    path: "/learn/route-definitions",
+    label: "Two-Phase Route Definitions",
+  },
   { path: "/learn/transitions", label: "Transitions" },
 ];
 

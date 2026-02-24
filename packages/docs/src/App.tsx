@@ -51,6 +51,11 @@ const LearnSsrWithLoadersPage = lazy(() =>
 const LearnRscPage = lazy(() =>
   import("./pages/LearnRscPage.js").then((m) => ({ default: m.LearnRscPage })),
 );
+const LearnRouteDefinitionsPage = lazy(() =>
+  import("./pages/LearnRouteDefinitionsPage.js").then((m) => ({
+    default: m.LearnRouteDefinitionsPage,
+  })),
+);
 const LearnTransitionsPage = lazy(() =>
   import("./pages/LearnTransitionsPage.js").then((m) => ({
     default: m.LearnTransitionsPage,
@@ -175,6 +180,12 @@ export const routes = [
                 path: "/react-server-components",
                 component: defer(<LearnRscPage />, {
                   name: "LearnRscPage",
+                }),
+              }),
+              route({
+                path: "/route-definitions",
+                component: defer(<LearnRouteDefinitionsPage />, {
+                  name: "LearnRouteDefinitionsPage",
                 }),
               }),
               route({

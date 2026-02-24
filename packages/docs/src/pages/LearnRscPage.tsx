@@ -269,6 +269,12 @@ export default function App() {
             See also the <a href="/learn/ssr">Server-Side Rendering</a> guide
             for how the router handles SSR and hydration
           </li>
+          <li>
+            For type-safe hooks in client components, see the{" "}
+            <a href="/learn/route-definitions">Two-Phase Route Definitions</a>{" "}
+            guide which explains how to split route definitions across the
+            server/client boundary
+          </li>
         </ul>
       </section>
     </div>
