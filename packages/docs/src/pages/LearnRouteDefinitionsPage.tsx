@@ -6,11 +6,14 @@ export function LearnRouteDefinitionsPage() {
       <h2>Two-Phase Route Definitions</h2>
 
       <p className="page-intro">
-        When using FUNSTACK Router with React Server Components, there is a
-        tension between type-safe routing and the RSC module boundary. Two-phase
-        route definitions solve this by splitting a route definition into a{" "}
-        <strong>shared part</strong> (importable by client components) and a{" "}
-        <strong>server part</strong> (where the component is attached).
+        When using FUNSTACK Router with React Server Components, you need
+        type-safe hooks like <code>useRouteParams</code> and{" "}
+        <code>useRouteData</code> in client components, but route definitions
+        that reference server components cannot be imported from client modules.
+        Two-phase route definitions solve this by splitting a route definition
+        into a <strong>shared part</strong> (importable by client components for
+        type safety) and a <strong>server part</strong> (where the component is
+        attached).
       </p>
 
       <section>
@@ -261,73 +264,6 @@ bindRoute(layout, { component: <Outlet />, children: [...] });`}</CodeBlock>
             sibling client components. No separate type declarations needed.
           </li>
         </ul>
-      </section>
-
-      <section>
-        <h3>Backwards Compatibility</h3>
-        <p>
-          The two-phase pattern is fully additive. The existing single-phase{" "}
-          <code>route()</code> API is unchanged:
-        </p>
-        <CodeBlock language="tsx">{`// Single-phase (existing) — still works
-route({
-  id: "user",
-  path: "/:userId",
-  component: <UserProfile />,
-  loader: fetchUser,
-});
-
-// Two-phase (new) — same route(), just without component
-const userRoute = route({
-  id: "user",
-  path: "/:userId",
-  loader: fetchUser,
-});
-bindRoute(userRoute, { component: <UserProfile /> });`}</CodeBlock>
-        <p>
-          Both patterns produce the same type of route definition and can
-          coexist in the same <code>routes</code> array. You can adopt the
-          two-phase pattern incrementally, one route at a time.
-        </p>
-      </section>
-
-      <section>
-        <h3>Migration Guide</h3>
-        <p>To migrate an existing route to the two-phase pattern:</p>
-        <h4>1. Extract the route definition</h4>
-        <p>
-          Move the non-component parts of the route to a colocated{" "}
-          <code>route.ts</code> file:
-        </p>
-        <CodeBlock language="tsx">{`// Before — everything in App.tsx (server module)
-export const userRoute = route({
-  id: "user",
-  path: "/:userId",
-  component: <UserProfile />,
-  loader: fetchUser,
-});
-
-// After:
-// pages/user/route.ts (shared module)
-export const userRoute = route({
-  id: "user",
-  path: "/:userId",
-  loader: fetchUser,
-});
-
-// App.tsx (server module)
-import { userRoute } from "./pages/user/route";
-bindRoute(userRoute, { component: <UserProfile /> });`}</CodeBlock>
-        <h4>2. Use the route object in client components</h4>
-        <CodeBlock language="tsx">{`// pages/user/UserActions.tsx — "use client"
-import { userRoute } from "./route";
-import { useRouteParams, useRouteData } from "@funstack/router";
-
-export function UserActions() {
-  const { userId } = useRouteParams(userRoute); // type-safe
-  const user = useRouteData(userRoute);          // type-safe
-  // ...
-}`}</CodeBlock>
       </section>
     </div>
   );
