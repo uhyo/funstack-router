@@ -56,12 +56,13 @@ export function LearnRouteDefinitionsPage() {
         </p>
         <p>
           This means we can split a route definition at exactly one point: the
-          component reference. This is what two-phase route definitions do.
+          component reference. FUNSTACK Router supports this split through
+          partial route definitions and <code>bindRoute()</code>.
         </p>
       </section>
 
       <section>
-        <h3>Phase 1: Define the Route (Shared Module)</h3>
+        <h3>Step 1: Define the Route (Shared Module)</h3>
         <p>
           Call <code>route()</code> <strong>without</strong> a{" "}
           <code>component</code> property to create a partial route definition.
@@ -91,7 +92,7 @@ export const userRoute = route({
       </section>
 
       <section>
-        <h3>Phase 2: Bind the Component (Server Module)</h3>
+        <h3>Step 2: Bind the Component (Server Module)</h3>
         <p>
           Use <code>bindRoute()</code> from <code>@funstack/router/server</code>{" "}
           to attach a component to the partial route. This produces a full route
@@ -128,7 +129,7 @@ export default function App() {
       <section>
         <h3>Type-Safe Hooks in Client Components</h3>
         <p>
-          The partial route object from Phase 1 can be imported in client
+          The partial route object from Step 1 can be imported in client
           components and passed to hooks for full type safety:
         </p>
         <CodeBlock language="tsx">{`// src/pages/user/UserActions.tsx — "use client"
@@ -161,9 +162,9 @@ export function UserActions() {
       <section>
         <h3>Navigation State</h3>
         <p>
-          <code>routeState()</code> works with two-phase route definitions. When
-          called without a <code>component</code>, it produces a partial route
-          carrying the state type:
+          <code>routeState()</code> also supports partial route definitions.
+          When called without a <code>component</code>, it produces a partial
+          route carrying the state type:
         </p>
         <CodeBlock language="typescript">{`// src/pages/settings/route.ts — shared module
 import { routeState } from "@funstack/router";
@@ -234,20 +235,20 @@ bindRoute(layout, { component: <Outlet />, children: [...] });`}</CodeBlock>
       <section>
         <h3>Recommended Project Structure</h3>
         <p>
-          The two-phase pattern encourages <strong>collocating</strong> each
-          route definition with the page components that use it:
+          This pattern encourages <strong>collocating</strong> each route
+          definition with the page components that use it:
         </p>
         <CodeBlock language="bash">{`src/
   pages/
     user/
-      route.ts            ← Phase 1: id, path, loader (shared module)
+      route.ts            ← Step 1: id, path, loader (shared module)
       UserProfile.tsx     ← Server component (the page)
       UserActions.tsx     ← "use client" — imports ./route for hooks
     settings/
-      route.ts            ← Phase 1: id, path, routeState (shared module)
+      route.ts            ← Step 1: id, path, routeState (shared module)
       Settings.tsx        ← Server component (the page)
       SettingsPanel.tsx   ← "use client" — imports ./route for hooks
-  App.tsx                 ← Phase 2: bindRoute() assembles route tree`}</CodeBlock>
+  App.tsx                 ← Step 2: bindRoute() assembles route tree`}</CodeBlock>
         <p>This structure provides several benefits:</p>
         <ul>
           <li>
