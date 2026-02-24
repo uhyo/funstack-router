@@ -83,6 +83,37 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@25.3.0)
 
+  packages/example-rsc:
+    dependencies:
+      '@funstack/router':
+        specifier: workspace:*
+        version: link:../router
+      '@funstack/static':
+        specifier: ^0.0.9
+        version: 0.0.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.0))
+      react:
+        specifier: ^19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.4
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@vitejs/plugin-react':
+        specifier: ^5.1.4
+        version: 5.1.4(vite@7.3.1(@types/node@25.3.0))
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vite:
+        specifier: ^7.3.1
+        version: 7.3.1(@types/node@25.3.0)
+
   packages/router:
     dependencies:
       '@funstack/skill-installer':
