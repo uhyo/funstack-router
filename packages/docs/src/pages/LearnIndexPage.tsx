@@ -84,15 +84,14 @@ export function LearnIndexPage() {
       </section>
       <section className="learn-category">
         <h2>
-          <a href="/learn/route-definitions">Two-Phase Route Definitions</a>
+          <a href="/learn/route-definitions">RSC with Route Features</a>
         </h2>
         <p>
-          Learn how to split route definitions across the RSC module boundary.
-          Define routes in shared modules for type-safe hooks in client
-          components, then bind server components in your server module using{" "}
-          <code>bindRoute()</code>. This pattern enables full type safety for{" "}
-          <code>useRouteParams</code>, <code>useRouteData</code>, and{" "}
-          <code>useRouteState</code> across the server/client boundary.
+          Use loaders, typed hooks (<code>useRouteParams</code>,{" "}
+          <code>useRouteData</code>, <code>useRouteState</code>), and navigation
+          state alongside React Server Components. This guide shows how to split
+          route definitions across the server/client boundary using{" "}
+          <code>bindRoute()</code> so client components get full type safety.
         </p>
       </section>
 

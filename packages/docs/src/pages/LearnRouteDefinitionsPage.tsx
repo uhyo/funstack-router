@@ -3,17 +3,18 @@ import { CodeBlock } from "../components/CodeBlock.js";
 export function LearnRouteDefinitionsPage() {
   return (
     <div className="learn-content">
-      <h2>Two-Phase Route Definitions</h2>
+      <h2>RSC with Route Features</h2>
 
       <p className="page-intro">
-        When using FUNSTACK Router with React Server Components, you need
-        type-safe hooks like <code>useRouteParams</code> and{" "}
-        <code>useRouteData</code> in client components, but route definitions
-        that reference server components cannot be imported from client modules.
-        Two-phase route definitions solve this by splitting a route definition
-        into a <strong>shared part</strong> (importable by client components for
-        type safety) and a <strong>server part</strong> (where the component is
-        attached).
+        When using React Server Components as route components, you may also
+        want route features like loaders, typed hooks (
+        <code>useRouteParams</code>, <code>useRouteData</code>), and navigation
+        state. The challenge is that route definitions referencing server
+        components cannot be imported from client modules. This guide shows how
+        to split a route definition into a <strong>shared part</strong>{" "}
+        (importable by client components for type safety) and a{" "}
+        <strong>server part</strong> (where the component is attached), enabling
+        full route features alongside RSC.
       </p>
 
       <section>

@@ -36,7 +36,7 @@ const learnNavItems: NavEntry[] = [
   },
   {
     path: "/learn/route-definitions",
-    label: "Two-Phase Route Definitions",
+    label: "RSC with Route Features",
   },
   { path: "/learn/transitions", label: "Transitions" },
 ];
