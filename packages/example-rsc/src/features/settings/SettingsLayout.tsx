@@ -1,6 +1,5 @@
-"use client";
-
-import { useLocation, Outlet } from "@funstack/router";
+import { Outlet } from "@funstack/router";
+import { NavLink } from "../../components/NavLink.js";
 
 const tabs = [
   { path: "/settings/profile", label: "Profile" },
@@ -8,21 +7,20 @@ const tabs = [
 ];
 
 export function SettingsLayout() {
-  const location = useLocation();
-  const pathname = location?.pathname ?? "";
-
   return (
     <div className="settings-layout">
       <h2>Settings</h2>
       <nav className="settings-tabs">
         {tabs.map((tab) => (
-          <a
+          <NavLink
             key={tab.path}
             href={tab.path}
-            className={"tab-link" + (pathname === tab.path ? " active" : "")}
+            className="tab-link"
+            activeClassName="active"
+            exact
           >
             {tab.label}
-          </a>
+          </NavLink>
         ))}
       </nav>
       <div className="settings-content">

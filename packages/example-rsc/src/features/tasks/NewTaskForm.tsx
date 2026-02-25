@@ -1,22 +1,10 @@
-"use client";
-
-import { useEffect } from "react";
-import { useNavigate, useRouteData } from "@funstack/router";
-import { newTaskRoute } from "./route.js";
+import { NewTaskRedirect } from "./NewTaskRedirect.js";
 
 export function NewTaskForm() {
-  const navigate = useNavigate();
-  const data = useRouteData(newTaskRoute);
-
-  useEffect(() => {
-    if (data.createdTask) {
-      navigate("/tasks");
-    }
-  }, [data.createdTask, navigate]);
-
   return (
     <div className="new-task">
       <h2>Create New Task</h2>
+      <NewTaskRedirect />
       <form method="POST" className="task-form">
         <div className="form-field">
           <label htmlFor="title">Title</label>

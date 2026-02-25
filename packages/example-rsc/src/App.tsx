@@ -20,11 +20,11 @@ import {
 import { DashboardPage } from "./features/dashboard/DashboardPage.js";
 import { TaskListPage } from "./features/tasks/TaskListPage.js";
 import { TaskDetailPage } from "./features/tasks/TaskDetailPage.js";
+import { NewTaskForm } from "./features/tasks/NewTaskForm.js";
+import { SettingsLayout } from "./features/settings/SettingsLayout.js";
 import { ProfilePage } from "./features/settings/ProfilePage.js";
 
 // Client component imports
-import { NewTaskForm } from "./features/tasks/NewTaskForm.js";
-import { SettingsLayout } from "./features/settings/SettingsLayout.js";
 import { PreferencesPanel } from "./features/settings/PreferencesPanel.js";
 
 // Phase 2: Bind components to routes and assemble the route tree.
