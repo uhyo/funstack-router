@@ -51,6 +51,34 @@ function App() {
   return <Router routes={routes} />;
 }`}</CodeBlock>
       </section>
+
+      <section>
+        <h2>
+          <code>location.href</code> and <code>location.reload()</code> doesn't
+          hard navigate
+        </h2>
+        <p>
+          When you use <code>location.href = "..."</code> or{" "}
+          <code>location.reload()</code> in an app with FUNSTACK Router, the
+          router intercepts the navigation and handles it as a client-side route
+          change instead of performing a full page reload.
+        </p>
+        <p>
+          This is because the Navigation API, which FUNSTACK Router is built on,
+          intercepts these navigations by default.
+        </p>
+        <p>
+          If you need a true hard navigation or reload that bypasses the router,
+          use <code>hardNavigate</code> or <code>hardReload</code>:
+        </p>
+        <CodeBlock language="tsx">{`import { hardReload, hardNavigate } from "@funstack/router";
+
+// Full page reload — bypasses the router and all blockers
+hardReload();
+
+// Full page navigation — bypasses the router and all blockers
+hardNavigate("/other-page");`}</CodeBlock>
+      </section>
     </div>
   );
 }
