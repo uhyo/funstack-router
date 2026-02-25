@@ -255,6 +255,58 @@ const productRoute = routeState<{ filter: string }>()({
       </article>
 
       <article className="api-item">
+        <h3>
+          <code>hardReload()</code>
+        </h3>
+        <p>
+          Performs a full page reload, bypassing the router's navigation
+          interception entirely. This is useful when you need a true browser
+          reload that the router should not intercept.
+        </p>
+        <CodeBlock language="tsx">{`import { hardReload } from "@funstack/router";
+
+// Full page reload — bypasses the router and all blockers
+hardReload();`}</CodeBlock>
+      </article>
+
+      <article className="api-item">
+        <h3>
+          <code>hardNavigate(url)</code>
+        </h3>
+        <p>
+          Performs a full page navigation to the given URL, bypassing the
+          router's navigation interception entirely. This triggers a real
+          browser navigation instead of a client-side route change, and skips
+          all blockers.
+        </p>
+        <CodeBlock language="tsx">{`import { hardNavigate } from "@funstack/router";
+
+// Full page navigation — bypasses the router and all blockers
+hardNavigate("/other-page");`}</CodeBlock>
+        <h4>Parameters</h4>
+        <table className="props-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <code>url</code>
+              </td>
+              <td>
+                <code>string</code>
+              </td>
+              <td>The URL to navigate to</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article className="api-item">
         <h3>Server Entry Point</h3>
         <p>
           The <code>route()</code> and <code>routeState()</code> helpers are

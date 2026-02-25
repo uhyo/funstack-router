@@ -20,6 +20,9 @@ export { useIsPending } from "./hooks/useIsPending.js";
 export { route, routeState } from "./route.js";
 export { bindRoute } from "./bindRoute.js";
 
+// Bypass Interception
+export { hardReload, hardNavigate } from "./bypassInterception.js";
+
 // Types
 export type {
   MatchedRoute,

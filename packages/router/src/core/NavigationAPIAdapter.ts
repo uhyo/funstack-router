@@ -10,6 +10,7 @@ import type {
   OnNavigateCallback,
 } from "../types.js";
 import { matchRoutes } from "./matchRoutes.js";
+import { isBypassInterception } from "../bypassInterception.js";
 import {
   executeLoaders,
   createLoaderRequest,
@@ -147,6 +148,16 @@ export class NavigationAPIAdapter implements RouterAdapter {
     checkBlockers?: () => boolean,
   ): (() => void) | undefined {
     const handleNavigate = (event: NavigateEvent) => {
+      // If the navigation was triggered by hardReload/hardNavigate, skip blockers and interception
+      if (isBypassInterception(event.info)) {
+        onNavigate?.(event, {
+          matches: [],
+          intercepting: false,
+          formData: event.formData,
+        });
+        return;
+      }
+
       // Capture ephemeral info from the navigate event
       // This info is only available during this navigation and resets on the next one
       this.#currentNavigationInfo = event.info;

@@ -69,6 +69,13 @@ export function ApiReferenceIndexPage() {
           <li>
             <code>routeState()</code> — Typed navigation state management
           </li>
+          <li>
+            <code>hardReload()</code> — Full page reload bypassing the router
+          </li>
+          <li>
+            <code>hardNavigate()</code> — Full page navigation bypassing the
+            router
+          </li>
         </ul>
       </section>
 
