@@ -69,17 +69,22 @@ export function LearnRouteDefinitionsPage() {
           This object carries all type information and is safe to import from
           client modules:
         </p>
-        <CodeBlock language="typescript">{`// src/pages/user/route.ts — shared module (no "use client" directive)
-import { route } from "@funstack/router";
+        <CodeBlock language="typescript">{`// src/pages/user/loader.ts
+"use client";
 import type { User } from "../../types";
+
+export async function loadUser({ params, signal }) {
+  const res = await fetch(\`/api/users/\${params.userId}\`, { signal });
+  return res.json() as Promise<User>;
+}`}</CodeBlock>
+        <CodeBlock language="typescript">{`// src/pages/user/route.ts — shared module (no "use client" directive)
+import { route } from "@funstack/router/server";
+import { loadUser } from "./loader";
 
 export const userRoute = route({
   id: "user",
   path: "/:userId",
-  loader: async ({ params, signal }) => {
-    const res = await fetch(\`/api/users/\${params.userId}\`, { signal });
-    return res.json() as Promise<User>;
-  },
+  loader: loadUser,
 });
 // Inferred types:
 //   Params = { userId: string }  — from path
@@ -132,7 +137,8 @@ export default function App() {
           The partial route object from Step 1 can be imported in client
           components and passed to hooks for full type safety:
         </p>
-        <CodeBlock language="tsx">{`// src/pages/user/UserActions.tsx — "use client"
+        <CodeBlock language="tsx">{`// src/pages/user/UserActions.tsx
+"use client";
 import { useRouteParams, useRouteData } from "@funstack/router";
 import { userRoute } from "./route";
 
@@ -167,7 +173,7 @@ export function UserActions() {
           route carrying the state type:
         </p>
         <CodeBlock language="typescript">{`// src/pages/settings/route.ts — shared module
-import { routeState } from "@funstack/router";
+import { routeState } from "@funstack/router/server";
 
 type SettingsState = { tab: string };
 
@@ -176,7 +182,8 @@ export const settingsRoute = routeState<SettingsState>()({
   path: "/settings",
 });
 // Params = {}, State = { tab: string }`}</CodeBlock>
-        <CodeBlock language="tsx">{`// src/pages/settings/SettingsPanel.tsx — "use client"
+        <CodeBlock language="tsx">{`// src/pages/settings/SettingsPanel.tsx
+"use client";
 import { useRouteState } from "@funstack/router";
 import { settingsRoute } from "./route";
 
@@ -195,9 +202,12 @@ export function SettingsPanel() {
           nested route trees:
         </p>
         <CodeBlock language="typescript">{`// src/pages/users/route.ts
+import { route } from "@funstack/router/server";
 export const usersRoute = route({ id: "users", path: "/users" });
 
 // src/pages/users/profile/route.ts
+import { route } from "@funstack/router/server";
+import { fetchUser } from "./fetchUser"; // "use client" module
 export const userProfileRoute = route({
   id: "userProfile",
   path: "/:userId",       // relative to parent
@@ -205,6 +215,7 @@ export const userProfileRoute = route({
 });
 
 // src/pages/users/settings/route.ts
+import { route } from "@funstack/router/server";
 export const userSettingsRoute = route({
   id: "userSettings",
   path: "/:userId/settings",  // relative to parent
@@ -228,7 +239,8 @@ const routes = [
           optional. A route without <code>id</code> can still be used with{" "}
           <code>bindRoute()</code>:
         </p>
-        <CodeBlock language="typescript">{`const layout = route({ path: "/dashboard" });
+        <CodeBlock language="typescript">{`import { route, bindRoute } from "@funstack/router/server";
+const layout = route({ path: "/dashboard" });
 bindRoute(layout, { component: <Outlet />, children: [...] });`}</CodeBlock>
       </section>
 
@@ -241,7 +253,8 @@ bindRoute(layout, { component: <Outlet />, children: [...] });`}</CodeBlock>
         <CodeBlock language="bash">{`src/
   pages/
     user/
-      route.ts            ← Step 1: id, path, loader (shared module)
+      route.ts            ← Step 1: id, path (shared module)
+      loader.ts           ← "use client" — loader function
       UserProfile.tsx     ← Server component (the page)
       UserActions.tsx     ← "use client" — imports ./route for hooks
     settings/
