@@ -164,9 +164,9 @@ const editRoute = route({
             with no server-side form handling), consider using React 19&rsquo;s{" "}
             <code>{"<form action={fn}>"}</code> pattern instead. When a form
             action is a <strong>function</strong> rather than a URL, the browser
-            will not attempt a server round-trip &mdash; it calls the function
-            directly, even before hydration completes (via React&rsquo;s
-            progressive enhancement for actions).
+            will not attempt a server round-trip on submission. Note that in a
+            client-only app the form will not work until React hydrates, since
+            the function only exists in the JavaScript bundle.
           </p>
           <p>
             In contrast, FUNSTACK Router&rsquo;s <code>action</code> intercepts
