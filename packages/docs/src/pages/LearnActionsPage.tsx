@@ -34,10 +34,11 @@ export function LearnActionsPage() {
       <section>
         <h3>How It Works</h3>
         <p>
-          When a <code>{'<form method="post">'}</code> is submitted inside a
-          route that defines an <code>action</code>, the router intercepts the
-          submission via the Navigation API instead of letting the browser send
-          it to the server. The flow is:
+          When a <code>{'<form method="post">'}</code> is submitted, the router
+          matches the form&rsquo;s destination URL against the route
+          definitions. If a matched route defines an <code>action</code>, the
+          router intercepts the submission via the Navigation API instead of
+          letting the browser send it to the server. The flow is:
         </p>
         <ol>
           <li>
