@@ -38,6 +38,7 @@ const learnNavItems: NavEntry[] = [
     path: "/learn/route-definitions",
     label: "RSC with Route Features",
   },
+  { path: "/learn/actions", label: "Form Actions" },
   { path: "/learn/transitions", label: "Transitions" },
 ];
 

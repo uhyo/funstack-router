@@ -97,6 +97,19 @@ export function LearnIndexPage() {
 
       <section className="learn-category">
         <h2>
+          <a href="/learn/actions">Form Actions</a>
+        </h2>
+        <p>
+          Learn how the router intercepts POST form submissions and runs action
+          functions on the client. This guide covers the action/loader data flow
+          and includes important guidance on progressive enhancement &mdash;
+          your server should always be ready to handle POST requests as a
+          baseline.
+        </p>
+      </section>
+
+      <section className="learn-category">
+        <h2>
           <a href="/learn/transitions">Controlling Transitions</a>
         </h2>
         <p>

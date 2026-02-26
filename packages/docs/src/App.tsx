@@ -56,6 +56,11 @@ const LearnRouteDefinitionsPage = lazy(() =>
     default: m.LearnRouteDefinitionsPage,
   })),
 );
+const LearnActionsPage = lazy(() =>
+  import("./pages/LearnActionsPage.js").then((m) => ({
+    default: m.LearnActionsPage,
+  })),
+);
 const LearnTransitionsPage = lazy(() =>
   import("./pages/LearnTransitionsPage.js").then((m) => ({
     default: m.LearnTransitionsPage,
@@ -186,6 +191,12 @@ export const routes = [
                 path: "/route-definitions",
                 component: defer(<LearnRouteDefinitionsPage />, {
                   name: "LearnRouteDefinitionsPage",
+                }),
+              }),
+              route({
+                path: "/actions",
+                component: defer(<LearnActionsPage />, {
+                  name: "LearnActionsPage",
                 }),
               }),
               route({

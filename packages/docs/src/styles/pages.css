@@ -247,6 +247,56 @@
   color: var(--color-text);
 }
 
+/* Callout */
+.callout {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin: 16px 0;
+  border-left: 4px solid;
+}
+
+.callout p {
+  margin: 0 0 8px;
+}
+
+.callout p:last-child {
+  margin-bottom: 0;
+}
+
+.callout-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.callout.warning {
+  background: #fef3c7;
+  border-left-color: #f59e0b;
+}
+
+.callout.warning .callout-title {
+  color: #92400e;
+}
+
+.callout.warning p {
+  color: #78350f;
+}
+
+@media (prefers-color-scheme: dark) {
+  .callout.warning {
+    background: #422006;
+    border-left-color: #f59e0b;
+  }
+
+  .callout.warning .callout-title {
+    color: #fbbf24;
+  }
+
+  .callout.warning p {
+    color: #fde68a;
+  }
+}
+
 /* Not Found Page */
 .not-found-page {
   text-align: center;

@@ -102,8 +102,9 @@ export function ApiReferenceIndexPage() {
             extraction utilities
           </li>
           <li>
-            <code>RouteDefinition</code>, <code>LoaderArgs</code>,{" "}
-            <code>Location</code>, <code>NavigateOptions</code>
+            <code>RouteDefinition</code>, <code>ActionArgs</code>,{" "}
+            <code>LoaderArgs</code>, <code>Location</code>,{" "}
+            <code>NavigateOptions</code>
           </li>
         </ul>
       </section>
