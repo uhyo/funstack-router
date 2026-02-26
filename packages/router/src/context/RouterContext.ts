@@ -16,8 +16,6 @@ export type RouterContextValue = {
   url: URL | null;
   /** Whether a navigation transition is pending */
   isPending: boolean;
-  /** Navigate to a new URL */
-  navigate: (to: string, options?: NavigateOptions) => void;
   /** Navigate to a new URL and wait for completion */
   navigateAsync: (to: string, options?: NavigateOptions) => Promise<void>;
   /** Update current entry's state without navigation */

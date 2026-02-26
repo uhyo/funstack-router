@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { Suspense, type ReactNode } from "react";
 import { Router } from "../Router/index.js";
-import { useNavigate } from "../hooks/useNavigate.js";
 import { useLocation } from "../hooks/useLocation.js";
 import { useSearchParams } from "../hooks/useSearchParams.js";
 import { useIsPending } from "../hooks/useIsPending.js";
@@ -18,77 +17,6 @@ describe("hooks", () => {
 
   afterEach(() => {
     cleanupNavigationMock();
-  });
-
-  describe("useNavigate", () => {
-    it("returns a navigate function", () => {
-      let navigateFn: ReturnType<typeof useNavigate> | null = null;
-
-      function TestComponent() {
-        navigateFn = useNavigate();
-        return null;
-      }
-
-      const routes: RouteDefinition[] = [
-        { path: "/", component: TestComponent },
-      ];
-
-      render(<Router routes={routes} />);
-      expect(typeof navigateFn).toBe("function");
-    });
-
-    it("navigates to a new URL", () => {
-      function TestComponent() {
-        const navigate = useNavigate();
-        return <button onClick={() => navigate("/about")}>Go</button>;
-      }
-
-      const routes: RouteDefinition[] = [
-        { path: "/", component: TestComponent },
-      ];
-
-      render(<Router routes={routes} />);
-      screen.getByRole("button").click();
-
-      expect(mockNavigation.navigate).toHaveBeenCalledWith("/about", {
-        history: "push",
-        state: undefined,
-      });
-    });
-
-    it("supports replace option", () => {
-      function TestComponent() {
-        const navigate = useNavigate();
-        return (
-          <button onClick={() => navigate("/about", { replace: true })}>
-            Go
-          </button>
-        );
-      }
-
-      const routes: RouteDefinition[] = [
-        { path: "/", component: TestComponent },
-      ];
-
-      render(<Router routes={routes} />);
-      screen.getByRole("button").click();
-
-      expect(mockNavigation.navigate).toHaveBeenCalledWith("/about", {
-        history: "replace",
-        state: undefined,
-      });
-    });
-
-    it("throws when used outside Router", () => {
-      function TestComponent() {
-        useNavigate();
-        return null;
-      }
-
-      expect(() => render(<TestComponent />)).toThrow(
-        "useNavigate must be used within a Router",
-      );
-    });
   });
 
   describe("useLocation", () => {

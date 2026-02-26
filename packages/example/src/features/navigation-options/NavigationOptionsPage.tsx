@@ -1,5 +1,4 @@
 import type { RouteComponentProps } from "@funstack/router";
-import { useNavigate } from "@funstack/router";
 
 /**
  * Example: Navigation Options (replace, state, info)
@@ -18,10 +17,8 @@ type PageState = {
 type Props = RouteComponentProps<Record<string, never>, PageState>;
 
 export function NavigationOptionsPage({ state, info }: Props) {
-  const navigate = useNavigate();
-
   const handlePushNavigation = () => {
-    navigate("/nav-options", {
+    navigation.navigate("/nav-options", {
       state: {
         navigatedWith: "push",
         timestamp: Date.now(),
@@ -31,8 +28,8 @@ export function NavigationOptionsPage({ state, info }: Props) {
   };
 
   const handleReplaceNavigation = () => {
-    navigate("/nav-options", {
-      replace: true,
+    navigation.navigate("/nav-options", {
+      history: "replace",
       state: {
         navigatedWith: "replace",
         timestamp: Date.now(),
@@ -42,7 +39,7 @@ export function NavigationOptionsPage({ state, info }: Props) {
   };
 
   const handleExternalWithState = () => {
-    navigate("/about", {
+    navigation.navigate("/about", {
       state: { referrer: "/nav-options" },
       info: { tracking: "nav-options-demo" },
     });
@@ -146,8 +143,8 @@ export function NavigationOptionsPage({ state, info }: Props) {
             padding: "0.5rem",
             overflow: "auto",
           }}
-        >{`navigate("/page", {
-  replace: true,           // Optional: replace instead of push
+        >{`navigation.navigate("/page", {
+  history: "replace",      // Optional: "replace" instead of default "push"
   state: { foo: "bar" },   // Optional: persistent state
   info: { temp: "data" },  // Optional: ephemeral info
 });`}</pre>

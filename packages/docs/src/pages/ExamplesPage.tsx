@@ -8,7 +8,7 @@ export function ExamplesPage() {
       <section>
         <h2>Basic Routing</h2>
         <p>A simple example with home and about pages:</p>
-        <CodeBlock language="tsx">{`import { Router, route, Outlet, useNavigate } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { Router, route, Outlet } from "@funstack/router";
 
 function Home() {
   return <h1>Home Page</h1>;
@@ -19,13 +19,11 @@ function About() {
 }
 
 function Layout() {
-  const navigate = useNavigate();
-
   return (
     <div>
       <nav>
-        <button onClick={() => navigate("/")}>Home</button>
-        <button onClick={() => navigate("/about")}>About</button>
+        <button onClick={() => navigation.navigate("/")}>Home</button>
+        <button onClick={() => navigation.navigate("/about")}>About</button>
       </nav>
       <Outlet />
     </div>

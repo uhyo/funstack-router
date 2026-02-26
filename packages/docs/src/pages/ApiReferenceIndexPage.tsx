@@ -30,9 +30,6 @@ export function ApiReferenceIndexPage() {
         <p>React hooks for accessing router state and navigation.</p>
         <ul>
           <li>
-            <code>useNavigate()</code> — Programmatic navigation
-          </li>
-          <li>
             <code>useLocation()</code> — Current location object
           </li>
           <li>

@@ -3,7 +3,6 @@ import { render, screen } from "@testing-library/react";
 import { Router } from "../Router/index.js";
 import { Outlet } from "../Outlet.js";
 import { useLocation } from "../hooks/useLocation.js";
-import { useNavigate } from "../hooks/useNavigate.js";
 import { route, type RouteDefinition } from "../route.js";
 import { clearLoaderCache } from "../core/loaderCache.js";
 
@@ -155,34 +154,6 @@ describe("Fallback Mode", () => {
         <Router routes={routes} fallback="static" />,
       );
       expect(container.textContent).toBe("");
-    });
-
-    it("useNavigate returns a function that warns on call", () => {
-      setupStaticLocation("http://localhost/");
-      const consoleWarnSpy = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => {});
-
-      function NavigateTester() {
-        const navigate = useNavigate();
-        return <button onClick={() => navigate("/about")}>Navigate</button>;
-      }
-
-      const routes: RouteDefinition[] = [
-        { path: "/", component: NavigateTester },
-      ];
-
-      render(<Router routes={routes} fallback="static" />);
-
-      // Click the button to trigger navigate
-      screen.getByText("Navigate").click();
-
-      // Should have logged a warning
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("static fallback mode"),
-      );
-
-      consoleWarnSpy.mockRestore();
     });
 
     it("does not call onNavigate callback in static mode", () => {

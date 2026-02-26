@@ -8,7 +8,7 @@ export function HomePage() {
       <ul>
         <li>
           <a href="/about">Basic navigation</a> - Native &lt;a&gt; tags +{" "}
-          <code>useNavigate()</code> hook
+          <code>navigation.navigate()</code>
         </li>
         <li>
           <a href="/users">Data loaders with Suspense</a> - Async data fetching

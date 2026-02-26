@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useBlocker, useNavigate } from "@funstack/router";
+import { useBlocker } from "@funstack/router";
 
 /**
  * Example: useBlocker hook for preventing navigation with unsaved changes
@@ -9,7 +9,6 @@ import { useBlocker, useNavigate } from "@funstack/router";
  * or any state that would be lost on navigation.
  */
 export function EditFormPage() {
-  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [saved, setSaved] = useState(false);
@@ -32,7 +31,7 @@ export function EditFormPage() {
     // Simulate saving
     setSaved(true);
     alert("Saved successfully!");
-    navigate("/");
+    navigation.navigate("/");
   };
 
   const handleReset = () => {

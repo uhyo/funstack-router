@@ -1,5 +1,4 @@
 import { use } from "react";
-import { useNavigate } from "@funstack/router";
 import type { User } from "../types";
 
 type Props = {
@@ -8,14 +7,15 @@ type Props = {
 
 export function UserDetail({ data }: Props) {
   const user = use(data);
-  const navigate = useNavigate();
 
   if (!user) {
     return (
       <div>
         <h1>User Not Found</h1>
         <p>The requested user does not exist.</p>
-        <button onClick={() => navigate("/users")}>Back to Users</button>
+        <button onClick={() => navigation.navigate("/users")}>
+          Back to Users
+        </button>
       </div>
     );
   }
@@ -48,7 +48,10 @@ export function UserDetail({ data }: Props) {
           <span style={{ color: "#999" }}>Next User →</span>
         )}
       </div>
-      <button onClick={() => navigate("/users")} style={{ marginTop: "1rem" }}>
+      <button
+        onClick={() => navigation.navigate("/users")}
+        style={{ marginTop: "1rem" }}
+      >
         Back to Users
       </button>
     </div>

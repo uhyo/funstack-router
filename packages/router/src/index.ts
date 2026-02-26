@@ -7,7 +7,6 @@ export { Router, type RouterProps, type SSRConfig } from "./Router/index.js";
 export { Outlet } from "./Outlet.js";
 
 // Hooks
-export { useNavigate } from "./hooks/useNavigate.js";
 export { useLocation } from "./hooks/useLocation.js";
 export { useSearchParams } from "./hooks/useSearchParams.js";
 export { useBlocker, type UseBlockerOptions } from "./hooks/useBlocker.js";

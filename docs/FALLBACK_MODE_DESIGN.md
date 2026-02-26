@@ -91,7 +91,6 @@ type FallbackMode =
 | `useParams()`         | ✅                  | ✅                   |
 | `useLocation()`       | ✅                  | ✅ (read-only)       |
 | Link clicks (SPA)     | ✅ Intercepted      | ❌ Full page load    |
-| `useNavigate()`       | ✅ Works            | ⚠️ Throws or no-op   |
 | Back/forward (SPA)    | ✅ Handled          | ❌ Full page load    |
 | `onNavigate` callback | ✅                  | ❌ Never called      |
 
@@ -381,11 +380,6 @@ function useParams() {
   const { params } = useRouteContext();
   return params;
 }
-
-function useNavigate() {
-  const { navigate } = useRouterContext();
-  return navigate; // Adapter handles mode-specific behavior
-}
 ```
 
 ### 8. Data Loaders
@@ -584,7 +578,6 @@ type FallbackMode =
 4. **Hook behavior in static mode**
    - `useLocation()` returns correct values
    - `useParams()` returns correct values
-   - `useNavigate()` returns function that warns
 
 ### Integration Tests
 

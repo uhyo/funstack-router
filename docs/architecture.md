@@ -158,20 +158,6 @@ function Layout() {
 
 ## Hooks API
 
-### `useNavigate()`
-
-Returns a function for programmatic navigation:
-
-```typescript
-const navigate = useNavigate();
-
-// Basic navigation
-navigate("/users");
-
-// With options
-navigate("/users", { replace: true, state: { from: "home" } });
-```
-
 ### `useLocation()`
 
 Returns the current location object:
@@ -283,7 +269,6 @@ src/
 ├── route.ts                 # Route definition helper with type inference
 ├── types.ts                 # Shared type definitions
 ├── hooks/
-│   ├── useNavigate.ts
 │   ├── useLocation.ts
 │   ├── useParams.ts
 │   └── useSearchParams.ts

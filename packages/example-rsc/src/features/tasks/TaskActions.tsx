@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouteParams, useRouteData, useNavigate } from "@funstack/router";
+import { useRouteParams, useRouteData } from "@funstack/router";
 import { taskDetailRoute } from "./route.js";
 import { updateTaskStatus, deleteTask } from "../../data/tasks.js";
 
@@ -16,7 +16,6 @@ const statusOptions: {
 export function TaskActions() {
   const { taskId } = useRouteParams(taskDetailRoute);
   const task = useRouteData(taskDetailRoute);
-  const navigate = useNavigate();
 
   if (!task) {
     return (
@@ -30,12 +29,12 @@ export function TaskActions() {
 
   const handleStatusChange = (newStatus: "todo" | "in-progress" | "done") => {
     updateTaskStatus(task.id, newStatus);
-    navigate(`/tasks/${task.id}`);
+    navigation.navigate(`/tasks/${task.id}`);
   };
 
   const handleDelete = () => {
     deleteTask(task.id);
-    navigate("/tasks");
+    navigation.navigate("/tasks");
   };
 
   return (

@@ -10,28 +10,6 @@ export function ApiHooksPage() {
 
       <article className="api-item">
         <h3>
-          <code>useNavigate()</code>
-        </h3>
-        <p>Returns a function to programmatically navigate.</p>
-        <CodeBlock language="tsx">{`import { useNavigate } from "@funstack/router";
-
-function MyComponent() {
-  const navigate = useNavigate();
-
-  // Navigate to a path
-  navigate("/about");
-
-  // Navigate with options
-  navigate("/users/123", {
-    replace: true,  // Replace current history entry
-    state: { from: "home" },  // Persistent state (survives back/forward)
-    info: { referrer: "home" },  // Ephemeral info (only for this navigation)
-  });
-}`}</CodeBlock>
-      </article>
-
-      <article className="api-item">
-        <h3>
           <code>useLocation()</code>
         </h3>
         <p>Returns the current location object.</p>

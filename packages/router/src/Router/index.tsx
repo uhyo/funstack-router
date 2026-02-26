@@ -174,14 +174,6 @@ export function Router({
     );
   }, [adapter, routes, onNavigate, blockerRegistry]);
 
-  // Navigate function from adapter
-  const navigate = useCallback(
-    (to: string, options?: NavigateOptions) => {
-      adapter.navigate(to, options);
-    },
-    [adapter],
-  );
-
   // Navigate function that returns a Promise
   const navigateAsync = useCallback(
     (to: string, options?: NavigateOptions) => {
@@ -270,7 +262,6 @@ export function Router({
       locationInfo,
       url: urlObject,
       isPending,
-      navigate,
       navigateAsync,
       updateCurrentEntryState,
     }),
@@ -279,7 +270,6 @@ export function Router({
       locationInfo,
       urlObject,
       isPending,
-      navigate,
       navigateAsync,
       updateCurrentEntryState,
     ],
