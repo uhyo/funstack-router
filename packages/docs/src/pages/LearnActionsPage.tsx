@@ -60,7 +60,7 @@ export function LearnActionsPage() {
             The action&rsquo;s return value is passed to the route&rsquo;s{" "}
             <code>loader</code> as <code>actionResult</code>
           </li>
-          <li>The loader re-runs and the UI updates with fresh data</li>
+          <li>The loader runs and the UI updates with fresh data</li>
         </ol>
         <p>
           If the matched route does <strong>not</strong> define an action, the
@@ -181,8 +181,8 @@ const editRoute = route({
         <h3>Action Result and Loader</h3>
         <p>
           When a route defines both an <code>action</code> and a{" "}
-          <code>loader</code>, the loader re-runs after the action completes.
-          The action&rsquo;s return value is passed to the loader via the{" "}
+          <code>loader</code>, the loader runs after the action completes. The
+          action&rsquo;s return value is passed to the loader via the{" "}
           <code>actionResult</code> parameter:
         </p>
         <CodeBlock language="typescript">{`action: async ({ request }) => {
