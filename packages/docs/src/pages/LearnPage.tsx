@@ -19,6 +19,8 @@ const learnNavItems: NavEntry[] = [
   { path: "/learn/navigation-api", label: "Navigation API" },
   { path: "/learn/nested-routes", label: "Nested Routes" },
   { path: "/learn/type-safety", label: "Type Safety" },
+  { path: "/learn/actions", label: "Form Actions" },
+  { path: "/learn/transitions", label: "Transitions" },
   {
     label: "SSR",
     items: [
@@ -37,8 +39,6 @@ const learnNavItems: NavEntry[] = [
       { path: "/learn/rsc/route-features", label: "RSC with Route Features" },
     ],
   },
-  { path: "/learn/actions", label: "Form Actions" },
-  { path: "/learn/transitions", label: "Transitions" },
 ];
 
 function isNavGroup(entry: NavEntry): entry is NavGroup {
