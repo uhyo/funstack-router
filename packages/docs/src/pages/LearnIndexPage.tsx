@@ -72,27 +72,25 @@ export function LearnIndexPage() {
       </section>
 
       <section className="learn-category">
-        <h2>
-          <a href="/learn/react-server-components">React Server Components</a>
-        </h2>
+        <h2>React Server Components</h2>
         <p>
-          Learn how to use FUNSTACK Router with React Server Components. Define
-          routes in server modules using the{" "}
-          <code>@funstack/router/server</code> entry point and keep your client
-          bundle lean by separating route definitions from runtime router code.
+          FUNSTACK Router is designed to work with React Server Components.
+          These guides cover how to define routes in server modules and use
+          route features alongside RSC:
         </p>
-      </section>
-      <section className="learn-category">
-        <h2>
-          <a href="/learn/route-definitions">RSC with Route Features</a>
-        </h2>
-        <p>
-          Use loaders, typed hooks (<code>useRouteParams</code>,{" "}
-          <code>useRouteData</code>, <code>useRouteState</code>), and navigation
-          state alongside React Server Components. This guide shows how to split
-          route definitions across the server/client boundary using{" "}
-          <code>bindRoute()</code> so client components get full type safety.
-        </p>
+        <ul>
+          <li>
+            <a href="/learn/rsc">React Server Components</a> &mdash; define
+            routes in server modules using the{" "}
+            <code>@funstack/router/server</code> entry point and keep your
+            client bundle lean
+          </li>
+          <li>
+            <a href="/learn/rsc/route-features">RSC with Route Features</a>{" "}
+            &mdash; use loaders, typed hooks, and navigation state alongside RSC
+            by splitting route definitions with <code>bindRoute()</code>
+          </li>
+        </ul>
       </section>
 
       <section className="learn-category">

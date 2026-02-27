@@ -108,7 +108,7 @@ export function HomePage() {
             <h3>RSC Compatible</h3>
             <p>
               Designed to work with React Server Components.{" "}
-              <a href="/learn/react-server-components">Learn more</a>
+              <a href="/learn/rsc">Learn more</a>
             </p>
           </div>
         </div>

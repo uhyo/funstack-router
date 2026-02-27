@@ -271,8 +271,8 @@ export default function App() {
           </li>
           <li>
             For type-safe hooks in client components, see the{" "}
-            <a href="/learn/route-definitions">RSC with Route Features</a> guide
-            which explains how to split route definitions across the
+            <a href="/learn/rsc/route-features">RSC with Route Features</a>{" "}
+            guide which explains how to split route definitions across the
             server/client boundary
           </li>
         </ul>

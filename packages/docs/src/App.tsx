@@ -182,16 +182,22 @@ export const routes = [
                 ],
               }),
               route({
-                path: "/react-server-components",
-                component: defer(<LearnRscPage />, {
-                  name: "LearnRscPage",
-                }),
-              }),
-              route({
-                path: "/route-definitions",
-                component: defer(<LearnRouteDefinitionsPage />, {
-                  name: "LearnRouteDefinitionsPage",
-                }),
+                path: "/rsc",
+                component: <Outlet />,
+                children: [
+                  route({
+                    path: "/",
+                    component: defer(<LearnRscPage />, {
+                      name: "LearnRscPage",
+                    }),
+                  }),
+                  route({
+                    path: "/route-features",
+                    component: defer(<LearnRouteDefinitionsPage />, {
+                      name: "LearnRouteDefinitionsPage",
+                    }),
+                  }),
+                ],
               }),
               route({
                 path: "/actions",

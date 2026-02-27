@@ -349,7 +349,7 @@ const routes = [
           <li>
             <code>bindRoute</code> - Binds a component to a partial route
             definition (see{" "}
-            <a href="/learn/route-definitions">Two-Phase Route Definitions</a>)
+            <a href="/learn/rsc/route-features">Two-Phase Route Definitions</a>)
           </li>
           <li>
             Types: <code>ActionArgs</code>, <code>LoaderArgs</code>,{" "}
@@ -363,10 +363,9 @@ const routes = [
           , and hooks, use the main <code>@funstack/router</code> entry point.
         </p>
         <p>
-          See the{" "}
-          <a href="/learn/react-server-components">React Server Components</a>{" "}
-          guide for a full walkthrough of using the server entry point, and the{" "}
-          <a href="/learn/route-definitions">Two-Phase Route Definitions</a>{" "}
+          See the <a href="/learn/rsc">React Server Components</a> guide for a
+          full walkthrough of using the server entry point, and the{" "}
+          <a href="/learn/rsc/route-features">Two-Phase Route Definitions</a>{" "}
           guide for using <code>bindRoute()</code> to split route definitions
           across the RSC boundary.
         </p>

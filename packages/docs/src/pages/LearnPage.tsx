@@ -31,12 +31,11 @@ const learnNavItems: NavEntry[] = [
     ],
   },
   {
-    path: "/learn/react-server-components",
-    label: "React Server Components",
-  },
-  {
-    path: "/learn/route-definitions",
-    label: "RSC with Route Features",
+    label: "RSC",
+    items: [
+      { path: "/learn/rsc", label: "React Server Components" },
+      { path: "/learn/rsc/route-features", label: "RSC with Route Features" },
+    ],
   },
   { path: "/learn/actions", label: "Form Actions" },
   { path: "/learn/transitions", label: "Transitions" },
