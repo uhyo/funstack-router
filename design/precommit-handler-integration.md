@@ -103,10 +103,11 @@ Phase 2 (commit):    New page fades in with data ready
 
 ### Overview
 
-Two new API surfaces, mirroring the existing `onNavigate`/`loader` pattern:
+One new API surface on route definitions:
 
-1. **Route-level `precommit` function** — per-route pre-commit logic (guards, prefetching, animations)
-2. **Router-level `onPrecommit` callback** — app-wide pre-commit logic (global auth, analytics, view transitions)
+- **Route-level `precommit` function** — per-route pre-commit logic (guards, prefetching, animations)
+
+For app-wide precommit logic, no new Router prop is needed. The existing `onNavigate` callback receives the raw `NavigateEvent`, so users can call `event.intercept({ precommitHandler })` directly. The Navigation API aggregates handlers from multiple `intercept()` calls, so the user's precommit handler runs alongside the router's.
 
 ### Route-Level `precommit`
 
@@ -143,9 +144,10 @@ type PrecommitArgs<Params extends Record<string, string>> = {
 
 #### Execution semantics
 
-- Only the **deepest matched route** with a `precommit` handler runs. This mirrors how `action` works — the most specific route takes precedence for pre-commit behavior.
-- If the precommit handler throws or returns a rejected promise, the navigation is cancelled (the browser handles this natively).
-- If `controller.redirect()` is called, the navigation destination changes. The router should re-match routes against the redirected URL for the post-commit `handler`.
+- **All matched routes** with `precommit` handlers run **sequentially, parent to child**. This allows layout routes to define guards that protect all their children.
+- If any precommit handler throws or returns a rejected promise, the navigation is cancelled (the browser handles this natively). Subsequent handlers in the chain are not called.
+- If `controller.redirect()` is called, subsequent precommit handlers in the chain are **skipped** — the redirect changes the destination, so child handlers' params would be stale. The router wraps the controller to detect redirect calls.
+- After all precommit handlers complete, the router re-matches routes against the (potentially redirected) URL for the post-commit `handler`.
 
 #### Type-safe route definition
 
@@ -161,63 +163,44 @@ const adminRoute = route({
 });
 ```
 
-### Router-Level `onPrecommit`
+### Global Precommit via `onNavigate`
 
-A new optional prop on `<Router>`:
+Users who need app-wide precommit logic (global auth, analytics, view transitions) can use the existing `onNavigate` callback:
 
 ```typescript
 <Router
   routes={routes}
-  onPrecommit={async (controller, info) => {
-    // Runs before any route-level precommit handlers
-    console.log("Navigating to:", info.destination.pathname);
+  onNavigate={(event, info) => {
+    if (info.intercepting) {
+      event.intercept({
+        precommitHandler: async (controller) => {
+          // Global precommit logic
+          if (needsAuth(info.matches) && !isAuthenticated()) {
+            controller.redirect("/signin", { history: "replace" });
+          }
+        },
+      });
+    }
   }}
 />
 ```
 
-#### `OnPrecommitCallback`
-
-```typescript
-type OnPrecommitInfo = {
-  /** Matched routes for the destination */
-  matches: readonly MatchedRoute[] | null;
-  /** The destination URL */
-  destination: URL;
-  /** AbortSignal for the navigation */
-  signal: AbortSignal;
-};
-
-type OnPrecommitCallback = (
-  controller: NavigationPrecommitController,
-  info: OnPrecommitInfo,
-) => void | Promise<void>;
-```
+The Navigation API aggregates handlers from multiple `intercept()` calls. Precommit handlers run in registration order, so the user's handler (registered during `onNavigate`) runs **before** the router's handler (registered after `onNavigate` returns). This is the natural order: global guards run before route-level guards.
 
 #### Execution order
 
 ```
 1. navigate event fires
-2. onNavigate callback (existing) — can preventDefault()
-3. event.intercept() is called with precommitHandler + handler
+2. onNavigate callback (existing) — can preventDefault() or call event.intercept()
+3. Router calls event.intercept() with precommitHandler + handler
 4. precommitHandler starts:
-   a. onPrecommit callback (global, new)
-   b. Route-level precommit (new)
-5. precommitHandler resolves → navigation COMMITS
+   a. User's precommitHandler from onNavigate (if registered)
+   b. Router's precommitHandler:
+      - Route precommit handlers run sequentially (parent → child)
+5. All precommitHandler promises resolve → navigation COMMITS
 6. handler runs:
    a. Actions (form submissions, existing)
    b. Loaders (existing)
-```
-
-### `RouterProps` Changes
-
-```typescript
-export type RouterProps = {
-  routes: RouteDefinition[];
-  onNavigate?: OnNavigateCallback;
-  onPrecommit?: OnPrecommitCallback; // NEW
-  fallback?: FallbackMode;
-  ssr?: SSRConfig;
-};
 ```
 
 ### `InternalRouteDefinition` Changes
@@ -274,36 +257,40 @@ interface NavigationInterceptOptions {
 
 Add `precommitHandler` to the `event.intercept()` call. The precommit handler:
 
-1. Calls the router-level `onPrecommit` callback (if provided)
-2. Finds and runs the deepest matched route's `precommit` handler (if any)
-3. If neither exists, no `precommitHandler` is passed to `intercept()` (preserving current behavior for browsers without support)
+1. Collects all matched routes that have a `precommit` handler
+2. Runs them sequentially, parent to child
+3. Stops early if `controller.redirect()` is called
+4. If no matched route has a `precommit`, no `precommitHandler` is passed to `intercept()` (preserving current behavior for browsers without support)
 
 ```typescript
 // Pseudocode for the key change in setupInterception
-const hasPrecommit = onPrecommit || matched.some((m) => m.route.precommit);
+const precommitRoutes = matched.filter((m) => m.route.precommit);
 
 event.intercept({
   // Only include precommitHandler if there's something to run
   // This preserves backwards compatibility with browsers that don't support it
-  ...(hasPrecommit && event.cancelable
+  ...(precommitRoutes.length > 0 && event.cancelable
     ? {
         precommitHandler: async (controller) => {
-          // 1. Global onPrecommit
-          await onPrecommit?.(controller, {
-            matches: matched,
-            destination: url,
-            signal: event.signal,
-          });
+          // Track whether redirect was called to short-circuit remaining handlers
+          let redirected = false;
+          const wrappedController: NavigationPrecommitController = {
+            redirect(...args) {
+              redirected = true;
+              return controller.redirect(...args);
+            },
+            addHandler: controller.addHandler.bind(controller),
+          };
 
-          // 2. Route-level precommit (deepest match with precommit)
-          const precommitRoute = findPrecommitRoute(matched);
-          if (precommitRoute) {
-            await precommitRoute.route.precommit!({
-              params: precommitRoute.params,
-              controller,
+          // Run precommit handlers sequentially, parent → child
+          for (const match of precommitRoutes) {
+            await match.route.precommit!({
+              params: match.params,
+              controller: wrappedController,
               signal: event.signal,
               url,
             });
+            if (redirected) break;
           }
         },
       }
@@ -314,45 +301,15 @@ event.intercept({
 });
 ```
 
-### Step 4: Update `RouterAdapter` interface
-
-**File: `packages/router/src/core/RouterAdapter.ts`**
-
-Update `setupInterception` to accept the new `onPrecommit` parameter:
-
-```typescript
-setupInterception(
-  routes: InternalRouteDefinition[],
-  onNavigate?: OnNavigateCallback,
-  onPrecommit?: OnPrecommitCallback,    // NEW
-  checkBlockers?: () => boolean,
-): (() => void) | undefined;
-```
-
-### Step 5: Thread `onPrecommit` through `Router` component
-
-**File: `packages/router/src/Router/index.tsx`**
-
-Pass `onPrecommit` from props through to `adapter.setupInterception()`:
-
-```typescript
-useEffect(() => {
-  return adapter.setupInterception(
-    routes,
-    onNavigate,
-    onPrecommit, // NEW
-    blockerRegistry.checkAll,
-  );
-}, [adapter, routes, onNavigate, onPrecommit, blockerRegistry]);
-```
-
-### Step 6: Export new types
+### Step 4: Export new types
 
 **File: `packages/router/src/index.ts`**
 
-Export `PrecommitArgs`, `OnPrecommitCallback`, and `OnPrecommitInfo`.
+Export `PrecommitArgs`.
 
-### Step 7: Update test mock
+No changes are needed to `RouterAdapter`, `Router`, `StaticAdapter`, or `NullAdapter` since the precommit handling is entirely within `NavigationAPIAdapter`'s existing `setupInterception` method — it simply reads `precommit` from the matched route definitions.
+
+### Step 5: Update test mock
 
 **File: `packages/router/src/__tests__/setup.ts`**
 
@@ -366,17 +323,19 @@ The mock navigation needs to support `precommitHandler` in `event.intercept()`:
 - `controller.redirect()` should update the destination URL
 - `controller.addHandler()` should queue a post-commit callback
 
-### Step 8: Add tests
+### Step 6: Add tests
 
 New test cases:
 
 1. **Route precommit handler runs before commit**: Verify that during the precommit handler, the old URL is still active
 2. **Route precommit redirect**: Navigate to `/admin`, precommit redirects to `/signin`, verify the final URL is `/signin` and the correct route renders
 3. **Route precommit cancellation**: Precommit throws → navigation is cancelled, old page remains
-4. **Global onPrecommit callback**: Verify it runs before route-level precommit
-5. **Precommit with loaders**: Verify loaders still run post-commit after precommit resolves
-6. **Precommit not passed for non-cancelable events**: Verify no `precommitHandler` is included when `event.cancelable` is false
-7. **No precommit when no handlers defined**: Verify `precommitHandler` is omitted from `intercept()` when neither `onPrecommit` nor route `precommit` exists
+4. **Multi-level precommit (parent → child)**: Both parent and child have precommit handlers; verify both run in order (parent first)
+5. **Parent redirect skips child precommit**: Parent precommit calls `redirect()`; verify child precommit does not run
+6. **Precommit with loaders**: Verify loaders still run post-commit after precommit resolves
+7. **Precommit not passed for non-cancelable events**: Verify no `precommitHandler` is included when `event.cancelable` is false
+8. **No precommit when no handlers defined**: Verify `precommitHandler` is omitted from `intercept()` when no matched route has `precommit`
+9. **Global precommit via onNavigate**: Verify user can register precommit handler via `onNavigate` + `event.intercept()`
 
 ## Interaction with Existing Features
 
@@ -391,12 +350,23 @@ navigate event → blockers check → (blocked? → preventDefault, done)
 
 ### `onNavigate` callback
 
-`onNavigate` runs during the `navigate` event, before `event.intercept()`. It can `preventDefault()` to stop the navigation entirely. If it doesn't prevent, the precommit handler runs next. No change to `onNavigate` behavior.
+`onNavigate` runs during the `navigate` event, before the router calls `event.intercept()`. It can:
+
+1. Call `event.preventDefault()` to stop the navigation entirely.
+2. Call `event.intercept({ precommitHandler })` to register a global precommit handler.
+
+If the user registers a precommit handler via `onNavigate`, it runs **before** the router's route-level precommit handlers (since `intercept()` calls are processed in registration order).
 
 ```
 navigate event → onNavigate callback → (prevented? → done)
-                                      → intercept({ precommitHandler, handler })
+               ↓                      → user may call event.intercept({ precommitHandler })
+               → router calls event.intercept({ precommitHandler, handler })
+               → all precommitHandlers run (user's first, then router's)
+               → commit
+               → all handlers run
 ```
+
+No changes to the `onNavigate` type signature or behavior are needed.
 
 ### Loaders and Actions
 
@@ -418,42 +388,63 @@ This is the desired behavior: the precommit phase is invisible to the React tree
 
 Precommit handlers are a client-side Navigation API feature. They have no effect during SSR or in static/null adapter modes. No changes needed for `StaticAdapter` or `NullAdapter`.
 
-## Deepest-Match vs. All-Matches Execution
+## Multi-Level Execution Model
 
-A key design decision is whether precommit handlers run for the **deepest matched route** or for **all matched routes** in the stack.
+All matched routes with `precommit` handlers run **sequentially, parent to child**. This allows layout routes to define guards that protect all their children without duplicating logic.
 
-### Option A: Deepest match only (recommended)
+### Example: Nested Auth Guards
 
-Only the most specific matched route's `precommit` runs. This is consistent with how `action` works.
+```typescript
+const routes = [
+  route({
+    path: "/app",
+    precommit: async ({ controller, signal }) => {
+      // Parent guard: require authentication for all /app/* routes
+      if (!isAuthenticated()) {
+        controller.redirect("/signin", { history: "replace" });
+      }
+    },
+    component: AppLayout,
+    children: [
+      route({
+        path: "admin",
+        precommit: async ({ controller, signal }) => {
+          // Child guard: require admin role (only runs if parent didn't redirect)
+          if (!isAdmin()) {
+            controller.redirect("/app/unauthorized");
+          }
+        },
+        component: AdminPanel,
+      }),
+    ],
+  }),
+];
+```
 
-**Pros:**
+Navigating to `/app/admin` as an unauthenticated user:
 
-- Simple mental model: one route "owns" the pre-commit behavior
-- No ordering concerns between parent/child precommit handlers
-- Consistent with `action` precedent
+1. Parent precommit runs → redirects to `/signin`
+2. Child precommit is **skipped** (redirect already issued)
 
-**Cons:**
+Navigating to `/app/admin` as a non-admin authenticated user:
 
-- Parent layout routes can't define their own guards (must use `onPrecommit` for global guards)
+1. Parent precommit runs → passes (user is authenticated)
+2. Child precommit runs → redirects to `/app/unauthorized`
 
-### Option B: All matches (parent to child)
+### Short-Circuiting on Redirect
 
-All matched routes' `precommit` handlers run sequentially, parent first.
+The router wraps the `NavigationPrecommitController` to detect `redirect()` calls. When a redirect occurs, remaining precommit handlers in the chain are skipped because:
 
-**Pros:**
+- Child handlers' `params` would be stale (they were extracted from the original URL, not the redirect target)
+- Continuing after redirect could issue conflicting redirects
+- The intent of a redirect is to change the destination, which makes subsequent guards on the original destination irrelevant
 
-- Layout routes can define guards for all their children
-- More granular control
+### Contrast with `action`
 
-**Cons:**
+Unlike `action` (which runs only the deepest match), `precommit` runs all levels. This difference is intentional:
 
-- Ordering and early-return semantics are complex (if parent redirects, do children run?)
-- No existing precedent in the router (`action` is deepest-only)
-- Can be approximated with `onPrecommit` + route matching for the global case
-
-### Recommendation
-
-**Option A (deepest match only)** is recommended for the initial implementation. It keeps the API simple and consistent. Global precommit logic belongs in `onPrecommit`. If demand for parent-level guards emerges, it can be added later as an opt-in without breaking changes.
+- **`action`** handles form submission — only one route should process a given form.
+- **`precommit`** defines guards and pre-navigation logic — parent routes naturally want to guard access to their entire subtree.
 
 ## Re-Matching After Redirect
 
@@ -516,7 +507,6 @@ const supportsPrecommit = (() => {
 When `precommitHandler` is not supported:
 
 - Route `precommit` handlers are silently skipped
-- `onPrecommit` is silently skipped
 - A console warning is logged if precommit handlers are defined but not supported
 
 ### Precommit + form submissions
@@ -559,16 +549,12 @@ This is also deferred from the initial implementation.
 
 ## Summary of Files to Change
 
-| File                                               | Change                                                                                                      |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `packages/router/src/navigation-api.d.ts`          | Add `NavigationPrecommitController` type, update `intercept()` options                                      |
-| `packages/router/src/types.ts`                     | Add `PrecommitArgs`, `OnPrecommitCallback`, `OnPrecommitInfo`; add `precommit` to `InternalRouteDefinition` |
-| `packages/router/src/route.ts`                     | Add `precommit` to `route()` and `routeState()` helpers                                                     |
-| `packages/router/src/core/RouterAdapter.ts`        | Update `setupInterception` signature to accept `onPrecommit`                                                |
-| `packages/router/src/core/NavigationAPIAdapter.ts` | Pass `precommitHandler` to `intercept()`, implement precommit execution logic                               |
-| `packages/router/src/core/StaticAdapter.ts`        | Update `setupInterception` parameter types                                                                  |
-| `packages/router/src/core/NullAdapter.ts`          | Update `setupInterception` parameter types                                                                  |
-| `packages/router/src/Router/index.tsx`             | Accept `onPrecommit` prop, pass to adapter                                                                  |
-| `packages/router/src/index.ts`                     | Export new types                                                                                            |
-| `packages/router/src/__tests__/setup.ts`           | Add `precommitHandler` support to mock navigation                                                           |
-| `packages/router/src/__tests__/precommit.test.tsx` | New test file for precommit handler tests                                                                   |
+| File                                               | Change                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------ |
+| `packages/router/src/navigation-api.d.ts`          | Add `NavigationPrecommitController` type, update `intercept()` options   |
+| `packages/router/src/types.ts`                     | Add `PrecommitArgs`; add `precommit` to `InternalRouteDefinition`        |
+| `packages/router/src/route.ts`                     | Add `precommit` to `route()` and `routeState()` helpers                  |
+| `packages/router/src/core/NavigationAPIAdapter.ts` | Pass `precommitHandler` to `intercept()`, implement sequential execution |
+| `packages/router/src/index.ts`                     | Export `PrecommitArgs`                                                   |
+| `packages/router/src/__tests__/setup.ts`           | Add `precommitHandler` support to mock navigation                        |
+| `packages/router/src/__tests__/precommit.test.tsx` | New test file for precommit handler tests                                |
