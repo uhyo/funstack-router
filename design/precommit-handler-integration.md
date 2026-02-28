@@ -145,10 +145,10 @@ type PrecommitArgs<Params extends Record<string, string>> = {
 
 #### Execution semantics
 
-- Precommit handlers must be **synchronous**. This aligns with the precommit phase's purpose: fast guard checks using local state before the URL commits. Async work (data fetching, server-side auth) belongs in loaders, which run post-commit.
+- Precommit handlers may be synchronous or asynchronous — the router `await`s each handler before proceeding to the next. However, **synchronous handlers are strongly recommended**. The precommit phase runs before the URL bar updates, so async work (network requests, server-side auth) delays the visible navigation and degrades perceived performance. Prefer checking local state (tokens, flags, stores) in precommit and deferring async work to loaders, which run post-commit.
 - **All matched routes** with `precommit` handlers run **sequentially, parent to child**. This allows layout routes to define guards that protect all their children.
 - If `redirect()` is called, the remaining child handlers are **skipped**. The router then **re-matches** routes against the new URL and runs the new match stack's precommit handlers from parent to child. This process repeats until no redirect occurs (or a maximum iteration limit is reached), naturally resolving redirect chains.
-- If any precommit handler throws, the navigation is cancelled (the browser handles this natively via precommitHandler rejection).
+- If any precommit handler throws (or returns a rejected promise), the navigation is cancelled (the browser handles this natively via precommitHandler rejection).
 - After all precommit handlers complete without redirect, the navigation commits and the post-commit `handler` runs loaders against the final URL.
 
 #### Type-safe route definition
@@ -211,7 +211,9 @@ The Navigation API aggregates handlers from multiple `intercept()` calls. Precom
 export type InternalRouteDefinition = {
   // ... existing fields ...
   /** Pre-commit handler for this route */
-  precommit?: (args: PrecommitArgs<Record<string, string>>) => void;
+  precommit?: (
+    args: PrecommitArgs<Record<string, string>>,
+  ) => void | Promise<void>;
 };
 ```
 
@@ -273,7 +275,7 @@ event.intercept({
   // This preserves backwards compatibility with browsers that don't support it.
   ...(hasPrecommit && event.cancelable
     ? {
-        precommitHandler: (nativeController) => {
+        precommitHandler: async (nativeController) => {
           const MAX_REDIRECTS = 10;
           let currentUrl = url;
           let currentMatched = matched;
@@ -287,7 +289,7 @@ event.intercept({
             // Run precommit handlers sequentially, parent → child
             for (const match of currentMatched) {
               if (match.route.precommit) {
-                match.route.precommit({
+                await match.route.precommit({
                   params: match.params,
                   url: currentUrl,
                   redirect,
@@ -366,7 +368,7 @@ New test cases:
 11. **Precommit not passed for non-cancelable events**: Verify no `precommitHandler` is included when `event.cancelable` is false
 12. **No precommit when no handlers defined**: Verify `precommitHandler` is omitted from `intercept()` when no matched route has `precommit`
 13. **Global precommit via onNavigate**: Verify user can register precommit handler via `onNavigate` + `event.intercept()`
-14. **Precommit handler is synchronous**: Verify that returning a promise from precommit does not cause the router to await it
+14. **Async precommit handler**: Verify that an async precommit handler is awaited before the navigation commits
 
 ## Interaction with Existing Features
 
