@@ -116,10 +116,10 @@ A new optional `precommit` property on route definitions:
 ```typescript
 route({
   path: "/admin/settings",
-  precommit: async ({ params, controller, signal }) => {
-    const user = await checkAuth({ signal });
-    if (!user.isAdmin) {
-      controller.redirect("/unauthorized", { history: "replace" });
+  precommit: ({ params, redirect }) => {
+    if (!isAdmin()) {
+      redirect("/unauthorized");
+      return;
     }
   },
   loader: async ({ params, signal }) => fetchSettings(params),
@@ -133,10 +133,11 @@ route({
 type PrecommitArgs<Params extends Record<string, string>> = {
   /** Extracted path parameters for this route */
   params: Params;
-  /** NavigationPrecommitController for redirect/addHandler */
-  controller: NavigationPrecommitController;
-  /** AbortSignal — aborted if the navigation is cancelled */
-  signal: AbortSignal;
+  /**
+   * Redirect the navigation to a different URL before it commits.
+   * Call `return` after `redirect()` to avoid executing subsequent logic in the handler.
+   */
+  redirect: (url: string) => void;
   /** The destination URL */
   url: URL;
 };
@@ -144,10 +145,11 @@ type PrecommitArgs<Params extends Record<string, string>> = {
 
 #### Execution semantics
 
+- Precommit handlers must be **synchronous**. This aligns with the precommit phase's purpose: fast guard checks using local state before the URL commits. Async work (data fetching, server-side auth) belongs in loaders, which run post-commit.
 - **All matched routes** with `precommit` handlers run **sequentially, parent to child**. This allows layout routes to define guards that protect all their children.
-- If any precommit handler throws or returns a rejected promise, the navigation is cancelled (the browser handles this natively). Subsequent handlers in the chain are not called.
-- If `controller.redirect()` is called, subsequent precommit handlers in the chain are **skipped** — the redirect changes the destination, so child handlers' params would be stale. The router wraps the controller to detect redirect calls.
-- After all precommit handlers complete, the router re-matches routes against the (potentially redirected) URL for the post-commit `handler`.
+- If `redirect()` is called, the remaining child handlers are **skipped**. The router then **re-matches** routes against the new URL and runs the new match stack's precommit handlers from parent to child. This process repeats until no redirect occurs (or a maximum iteration limit is reached), naturally resolving redirect chains.
+- If any precommit handler throws, the navigation is cancelled (the browser handles this natively via precommitHandler rejection).
+- After all precommit handlers complete without redirect, the navigation commits and the post-commit `handler` runs loaders against the final URL.
 
 #### Type-safe route definition
 
@@ -156,7 +158,7 @@ The `route()` helper infers `Params` from the path pattern:
 ```typescript
 const adminRoute = route({
   path: "/admin/:section",
-  precommit: async ({ params }) => {
+  precommit: ({ params }) => {
     // params is typed as { section: string }
   },
   component: AdminPage,
@@ -209,7 +211,7 @@ The Navigation API aggregates handlers from multiple `intercept()` calls. Precom
 export type InternalRouteDefinition = {
   // ... existing fields ...
   /** Pre-commit handler for this route */
-  precommit?: (args: PrecommitArgs<Record<string, string>>) => unknown;
+  precommit?: (args: PrecommitArgs<Record<string, string>>) => void;
 };
 ```
 
@@ -257,46 +259,70 @@ interface NavigationInterceptOptions {
 
 Add `precommitHandler` to the `event.intercept()` call. The precommit handler:
 
-1. Collects all matched routes that have a `precommit` handler
-2. Runs them sequentially, parent to child
-3. Stops early if `controller.redirect()` is called
+1. Runs matched routes' `precommit` handlers sequentially, parent to child
+2. If `redirect()` is called, skips remaining children, re-matches routes against the new URL, and repeats (redirect chain loop with max iteration guard)
+3. Calls `nativeController.redirect()` on each redirect to update the Navigation API's destination
 4. If no matched route has a `precommit`, no `precommitHandler` is passed to `intercept()` (preserving current behavior for browsers without support)
 
 ```typescript
 // Pseudocode for the key change in setupInterception
-const precommitRoutes = matched.filter((m) => m.route.precommit);
+const hasPrecommit = matched.some((m) => m.route.precommit);
 
 event.intercept({
-  // Only include precommitHandler if there's something to run
-  // This preserves backwards compatibility with browsers that don't support it
-  ...(precommitRoutes.length > 0 && event.cancelable
+  // Only include precommitHandler if there's something to run.
+  // This preserves backwards compatibility with browsers that don't support it.
+  ...(hasPrecommit && event.cancelable
     ? {
-        precommitHandler: async (controller) => {
-          // Track whether redirect was called to short-circuit remaining handlers
-          let redirected = false;
-          const wrappedController: NavigationPrecommitController = {
-            redirect(...args) {
-              redirected = true;
-              return controller.redirect(...args);
-            },
-            addHandler: controller.addHandler.bind(controller),
-          };
+        precommitHandler: (nativeController) => {
+          const MAX_REDIRECTS = 10;
+          let currentUrl = url;
+          let currentMatched = matched;
 
-          // Run precommit handlers sequentially, parent → child
-          for (const match of precommitRoutes) {
-            await match.route.precommit!({
-              params: match.params,
-              controller: wrappedController,
-              signal: event.signal,
-              url,
-            });
-            if (redirected) break;
+          for (let i = 0; i < MAX_REDIRECTS; i++) {
+            let redirectTarget: string | null = null;
+            const redirect = (to: string) => {
+              redirectTarget = to;
+            };
+
+            // Run precommit handlers sequentially, parent → child
+            for (const match of currentMatched) {
+              if (match.route.precommit) {
+                match.route.precommit({
+                  params: match.params,
+                  url: currentUrl,
+                  redirect,
+                });
+                // Parent redirected → skip remaining children
+                if (redirectTarget !== null) break;
+              }
+            }
+
+            // No redirect → done, proceed to commit
+            if (redirectTarget === null) break;
+
+            // Apply redirect and re-match against new URL
+            nativeController.redirect(redirectTarget);
+            currentUrl = new URL(redirectTarget, currentUrl);
+            const newMatched = matchRoutes(routes, currentUrl.pathname);
+
+            // No routes match the redirect target → done
+            if (newMatched === null) break;
+
+            currentMatched = newMatched;
+            // Loop continues: run new match stack's precommit handlers
           }
         },
       }
     : {}),
   handler: async () => {
-    // ... existing handler code (actions + loaders) ...
+    // After commit, use the committed URL (may differ from original if redirected)
+    const committedEntry = navigation.currentEntry;
+    const committedUrl = new URL(committedEntry!.url!);
+    const finalMatches = matchRoutes(routes, committedUrl.pathname);
+
+    if (!finalMatches) return;
+
+    // ... existing action + loader logic, using finalMatches ...
   },
 });
 ```
@@ -332,10 +358,15 @@ New test cases:
 3. **Route precommit cancellation**: Precommit throws → navigation is cancelled, old page remains
 4. **Multi-level precommit (parent → child)**: Both parent and child have precommit handlers; verify both run in order (parent first)
 5. **Parent redirect skips child precommit**: Parent precommit calls `redirect()`; verify child precommit does not run
-6. **Precommit with loaders**: Verify loaders still run post-commit after precommit resolves
-7. **Precommit not passed for non-cancelable events**: Verify no `precommitHandler` is included when `event.cancelable` is false
-8. **No precommit when no handlers defined**: Verify `precommitHandler` is omitted from `intercept()` when no matched route has `precommit`
-9. **Global precommit via onNavigate**: Verify user can register precommit handler via `onNavigate` + `event.intercept()`
+6. **Redirect chain**: `/a` precommit redirects to `/b`, `/b` precommit redirects to `/c`; verify final URL is `/c` and `/c`'s route renders
+7. **Redirect chain with nested routes**: Parent precommit passes, child redirects to a different parent's subtree; verify new parent's precommit runs
+8. **Infinite redirect loop detection**: `/a` redirects to `/b`, `/b` redirects to `/a`; verify the loop stops at the iteration limit with a warning
+9. **Precommit receives correct params after redirect**: After a redirect, the new match stack's precommit handlers receive params extracted from the redirect target URL, not the original
+10. **Precommit with loaders**: Verify loaders run post-commit against the final (potentially redirected) URL
+11. **Precommit not passed for non-cancelable events**: Verify no `precommitHandler` is included when `event.cancelable` is false
+12. **No precommit when no handlers defined**: Verify `precommitHandler` is omitted from `intercept()` when no matched route has `precommit`
+13. **Global precommit via onNavigate**: Verify user can register precommit handler via `onNavigate` + `event.intercept()`
+14. **Precommit handler is synchronous**: Verify that returning a promise from precommit does not cause the router to await it
 
 ## Interaction with Existing Features
 
@@ -398,20 +429,22 @@ All matched routes with `precommit` handlers run **sequentially, parent to child
 const routes = [
   route({
     path: "/app",
-    precommit: async ({ controller, signal }) => {
+    precommit: ({ redirect }) => {
       // Parent guard: require authentication for all /app/* routes
       if (!isAuthenticated()) {
-        controller.redirect("/signin", { history: "replace" });
+        redirect("/signin");
+        return;
       }
     },
     component: AppLayout,
     children: [
       route({
         path: "admin",
-        precommit: async ({ controller, signal }) => {
+        precommit: ({ redirect }) => {
           // Child guard: require admin role (only runs if parent didn't redirect)
           if (!isAdmin()) {
-            controller.redirect("/app/unauthorized");
+            redirect("/app/unauthorized");
+            return;
           }
         },
         component: AdminPanel,
@@ -431,13 +464,18 @@ Navigating to `/app/admin` as a non-admin authenticated user:
 1. Parent precommit runs → passes (user is authenticated)
 2. Child precommit runs → redirects to `/app/unauthorized`
 
-### Short-Circuiting on Redirect
+### Short-Circuiting and Redirect Chains
 
-The router wraps the `NavigationPrecommitController` to detect `redirect()` calls. When a redirect occurs, remaining precommit handlers in the chain are skipped because:
+When `redirect()` is called in a precommit handler:
 
-- Child handlers' `params` would be stale (they were extracted from the original URL, not the redirect target)
-- Continuing after redirect could issue conflicting redirects
-- The intent of a redirect is to change the destination, which makes subsequent guards on the original destination irrelevant
+1. The remaining child handlers are **skipped** — the current match stack is invalidated since child handlers' `params` were extracted from the original URL, not the redirect target.
+2. The router **re-matches** routes against the redirect target URL.
+3. The new match stack's precommit handlers run from parent to child.
+4. This process repeats until no redirect occurs, up to a maximum of 10 iterations.
+
+This naturally resolves redirect chains: if `/old` redirects to `/new`, and `/new`'s layout route redirects to `/final`, both redirects are resolved in a single navigation. A maximum iteration guard prevents infinite redirect loops (e.g., `/a` → `/b` → `/a`), with a warning in development mode.
+
+The `redirect` function provided by the router is a simple callback that captures the target URL — the router checks whether it was called after each precommit handler returns. This avoids wrapping the native `NavigationPrecommitController` while still giving the router full control over the redirect chain.
 
 ### Contrast with `action`
 
@@ -448,37 +486,45 @@ Unlike `action` (which runs only the deepest match), `precommit` runs all levels
 
 ## Re-Matching After Redirect
 
-When `controller.redirect()` is called in a precommit handler, the destination URL changes. The post-commit `handler` needs to know the new matched routes to run loaders correctly.
+When a precommit handler calls `redirect()`, two levels of re-matching occur:
 
-### Approach
+### 1. During the precommit phase (redirect chains)
 
-After the precommit handler resolves, the `handler` should re-match routes against the (potentially redirected) URL. The URL after redirect is available as `navigation.currentEntry.url` after commit.
+Each time `redirect()` is called, the router immediately re-matches routes against the new URL and runs the new match stack's precommit handlers. This loop continues until no precommit handler redirects (or the iteration limit is reached). The router calls `nativeController.redirect()` on each iteration to update the Navigation API's destination.
+
+```
+Navigate to /old-page
+  → Match: [Layout, OldPage]
+  → Layout.precommit → no redirect
+  → OldPage.precommit → redirect("/new-page")
+  → Re-match /new-page: [Layout, NewPage]
+  → Layout.precommit → no redirect
+  → NewPage.precommit → no redirect
+  → Done. Navigation commits to /new-page.
+```
+
+### 2. In the post-commit handler (loader execution)
+
+After the precommit phase resolves and the navigation commits, the `handler` re-matches routes against the committed URL (which reflects the final redirect target) to determine which loaders to run:
 
 ```typescript
-event.intercept({
-  precommitHandler: async (controller) => {
-    // May call controller.redirect()
-    await runPrecommitHandlers(controller, matched, url);
-  },
-  handler: async () => {
-    // After commit, use the committed URL (may differ from original if redirected)
-    const committedEntry = navigation.currentEntry;
-    const committedUrl = new URL(committedEntry!.url!);
-    const finalMatches = matchRoutes(routes, committedUrl.pathname);
+handler: async () => {
+  const committedEntry = navigation.currentEntry;
+  const committedUrl = new URL(committedEntry!.url!);
+  const finalMatches = matchRoutes(routes, committedUrl.pathname);
 
-    if (!finalMatches) return;
+  if (!finalMatches) return;
 
-    // Execute loaders for the final matched routes
-    const request = createLoaderRequest(committedUrl);
-    const results = executeLoaders(
-      finalMatches,
-      committedEntry!.id,
-      request,
-      event.signal,
-    );
-    await Promise.all(results.map((r) => r.data));
-  },
-});
+  // Execute loaders for the final matched routes
+  const request = createLoaderRequest(committedUrl);
+  const results = executeLoaders(
+    finalMatches,
+    committedEntry!.id,
+    request,
+    event.signal,
+  );
+  await Promise.all(results.map((r) => r.data));
+},
 ```
 
 ## Edge Cases
@@ -515,7 +561,9 @@ For POST form submissions, the current flow is: match routes → find action rou
 
 ### Redirect to a route with its own precommit
 
-If a precommit handler redirects to a URL whose matched route also has a `precommit` handler, the redirected route's precommit does **not** run. The redirect happens within a single precommit phase — there is no recursive precommit evaluation. This matches the Navigation API's semantics where `controller.redirect()` changes the destination but doesn't restart the interception flow.
+If a precommit handler redirects to a URL whose matched route also has a `precommit` handler, the redirected route's precommit **does** run. The router re-matches routes after each redirect and runs the new match stack's precommit handlers, forming a redirect chain. This is intentionally different from the raw Navigation API semantics (where `controller.redirect()` simply changes the destination without restarting interception) — the router adds this re-evaluation to ensure all guards on the final destination are respected.
+
+A maximum iteration limit (10) prevents infinite redirect loops. If the limit is exceeded, the router stops redirecting, logs a warning in development, and commits to the last redirect target.
 
 ## Future Considerations
 

@@ -109,24 +109,29 @@ still benefits from detecting redirect calls for its own logic:
    status for child routes) after a parent has already decided to redirect
    is unnecessary network traffic and latency.
 
-### Simplified alternative: rely on convention
-
-An alternative to wrapping is to document that parent redirects take precedence
-by convention and trust route authors not to unconditionally redirect in child
-handlers. This would simplify the implementation but provide weaker guarantees.
-
 ## Conclusion
 
 The wrapping of `NavigationPrecommitController.redirect()` proposed in the
-design document is **not required by the Navigation API** — calling `redirect()`
-multiple times is explicitly supported and the last call wins. However, the
-wrapping remains valuable as a **router-level concern** to prevent child
-handlers from running with stale params or accidentally overriding parent
-redirects.
+original design document is **not required by the Navigation API** — calling
+`redirect()` multiple times is explicitly supported and the last call wins.
 
-A simpler alternative would be to not wrap the controller and instead rely on
-route authors to handle redirect precedence correctly, but this provides weaker
-guarantees.
+### Chosen approach: router-provided `redirect` function
+
+Based on these findings, the design document has been updated to use a different
+approach: instead of wrapping `NavigationPrecommitController`, the router
+provides its own `redirect` function to each route's precommit handler. This
+function captures the redirect target, allowing the router to:
+
+1. **Skip remaining child handlers** — when a parent redirects, children's
+   params would be stale (extracted from the original URL, not the redirect target).
+2. **Re-match routes** against the redirect target URL and run the new match
+   stack's precommit handlers, naturally resolving redirect chains.
+3. **Hide the native API** — route authors never interact with
+   `NavigationPrecommitController` directly. The router calls
+   `nativeController.redirect()` internally after each redirect chain iteration.
+
+This provides stronger guarantees than wrapping (redirect chains are resolved,
+not just short-circuited) while keeping the user-facing API simple.
 
 ## References
 
