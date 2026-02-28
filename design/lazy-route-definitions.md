@@ -31,7 +31,7 @@ Lazy route definitions solve this by allowing entire subtrees of the route tree 
 
 ## Proposed API
 
-Allow `children` to accept an async function that returns route definitions:
+Allow `children` to accept a function that returns route definitions — either synchronously or as a promise:
 
 ```typescript
 route({
@@ -44,7 +44,45 @@ route({
 });
 ```
 
-The async function is called at most once — when the router first needs the children (either on navigation to a matching path or on initial page load). After resolution, the returned route definitions replace the function in the route tree, and all subsequent matching operates on the resolved children synchronously.
+The function is called when the router first needs the children (either on navigation to a matching path or on initial page load). If it returns a promise, the parent's `<Outlet />` suspends until the promise resolves. If it returns an array synchronously, matching continues immediately with no suspension.
+
+### Caching contract
+
+The children function **may be called multiple times**. It is the user's responsibility to cache the result so that:
+
+1. The **same `Promise` reference** is returned on repeat calls while loading (required by `use()` — a new promise on each call causes infinite suspension).
+2. After the promise resolves, the function returns the **resolved array synchronously** on subsequent calls.
+
+This caching contract is important for resilience: if the Router component itself cannot commit (e.g., a Suspense boundary above Router causes the tree to be discarded), React state is lost and the function will be called again. A function that always returns a fresh promise would cause infinite suspension in this edge case. A function that returns the cached result synchronously avoids suspension entirely on retry.
+
+The recommended pattern uses a `lazy()` helper (user-land, not provided by the router):
+
+```typescript
+// helpers/lazy.ts
+function lazy<T>(load: () => Promise<T>): () => T | Promise<T> {
+  let value: { result: T } | undefined;
+  let promise: Promise<T> | undefined;
+  return () => {
+    if (value) return value.result;
+    if (!promise) {
+      promise = load().then((result) => {
+        value = { result };
+        return result;
+      });
+    }
+    return promise;
+  };
+}
+
+// routes.ts
+route({
+  path: "admin",
+  component: AdminLayout,
+  children: lazy(() => import("./admin/routes").then((m) => m.adminRoutes)),
+});
+```
+
+Simple `async () => { ... }` functions (as shown in the examples below) work for the common case where Router is committed, but do not satisfy the caching contract — they create a new promise on each call. For production use, the `lazy()` pattern is recommended.
 
 ### Usage Examples
 
@@ -153,7 +191,7 @@ During navigation, `startTransition` keeps the old page visible while lazy child
 
 ### What lazy children do NOT receive
 
-The async function takes no arguments. Lazy children define static route structure (paths, components, loaders) — they don't depend on runtime values like params or request data. This keeps the mental model simple: lazy children are a code-loading mechanism, not a data-loading mechanism.
+The function takes no arguments. Lazy children define static route structure (paths, components, loaders) — they don't depend on runtime values like params or request data. This keeps the mental model simple: lazy children are a code-loading mechanism, not a data-loading mechanism.
 
 ## Internal Design
 
@@ -164,10 +202,10 @@ The async function takes no arguments. Lazy children define static route structu
 ```typescript
 export type InternalRouteDefinition = {
   // ... existing fields ...
-  /** Child routes — either resolved or a lazy loader function */
+  /** Child routes — either resolved, or a lazy loader function (sync or async) */
   children?:
     | InternalRouteDefinition[]
-    | (() => Promise<InternalRouteDefinition[]>);
+    | (() => InternalRouteDefinition[] | Promise<InternalRouteDefinition[]>);
 };
 ```
 
@@ -176,7 +214,7 @@ export type InternalRouteDefinition = {
 All route definition types that have a `children` property need to accept the lazy form:
 
 ```typescript
-type LazyRouteChildren = () => Promise<RouteDefinition[]>;
+type LazyRouteChildren = () => RouteDefinition[] | Promise<RouteDefinition[]>;
 
 // Applied to OpaqueRouteDefinition, TypefulOpaqueRouteDefinition,
 // and all internal route types (RouteWithLoader, RouteWithoutLoader, etc.)
@@ -185,20 +223,33 @@ children?: RouteDefinition[] | LazyRouteChildren;
 
 ### `matchRoutes` Behavior with Lazy Children
 
-`matchRoutes` remains **synchronous**. When it encounters a route whose `children` is a function (unresolved lazy children), it handles it as follows:
+`matchRoutes` remains **synchronous**. When it encounters a route whose `children` is a function, it **calls the function** to determine how to proceed:
 
-1. **Prefix matching**: The route is recognized as having children (for the purpose of `isExact` determination), so it matches as a prefix — same as a route with static children.
+1. **Sync result** (function returns an array): The children are resolved immediately. `matchRoutes` mutates `route.children` to the resolved array and continues matching children — exactly as if they had been static all along.
 
-2. **Parent-only match**: Since children can't be iterated, the route matches as if it has no children present. The parent route is included in the match result.
+2. **Async result** (function returns a promise): The children can't be resolved synchronously. The route matches as a prefix (same as having children), but only the parent is included in the match result.
 
-3. **No special return type**: `matchRoutes` still returns `MatchedRoute[] | null`. The caller doesn't need to know whether the match is "partial" (lazy children unresolved) or "full."
+3. **No special return type**: `matchRoutes` still returns `MatchedRoute[] | null`. The caller doesn't need to know whether the match is "partial" (async children pending) or "full."
 
 ```typescript
 function matchRoute(route, pathname, options) {
+  const isLazyChildren = typeof route.children === "function";
+
+  // Call the lazy function to resolve children (sync or async)
+  if (isLazyChildren) {
+    const result = route.children();
+    if (Array.isArray(result)) {
+      // Sync resolution — install children and continue matching
+      route.children = internalRoutes(result);
+    }
+    // If result is a Promise, leave route.children as the function
+    // (it will be called again later and should return cached result)
+  }
+
   const hasStaticChildren =
     Array.isArray(route.children) && route.children.length > 0;
-  const hasLazyChildren = typeof route.children === "function";
-  const hasChildren = hasStaticChildren || hasLazyChildren;
+  const hasUnresolvedLazy = typeof route.children === "function"; // still a function = async
+  const hasChildren = hasStaticChildren || hasUnresolvedLazy;
 
   // Lazy children affect isExact: route matches as prefix
   const isExact = route.exact ?? !hasChildren;
@@ -207,8 +258,8 @@ function matchRoute(route, pathname, options) {
 
   if (hasStaticChildren) {
     // Existing child matching logic (unchanged)
-  } else if (hasLazyChildren) {
-    // Children not resolved yet — return parent match only
+  } else if (hasUnresolvedLazy) {
+    // Async children — return parent match only
     return [result];
   }
 
@@ -216,7 +267,11 @@ function matchRoute(route, pathname, options) {
 }
 ```
 
-The `hasLazyChildren` branch bypasses the `requireChildren` check. A route with lazy children conceptually _has_ children — they just haven't been loaded yet. Returning the parent match allows the parent component to render while children load.
+**Why `matchRoutes` calls the function:** This handles the case where the function returns a cached result synchronously (e.g., after a previous async resolution). If the function returns sync, matching continues without any Suspense or re-render — the route tree is fully resolved in a single pass. This is critical for resilience: if Router's state was lost (see [Router suspension edge case](#router-suspension)), the function returns sync on retry and `matchRoutes` resolves it immediately.
+
+**Side effect in `matchRoutes`:** Calling the lazy function is technically a side effect (it may trigger a dynamic import on the first call). This is acceptable because: (1) it's idempotent — the user's caching ensures repeated calls return the same result, (2) it mirrors how `React.lazy` triggers loading on first render, and (3) in React strict mode, `useMemo` may run twice, but both calls get the same cached result.
+
+The `hasUnresolvedLazy` branch bypasses the `requireChildren` check. A route with lazy children conceptually _has_ children — they just haven't been loaded yet. Returning the parent match allows the parent component to render while children load.
 
 ### New: `PendingOutlet` Component
 
@@ -238,14 +293,9 @@ function PendingOutlet({ promise }: { promise: Promise<void> }): ReactNode {
 }
 ```
 
-`PendingOutlet` itself is a thin wrapper. All the interesting work — creating the resolution promise and caching it — happens in the **Router** component (see [Router Component Changes](#router-component-changes) below).
+`PendingOutlet` itself is a thin wrapper. The Router component is responsible for calling the lazy function, getting the Promise, and registering it in its state cache (see [Router Component Changes](#router-component-changes) below). `PendingOutlet` only exists to call `use()` inside the Suspense boundary.
 
-**Why promise creation lives in Router, not PendingOutlet:** A component that suspends before it ever commits does not retain `useState` data — React discards the in-progress fiber and re-creates it when the promise resolves. If `PendingOutlet` created the promise in its own `useState`, the initializer would run again after each suspension, calling the lazy function multiple times. By creating the promise in Router (which is already committed and stable), it is created exactly once and persisted in Router's `lazyCache` state across re-renders.
-
-**State-based cache instead of a global `WeakMap`:** The promise cache is a `Map` held in the Router's state (see [Router Component Changes](#router-component-changes) below). This has two advantages over a module-level `WeakMap`:
-
-1. **Concurrent rendering safe.** The cache is scoped to the Router instance and participates in React's state lifecycle. A global `WeakMap` would persist across abandoned renders and could leak side effects.
-2. **Reset when routes change.** When the `routes` prop changes (new route definitions), the Router clears the map. A global cache would retain stale entries from old route objects.
+**Why PendingOutlet doesn't call the function or hold state:** A component that suspends before it ever commits does not retain `useState` data — React discards the in-progress fiber and re-creates it when the promise resolves. If `PendingOutlet` called the lazy function or created the promise in its own state, it would be repeated on each retry. Instead, Router creates the promise and passes it down. If Router's own state is also lost (see [Router suspension edge case](#router-suspension)), `matchRoutes` handles it by calling the function on re-render — the user's cache returns sync, so no `PendingOutlet` is needed at all.
 
 #### How it integrates with `RouteRenderer`
 
@@ -287,15 +337,19 @@ Each level has its own Suspense boundary in its parent layout, so each shows an 
 
 ### `NavigationAPIAdapter` Changes
 
-No changes are needed to `NavigationAPIAdapter`. The existing synchronous `matchRoutes` call returns a partial match (parent only) when lazy children are present. This is sufficient to decide whether to intercept the navigation.
+No changes are needed to `NavigationAPIAdapter`. `matchRoutes` now calls the lazy function internally — on first call it typically returns a Promise (async), resulting in a partial match. This is sufficient to decide whether to intercept the navigation.
 
-Lazy resolution is handled entirely by `PendingOutlet` in the React render cycle. The handler continues to work with the partial match — it runs loaders for matched routes (the parent), and the child loaders run later when `matchRoutes` re-runs after resolution.
+The handler continues to work with the partial match — it runs loaders for matched routes (the parent), and the child loaders run later when `matchRoutes` re-runs after resolution.
 
-The initial (possibly partial) `matched` result is used to decide _whether_ to intercept. A partial match (parent matched, lazy children not yet loaded) is sufficient — if the parent path matches, the URL belongs to our route tree and should be intercepted. When the initial `matched` is `null`, no route matches even as a prefix, and the navigation isn't intercepted.
+The initial (possibly partial) `matched` result is used to decide _whether_ to intercept. A partial match (parent matched, async lazy children pending) is sufficient — if the parent path matches, the URL belongs to our route tree and should be intercepted. When the initial `matched` is `null`, no route matches even as a prefix, and the navigation isn't intercepted.
+
+**Note:** `matchRoutes` calls the lazy function inside the NavigationAPIAdapter's synchronous `handleNavigate`. This is the first call, so it triggers the dynamic import (a side effect). The Promise is returned and discarded here — the actual suspension and resolution happen later in the React render cycle.
 
 ### `Router` Component Changes
 
-The Router holds the lazy resolution cache as state and is responsible for creating resolution promises. The cache is a `Map` from route definitions to their resolution promises. Its identity change (new `Map` reference) drives `matchedRoutesWithData` recomputation:
+The Router holds a lazy resolution cache in state. When `matchRoutes` returns a partial match (async lazy children), Router calls the function to get the Promise, registers it in the cache, and attaches a `.then()` handler to trigger a re-render on resolution.
+
+The cache is a `Map` from route definitions to their resolution promises. Its identity change (new `Map` reference) is included in the `matchedRoutesWithData` dependency array, driving recomputation after resolution:
 
 ```typescript
 // packages/router/src/Router/index.tsx
@@ -303,7 +357,7 @@ The Router holds the lazy resolution cache as state and is responsible for creat
 export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
-  // Cache of in-flight and resolved lazy resolution promises.
+  // Cache of in-flight lazy resolution promises.
   // Identity change (new Map reference) triggers matchedRoutesWithData recomputation.
   const [lazyCache, setLazyCache] = useState(
     () => new Map<InternalRouteDefinition, Promise<void>>(),
@@ -319,13 +373,17 @@ export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
   // ... existing adapter, blocker, subscription setup ...
 
   const matchedRoutesWithData = useMemo(() => {
-    // ... existing matching + loader logic (unchanged) ...
+    // matchRoutes now calls lazy functions internally —
+    // sync results are resolved in-place, async results cause partial match.
+    // (existing matching + loader logic otherwise unchanged)
   }, [routes, adapter, urlObject, runLoaders, locationKey, lazyCache]);
   //                                                        ^^^^^^^^^
 
-  // --- Lazy children resolution ---
-  // After matching, check if the deepest matched route has unresolved lazy
-  // children. If so, create a resolution promise and register it in the cache.
+  // --- Lazy children resolution (async case) ---
+  // If matchRoutes returned a partial match (lazy function returned a Promise),
+  // the deepest matched route still has typeof children === 'function'.
+  // Call the function to get the Promise (same one matchRoutes got — user caches it),
+  // register it in lazyCache, and attach a .then() handler.
   // This is setState-during-render on Router's OWN state, so React correctly
   // discards the current render and re-renders with the updated cache.
   if (matchedRoutesWithData) {
@@ -337,9 +395,13 @@ export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
       !lazyCache.has(lastMatch.route)
     ) {
       const route = lastMatch.route;
-      const lazyFn =
-        route.children as () => Promise<InternalRouteDefinition[]>;
-      const promise = lazyFn().then((resolved) => {
+      const lazyFn = route.children as () => Promise<
+        InternalRouteDefinition[]
+      >;
+      // Call the function — user's cache returns the same Promise that
+      // matchRoutes received, so no duplicate loading is triggered.
+      const promise = lazyFn();
+      const voidPromise = promise.then((resolved) => {
         route.children = internalRoutes(resolved);
         // New Map reference triggers matchedRoutesWithData recomputation.
         // This runs in .then() (outside render) — a normal async state update.
@@ -349,7 +411,7 @@ export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
       // React discards this render and immediately re-renders with the
       // updated cache. On re-render, the promise is found, RouteRenderer
       // passes it to PendingOutlet, and use() suspends.
-      setLazyCache((prev) => new Map([...prev, [route, promise]]));
+      setLazyCache((prev) => new Map([...prev, [route, voidPromise]]));
     }
   }
 
@@ -357,6 +419,8 @@ export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
   // so RouteRenderer can read it and pass the promise to PendingOutlet ...
 }
 ```
+
+**Note:** Router calls the lazy function a second time (after `matchRoutes` already called it). This is safe because the user's caching ensures the same Promise object is returned — no duplicate import is triggered. The Router needs to call it to attach its own `.then()` handler for the state update.
 
 **How the promise reaches `PendingOutlet`:**
 
@@ -382,14 +446,15 @@ The Router's subscription to `currententrychange` wraps updates in `startTransit
 1. Navigation commits → `currententrychange` fires
 2. `startTransition(() => setLocationEntry(newEntry))` begins a transition
 3. React starts rendering the new page (in transition)
-4. `matchedRoutesWithData` → partial match, Router detects lazy children
-5. Router creates promise, calls `setLazyCache` (setState-during-render) → React re-renders
+4. `matchRoutes` calls lazy function → Promise → partial match
+5. Router detects async lazy children, calls function (same Promise), registers in `lazyCache` (setState-during-render) → React re-renders
 6. On re-render: promise is in cache, `RouteRenderer` produces `<PendingOutlet promise={...}>`
 7. `<PendingOutlet>` calls `use(promise)` → **suspends inside the transition**
 8. React keeps the old page visible (transition behavior)
-9. Promise resolves → `setLazyCache` creates new `Map` reference (async state update)
+9. Promise resolves → `.then()` mutates `route.children`, calls `setLazyCache` (async state update)
 10. React retries the transition with resolved children
-11. Full match, loaders run, transition completes
+11. `matchRoutes` calls function → sync (user cached) → full match, loaders run
+12. Transition completes
 
 The user sees: old page → new page with full content. No intermediate loading state during navigation.
 
@@ -402,16 +467,19 @@ User clicks link to /admin/settings
   1. navigate event fires
   2. handleNavigate runs synchronously:
      a. matchRoutes(routes, "/admin/settings")
-        → /admin matches as prefix (lazy children detected)
+        → calls lazy function → Promise (first call)
+        → /admin matches as prefix (async children)
         → returns [{ route: adminRoute, params: {} }]  (partial match)
      b. willIntercept = true (matched !== null)
      c. event.intercept({ handler }) called
   3. Navigation commits → currententrychange fires
   4. startTransition(() => setLocationEntry(newEntry))
      React begins rendering the new page inside a transition:
-     a. useMemo: matchRoutes → partial match [adminRoute]
-     b. Router detects adminRoute has lazy children, not in cache
-     c. Router creates promise, calls setLazyCache (setState-during-render)
+     a. useMemo: matchRoutes calls lazy function → same Promise (user cached)
+        → partial match [adminRoute]
+     b. Router detects adminRoute has async lazy children, not in cache
+     c. Router calls function → same Promise, registers in lazyCache,
+        calls setLazyCache (setState-during-render)
         → React discards render, re-renders with updated cache
      d. Re-render: promise found in cache, RouteRenderer renders AdminLayout
      e. outlet = <PendingOutlet promise={lazyCache.get(adminRoute)} />
@@ -420,10 +488,11 @@ User clicks link to /admin/settings
      h. PendingOutlet calls use(promise) → SUSPENDS
      i. React keeps old page visible (startTransition behavior)
   5. Lazy children resolve asynchronously:
-     a. adminRoute.children = [settingsRoute, usersRoute, ...]
+     a. .then() mutates adminRoute.children = [settingsRoute, usersRoute, ...]
      b. setLazyCache(new Map(...)) → new cache reference (async state update)
   6. React retries the transition render:
-     a. useMemo (lazyCache changed): matchRoutes → full match [adminRoute, settingsRoute]
+     a. useMemo (lazyCache changed): matchRoutes calls function → sync (user cached)
+        → mutates route.children → full match [adminRoute, settingsRoute]
      b. executeLoaders runs for all matched routes
      c. RouteRenderer renders AdminLayout + Settings
   7. Transition completes → new page shown with full content
@@ -436,11 +505,12 @@ The user sees: old page → new page with full content. No intermediate loading 
 ```
 Browser loads /admin/settings directly
   1. Router component mounts
-  2. useMemo: matchRoutes(routes, "/admin/settings")
+  2. useMemo: matchRoutes calls lazy function → Promise (first call)
      → partial match: [adminRoute match]
-  3. Router detects adminRoute has lazy children, not in cache
-     a. Creates promise, calls setLazyCache (setState-during-render)
-     b. React discards render, re-renders with updated cache
+  3. Router detects adminRoute has async lazy children, not in cache
+     a. Calls function → same Promise, registers in lazyCache
+     b. Calls setLazyCache (setState-during-render)
+     c. React discards render, re-renders with updated cache
   4. Re-render: promise in cache, RouteRenderer renders AdminLayout:
      a. outlet = <PendingOutlet promise={lazyCache.get(adminRoute)} />
      b. AdminLayout renders <Suspense fallback={<Loading/>}><Outlet /></Suspense>
@@ -449,10 +519,10 @@ Browser loads /admin/settings directly
      e. Suspense boundary shows <Loading />
   5. User sees AdminLayout with loading fallback in outlet area
   6. Lazy children resolve:
-     a. adminRoute.children = [settingsRoute, usersRoute, ...]
+     a. .then() mutates adminRoute.children = [settingsRoute, usersRoute, ...]
      b. setLazyCache(new Map(...)) → new cache reference (async state update)
-  7. useMemo re-runs (lazyCache changed): matchRoutes(routes, "/admin/settings")
-     → full match: [adminRoute match, settingsRoute match]
+  7. useMemo re-runs (lazyCache changed): matchRoutes calls function → sync (user cached)
+     → mutates route.children → full match: [adminRoute match, settingsRoute match]
   8. executeLoaders runs settings loader
   9. RouteRenderer renders AdminLayout + Settings content
 ```
@@ -463,22 +533,21 @@ If `<Outlet />` is not wrapped in `<Suspense>`, the suspension propagates up to 
 
 ### Resolution Caching
 
-Lazy children are resolved **once** and installed in-place. The async function reference is replaced with the resolved array directly on the route definition object:
+Caching happens at two levels:
+
+1. **User-level caching** (required): The lazy function itself caches its result. On first call it returns a Promise; on subsequent calls it returns the resolved array synchronously. This is the user's responsibility (see [Caching contract](#caching-contract)). This is the **primary** caching mechanism and the one that ensures resilience when React state is lost.
+
+2. **In-place mutation** (optimization): After resolution, `matchRoutes` (sync path) and Router's `.then()` handler (async path) both mutate `route.children` to the resolved array:
 
 ```typescript
 // Before resolution:
-route.children = async () => { ... }; // function
+route.children = () => { ... }; // function
 
 // After resolution:
 route.children = [settingsRoute, usersRoute, ...]; // array
 ```
 
-This means:
-
-- Subsequent `matchRoutes` calls see the array and work synchronously
-- No separate cache data structure is needed
-- The route tree is indistinguishable from a fully-static one after all lazy subtrees are resolved
-- Resolution survives across navigations (the route definitions are long-lived objects)
+Once mutated, `matchRoutes` sees the array and takes the normal static-children path — the function is never called again. The route tree is indistinguishable from a fully-static one after all lazy subtrees are resolved.
 
 **Trade-off:** This mutates the route definition objects. Since `route()` returns the input object as-is (just a type assertion), the mutation affects the original object passed by the user. This is intentional — the mutation is an optimization that replaces a one-shot factory with its result.
 
@@ -525,11 +594,11 @@ Route: /admin (lazy children: [/settings, /users])
 Navigate to: /admin/nonexistent
 ```
 
-1. Initial `matchRoutes` returns `[adminRoute]` (partial match — lazy children not resolved)
+1. `matchRoutes` calls lazy function → Promise → partial match `[adminRoute]`
 2. Navigation is intercepted (parent matched)
 3. Navigation commits → React renders in transition
-4. Router creates promise (setState-during-render) → re-render → `PendingOutlet` suspends
-5. Lazy children resolve → `setLazyCache` → new cache reference → `matchRoutes` re-runs
+4. Router registers promise in lazyCache (setState-during-render) → re-render → `PendingOutlet` suspends
+5. Lazy children resolve → `setLazyCache` → `matchRoutes` re-runs (function returns sync)
 6. `/admin` matches, but no child matches `/nonexistent`
 7. If `requireChildren` is true (default): re-match returns `null`
 8. Nothing renders
@@ -578,7 +647,28 @@ For SSR-critical routes, users should define children statically. Lazy children 
 
 ### Route definitions prop change
 
-If the `routes` prop passed to `<Router>` changes (new array/new objects), previously resolved lazy children live on the old objects. The new route definitions may have fresh lazy functions that need resolution. This works correctly because both `matchRoutes` and `PendingOutlet` check `typeof route.children === 'function'` — fresh functions trigger resolution, while already-resolved arrays are matched synchronously.
+If the `routes` prop passed to `<Router>` changes (new array/new objects), previously resolved lazy children live on the old objects. The new route definitions may have fresh lazy functions that need resolution. This works correctly because `matchRoutes` checks `typeof route.children === 'function'` — fresh functions trigger resolution, while already-resolved arrays (or mutated children) are matched synchronously.
+
+### Router suspension
+
+If Router itself cannot commit (e.g., it is rendered inside a `<Suspense>` boundary and a sibling causes suspension), Router's `lazyCache` state is lost when the tree is discarded. Without the sync return capability, this would cause infinite suspension: Router renders → calls function → Promise → registers in lazyCache → suspends → state lost → repeat.
+
+With sync return from the user's cache:
+
+1. Router renders (first time, no state) → `matchRoutes` calls function → Promise → partial match
+2. Router registers in lazyCache (setState-during-render) → PendingOutlet suspends
+3. State is lost (tree discarded by parent Suspense)
+4. Promise resolves in background → `.then()` mutates `route.children` (mutation persists on the route object even though React state is gone)
+5. Later, React re-renders the tree from scratch
+6. Router renders fresh → `matchRoutes` sees `route.children` is now an array (mutated) → full match
+7. No suspension needed
+
+Even if the in-place mutation from `.then()` hasn't run yet (race condition), the user's cache provides a second line of defense:
+
+1. `matchRoutes` calls function → sync (user cached result) → mutates `route.children` → full match
+2. No suspension, no lazyCache needed
+
+This is why the [caching contract](#caching-contract) matters: it ensures that the system converges to a resolved state regardless of how many times React state is discarded.
 
 ## Interaction with Existing Features
 
@@ -632,7 +722,7 @@ route({
 **Pros:** No ambiguity in the `children` type — it's always an array.
 **Cons:** Two properties for the same concept. Users might set both `children` and `lazyChildren`, creating confusion. Adds more overloads to `route()` and `routeState()`.
 
-**Verdict:** Overloading `children` is simpler and more intuitive. The type union `RouteDefinition[] | (() => Promise<RouteDefinition[]>)` is clear.
+**Verdict:** Overloading `children` is simpler and more intuitive. The type union `RouteDefinition[] | (() => RouteDefinition[] | Promise<RouteDefinition[]>)` is clear.
 
 ### B: `lazy()` wrapper helper
 
@@ -692,11 +782,11 @@ useEffect(() => {
 
 **File:** `packages/router/src/types.ts`
 
-- Update `InternalRouteDefinition.children` to accept `(() => Promise<InternalRouteDefinition[]>)`
+- Update `InternalRouteDefinition.children` to accept `(() => InternalRouteDefinition[] | Promise<InternalRouteDefinition[]>)`
 
 **File:** `packages/router/src/route.ts`
 
-- Define `LazyRouteChildren = () => Promise<RouteDefinition[]>`
+- Define `LazyRouteChildren = () => RouteDefinition[] | Promise<RouteDefinition[]>`
 - Update `children` in `OpaqueRouteDefinition`, `RouteDefinition`, and all internal route types (`RouteWithLoader`, `RouteWithoutLoader`, etc.) to accept `LazyRouteChildren`
 - Note: `PartialRouteDefinition` types don't have `children` (they have `children?: never`), so no changes needed there
 
@@ -704,8 +794,9 @@ useEffect(() => {
 
 **File:** `packages/router/src/core/matchRoutes.ts`
 
-- Detect `typeof route.children === 'function'` for `hasChildren` / `isExact` determination
-- When children is a function, return parent-only match (bypass child matching and `requireChildren` check)
+- When `typeof route.children === 'function'`: call the function
+- If result is an array (sync): mutate `route.children`, continue matching children normally
+- If result is a Promise (async): treat as having children for `isExact`, return parent-only match (bypass `requireChildren`)
 
 ### Step 3: Add `lazyCache` to `RouterContext`
 
@@ -719,7 +810,7 @@ useEffect(() => {
 
 - Add `lazyCache` state via `useState(() => new Map())`
 - Clear cache when `routes` prop changes (derived state pattern)
-- After computing `matchedRoutesWithData`: detect lazy children on the deepest matched route and create resolution promises via setState-during-render
+- After computing `matchedRoutesWithData`: detect async lazy children on the deepest matched route, call function to get Promise (same one matchRoutes received — user caches), register in lazyCache via setState-during-render, attach `.then()` handler
 - Include `lazyCache` in `RouterContextValue`
 - Add `lazyCache` to the `useMemo` dependency array for `matchedRoutesWithData`
 
@@ -755,6 +846,8 @@ Test cases:
 10. **`matchRoutes` prefix matching with lazy children**: Verify parent matches as prefix even though children aren't loaded.
 11. **Suspense fallback shown on initial load**: Verify that the `<Suspense>` boundary around `<Outlet />` shows its fallback during lazy resolution on initial load.
 12. **No Suspense fallback during navigation**: Verify that during navigation, the old page stays visible (transition behavior) and no Suspense fallback is shown.
+13. **Sync resolution (cached function)**: Lazy function returns array synchronously on second call. Verify `matchRoutes` resolves it immediately with no suspension.
+14. **`matchRoutes` handles sync return**: Call `matchRoutes` with a route whose children function returns an array. Verify full match is returned and `route.children` is mutated to the array.
 
 ### Step 8: Export types
 
@@ -768,7 +861,7 @@ Test cases:
 | ---------------------------------------------- | ----------------------------------------------------------------------------- |
 | `packages/router/src/types.ts`                 | Update `InternalRouteDefinition.children` type                                |
 | `packages/router/src/route.ts`                 | Add `LazyRouteChildren` type; update `children` on all route definition types |
-| `packages/router/src/core/matchRoutes.ts`      | Handle lazy children in matching logic                                        |
+| `packages/router/src/core/matchRoutes.ts`      | Call lazy function; handle sync (mutate + match) and async (partial match)    |
 | `packages/router/src/context/RouterContext.ts` | Add `lazyCache` to `RouterContextValue`                                       |
 | `packages/router/src/Router/PendingOutlet.tsx` | New file: thin component that suspends via `use(promise)`                     |
 | `packages/router/src/Router/RouteRenderer.tsx` | Produce `<PendingOutlet>` outlet for routes with lazy children                |
