@@ -132,6 +132,25 @@ routeState<AdminState>()({
 });
 ```
 
+#### Parent layout with Suspense
+
+Parent components should wrap `<Outlet />` in a `<Suspense>` boundary to show a loading fallback while lazy children load:
+
+```tsx
+function AdminLayout() {
+  return (
+    <div>
+      <nav>Admin Navigation</nav>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Outlet />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+During navigation, `startTransition` keeps the old page visible while lazy children resolve — the `<Suspense>` fallback is only shown on initial page load (when there is no "old page" to keep visible). See [Detailed Behavior](#detailed-behavior) for the full flow.
+
 ### What lazy children do NOT receive
 
 The async function takes no arguments. Lazy children define static route structure (paths, components, loaders) — they don't depend on runtime values like params or request data. This keeps the mental model simple: lazy children are a code-loading mechanism, not a data-loading mechanism.
@@ -197,144 +216,104 @@ function matchRoute(route, pathname, options) {
 }
 ```
 
-The `hasLazyChildren` branch bypasses the `requireChildren` check. A route with lazy children conceptually _has_ children — they just haven't been loaded yet. Returning the parent match allows the parent component to render (with `outlet = null`) while children load.
+The `hasLazyChildren` branch bypasses the `requireChildren` check. A route with lazy children conceptually _has_ children — they just haven't been loaded yet. Returning the parent match allows the parent component to render while children load.
 
-### New: `resolveLazyChildren`
+### New: `PendingOutlet` Component
 
-A new async function that walks the route tree along a matching path and resolves any lazy children it encounters:
+When `RouteRenderer` computes the outlet for a route whose children are an unresolved function, it produces a `<PendingOutlet>` element instead of `null`. This component **suspends** (throws a promise), integrating with React's Suspense mechanism:
 
-```typescript
-// packages/router/src/core/resolveLazyChildren.ts
+```tsx
+// packages/router/src/Router/PendingOutlet.tsx
 
 /**
- * Walk the route tree along the given pathname and resolve any
- * lazy children encountered on the matching path.
- *
- * Resolved children are installed in-place (the function reference
- * is replaced with the resolved array), so subsequent synchronous
- * matchRoutes calls see the resolved children.
- *
- * Returns true if any lazy children were resolved.
+ * WeakMap to ensure each lazy children function is called at most once,
+ * even across multiple React render attempts (Strict Mode, concurrent rendering).
  */
-export async function resolveLazyChildren(
-  routes: InternalRouteDefinition[],
-  pathname: string,
-): Promise<boolean> {
-  let didResolve = false;
+const lazyResolutionCache = new WeakMap<
+  InternalRouteDefinition,
+  Promise<void>
+>();
 
-  for (const route of routes) {
-    const hasStaticChildren =
-      Array.isArray(route.children) && route.children.length > 0;
-    const hasLazyChildren = typeof route.children === "function";
-    const hasChildren = hasStaticChildren || hasLazyChildren;
-
-    // --- Pathless routes: always match, consume nothing ---
-    if (route.path === undefined) {
-      if (hasLazyChildren) {
-        route.children = internalRoutes(await route.children());
-        didResolve = true;
-      }
-      if (Array.isArray(route.children) && route.children.length > 0) {
-        didResolve =
-          (await resolveLazyChildren(route.children, pathname)) || didResolve;
-      }
-      // Pathless routes don't "claim" the path — continue checking siblings
-      continue;
-    }
-
-    // --- Path-based routes ---
-    const isExact = route.exact ?? !hasChildren;
-    const { matched, consumedPathname } = matchPath(
-      route.path,
-      pathname,
-      isExact,
-    );
-    if (!matched) continue;
-
-    // This route matches. Resolve its lazy children if needed.
-    if (hasLazyChildren) {
-      route.children = internalRoutes(await route.children());
-      didResolve = true;
-    }
-
-    // Recurse into (potentially just-resolved) children
-    if (Array.isArray(route.children) && route.children.length > 0) {
-      let remaining = pathname.slice(consumedPathname.length);
-      if (!remaining.startsWith("/")) remaining = "/" + remaining;
-      if (remaining === "") remaining = "/";
-      didResolve =
-        (await resolveLazyChildren(route.children, remaining)) || didResolve;
-    }
-
-    // First matching path-based route wins — stop checking siblings
-    break;
+/**
+ * A component that suspends while lazy children are being resolved.
+ * Rendered as the outlet when a matched route has unresolved lazy children.
+ */
+function PendingOutlet({
+  route,
+  onLazyResolved,
+}: {
+  route: InternalRouteDefinition;
+  onLazyResolved: () => void;
+}): ReactNode {
+  // If children were resolved between the time this element was created
+  // and when it renders (e.g., concurrent render race), render nothing.
+  // The lazyVersion state update will trigger a proper re-render.
+  if (typeof route.children !== "function") {
+    return null;
   }
 
-  return didResolve;
+  let promise = lazyResolutionCache.get(route);
+  if (!promise) {
+    const lazyFn = route.children;
+    promise = lazyFn().then((resolved) => {
+      route.children = internalRoutes(resolved);
+      onLazyResolved();
+    });
+    lazyResolutionCache.set(route, promise);
+  }
+
+  // Suspend: React catches this promise and shows the nearest
+  // Suspense boundary's fallback until the promise resolves.
+  throw promise;
 }
 ```
 
-This function mirrors the matching logic of `matchRoutes` just enough to walk the same path. It reuses `matchPath` (the internal helper in `matchRoutes.ts`, which will need to be exported or extracted to a shared module).
+#### How it integrates with `RouteRenderer`
 
-**Key property:** After `resolveLazyChildren(routes, pathname)` completes, calling `matchRoutes(routes, pathname)` is guaranteed to encounter only resolved (array) children along the matching path. This means `matchRoutes` produces a full match.
+In `RouteRenderer`, the outlet computation gains a new branch:
+
+```typescript
+// RouteRenderer.tsx — outlet computation
+const outlet = useMemo(() => {
+  if (index < matchedRoutes.length - 1) {
+    // Existing: child route matched, render it
+    return <RouteRenderer matchedRoutes={matchedRoutes} index={index + 1} />;
+  }
+
+  // NEW: if this route has unresolved lazy children, suspend
+  const currentRoute = matchedRoutes[index]?.route;
+  if (currentRoute && typeof currentRoute.children === "function") {
+    return <PendingOutlet route={currentRoute} onLazyResolved={onLazyResolved} />;
+  }
+
+  return null;
+}, [matchedRoutes, index, onLazyResolved]);
+```
+
+When the parent component renders `<Outlet />`, it renders the `outlet` from context — which is `<PendingOutlet>`. This component throws a promise, suspending the nearest `<Suspense>` boundary.
+
+#### Why each level handles itself
+
+Unlike a tree-walking `resolveLazyChildren` function, `PendingOutlet` resolves only one level of lazy children. Nested lazy subtrees are handled naturally:
+
+1. First `PendingOutlet` suspends → resolves admin children → `lazyVersion++` → re-render
+2. `matchRoutes` now matches deeper → finds another lazy `children` → second `PendingOutlet`
+3. Second `PendingOutlet` suspends → resolves advanced children → `lazyVersion++` → re-render
+4. Full match produced
+
+Each level has its own Suspense boundary in its parent layout, so each shows an independent loading state. No tree-walking logic is needed.
 
 ### `NavigationAPIAdapter` Changes
 
-The navigation handler resolves lazy children in the async `handler` before running loaders:
+No changes are needed to `NavigationAPIAdapter`. The existing synchronous `matchRoutes` call returns a partial match (parent only) when lazy children are present. This is sufficient to decide whether to intercept the navigation.
 
-```typescript
-// packages/router/src/core/NavigationAPIAdapter.ts
+Lazy resolution is handled entirely by `PendingOutlet` in the React render cycle. The handler continues to work with the partial match — it runs loaders for matched routes (the parent), and the child loaders run later when `matchRoutes` re-runs after resolution.
 
-setupInterception(routes, onNavigate, checkBlockers) {
-  const handleNavigate = (event: NavigateEvent) => {
-    // ... existing checks (bypass, blockers, canIntercept) ...
-
-    const url = new URL(event.destination.url);
-
-    // Initial match — may be partial if lazy children aren't resolved
-    const matched = matchRoutes(routes, url.pathname);
-
-    // ... existing onNavigate callback, willIntercept check ...
-
-    event.intercept({
-      handler: async () => {
-        // Resolve any lazy children along this navigation path
-        const didResolve = await resolveLazyChildren(routes, url.pathname);
-
-        // If lazy children were resolved, re-match to get the full match
-        const fullMatched = didResolve
-          ? matchRoutes(routes, url.pathname)
-          : matched;
-
-        if (!fullMatched) return;
-
-        const currentEntry = navigation.currentEntry;
-        if (!currentEntry) {
-          throw new Error(
-            "Navigation currentEntry is null during navigation interception",
-          );
-        }
-
-        // ... existing action + loader logic, using fullMatched ...
-      },
-    });
-  };
-
-  // ... existing event listener setup ...
-}
-```
-
-**Why resolve in `handler`, not before `intercept`?**
-
-The `handleNavigate` function runs synchronously during the navigate event. We can't `await` there. The `handler` callback passed to `event.intercept()` is async, making it the natural place for lazy resolution.
-
-We use the initial (possibly partial) `matched` result to decide _whether_ to intercept. A partial match (parent matched, lazy children not yet loaded) is sufficient — if the parent path matches, the URL belongs to our route tree and should be intercepted.
-
-**When the initial `matched` is `null`:** No route matches, even as a prefix. The navigation isn't intercepted. No lazy resolution happens — correctly, because if no parent route matches the URL, there are no lazy children to resolve.
+The initial (possibly partial) `matched` result is used to decide _whether_ to intercept. A partial match (parent matched, lazy children not yet loaded) is sufficient — if the parent path matches, the URL belongs to our route tree and should be intercepted. When the initial `matched` is `null`, no route matches even as a prefix, and the navigation isn't intercepted.
 
 ### `Router` Component Changes
 
-The Router component needs to handle lazy resolution for the **initial page load** case, where there's no navigation event to trigger resolution.
+The Router adds a `lazyVersion` state counter and a stable callback for `PendingOutlet` to trigger re-renders after lazy resolution:
 
 ```typescript
 // packages/router/src/Router/index.tsx
@@ -342,8 +321,12 @@ The Router component needs to handle lazy resolution for the **initial page load
 export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
-  // Counter to force re-computation after lazy resolution
+  // Counter incremented when lazy children are resolved,
+  // forcing matchedRoutesWithData to recompute.
   const [lazyVersion, setLazyVersion] = useState(0);
+  const onLazyResolved = useCallback(() => {
+    setLazyVersion((v) => v + 1);
+  }, []);
 
   // ... existing adapter, blocker, subscription setup ...
 
@@ -352,33 +335,41 @@ export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
   }, [routes, adapter, urlObject, runLoaders, locationKey, lazyVersion]);
   //                                                        ^^^^^^^^^^^
 
-  // Resolve lazy children on the matching path
-  useEffect(() => {
-    if (!urlObject) return;
-    let cancelled = false;
-
-    resolveLazyChildren(routes, urlObject.pathname).then((didResolve) => {
-      if (!cancelled && didResolve) {
-        setLazyVersion((v) => v + 1);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [routes, urlObject]);
-
-  // ... rest unchanged ...
+  // ... rest unchanged, but onLazyResolved must be threaded
+  // to RouteRenderer (via RouterContext or props) ...
 }
 ```
 
-**Why a `useEffect` and not inline in `useMemo`?**
+**How `onLazyResolved` reaches `PendingOutlet`:**
 
-`useMemo` must be synchronous. Lazy resolution is async. The effect fires after the initial render, resolves lazy children, and triggers a re-render via the `lazyVersion` state update.
+Add `onLazyResolved` to `RouterContextValue`:
 
-**Double-resolution concern:** Both the Router effect and the NavigationAPIAdapter handler could resolve the same lazy children. This is harmless — the first resolution installs the children; the second sees `Array.isArray(route.children)` and skips resolution. The in-place mutation acts as a natural deduplication mechanism.
+```typescript
+// RouterContext.ts
+export type RouterContextValue = {
+  // ... existing fields ...
+  /** Callback to trigger re-render after lazy children are resolved */
+  onLazyResolved: () => void;
+};
+```
 
-**Concurrent resolution:** If the user navigates away while lazy children are loading (for the initial page load), the effect's cleanup sets `cancelled = true`, preventing the stale `setLazyVersion` call. The new navigation's handler resolves the correct path's lazy children independently.
+`RouteRenderer` reads `onLazyResolved` from `RouterContext` and passes it to `PendingOutlet` when creating the outlet element.
+
+**Why `startTransition` makes this work for navigations:**
+
+The Router's subscription to `currententrychange` wraps updates in `startTransition` (line 158 of Router). When the user navigates to a lazy route:
+
+1. Navigation commits → `currententrychange` fires
+2. `startTransition(() => setLocationEntry(newEntry))` begins a transition
+3. React starts rendering the new page (in transition)
+4. `RouteRenderer` produces a `<PendingOutlet>` outlet
+5. `<PendingOutlet>` throws a promise → **suspends inside the transition**
+6. React keeps the old page visible (transition behavior)
+7. Promise resolves → `onLazyResolved()` → `lazyVersion++`
+8. React retries the transition with resolved children
+9. Full match, loaders run, transition completes
+
+The user sees: old page → new page with full content. No intermediate loading state during navigation.
 
 ## Detailed Behavior
 
@@ -393,23 +384,27 @@ User clicks link to /admin/settings
         → returns [{ route: adminRoute, params: {} }]  (partial match)
      b. willIntercept = true (matched !== null)
      c. event.intercept({ handler }) called
-  3. Navigation commits (URL changes to /admin/settings)
-  4. handler() runs asynchronously:
-     a. resolveLazyChildren(routes, "/admin/settings")
-        → resolves adminRoute.children = [settingsRoute, usersRoute, ...]
-        → recurses: no further lazy children
-        → returns true
-     b. matchRoutes(routes, "/admin/settings")
-        → /admin matches, children now available
-        → /settings matches within children
-        → returns [adminRoute match, settingsRoute match]  (full match)
-     c. executeLoaders(fullMatched, ...)
-        → runs admin loader (if any) + settings loader
-     d. await loader results
-  5. React renders with full match + data
+  3. Navigation commits → currententrychange fires
+  4. startTransition(() => setLocationEntry(newEntry))
+     React begins rendering the new page inside a transition:
+     a. useMemo: matchRoutes → partial match [adminRoute]
+     b. RouteRenderer renders AdminLayout
+     c. outlet = <PendingOutlet route={adminRoute} />
+     d. AdminLayout renders <Suspense><Outlet /></Suspense>
+     e. <Outlet /> renders <PendingOutlet>
+     f. PendingOutlet throws promise → SUSPENDS
+     g. React keeps old page visible (startTransition behavior)
+  5. Lazy children resolve asynchronously:
+     a. adminRoute.children = [settingsRoute, usersRoute, ...]
+     b. onLazyResolved() → setLazyVersion(v + 1)
+  6. React retries the transition render:
+     a. useMemo: matchRoutes → full match [adminRoute, settingsRoute]
+     b. executeLoaders runs for all matched routes
+     c. RouteRenderer renders AdminLayout + Settings
+  7. Transition completes → new page shown with full content
 ```
 
-During step 3-4, the old page remains visible (React transition). The URL has changed, but content hasn't updated yet. Once loaders complete in step 4d, React transitions to the new page with all data ready.
+The user sees: old page → new page with full content. No intermediate loading state, no Suspense fallback visible. This is because `startTransition` keeps the old page visible while the transition (including Suspense) resolves.
 
 ### Initial Page Load on a Lazy Route
 
@@ -418,23 +413,25 @@ Browser loads /admin/settings directly
   1. Router component mounts
   2. useMemo: matchRoutes(routes, "/admin/settings")
      → partial match: [adminRoute match]
-  3. RouteRenderer renders AdminLayout with outlet=null
-     → User sees the admin layout but no child content
-  4. useEffect fires: resolveLazyChildren(routes, "/admin/settings")
-     → resolves adminRoute.children
-     → setLazyVersion(1)
-  5. useMemo re-runs: matchRoutes(routes, "/admin/settings")
+  3. RouteRenderer renders AdminLayout:
+     a. outlet = <PendingOutlet route={adminRoute} />
+     b. AdminLayout renders <Suspense fallback={<Loading/>}><Outlet /></Suspense>
+     c. <Outlet /> renders <PendingOutlet>
+     d. PendingOutlet throws promise → SUSPENDS
+     e. Suspense boundary shows <Loading />
+  4. User sees AdminLayout with loading fallback in outlet area
+  5. Lazy children resolve:
+     a. adminRoute.children = [settingsRoute, usersRoute, ...]
+     b. onLazyResolved() → setLazyVersion(1)
+  6. useMemo re-runs: matchRoutes(routes, "/admin/settings")
      → full match: [adminRoute match, settingsRoute match]
-  6. executeLoaders runs settings loader
-  7. RouteRenderer renders AdminLayout + Settings content
+  7. executeLoaders runs settings loader
+  8. RouteRenderer renders AdminLayout + Settings content
 ```
 
-Between steps 3 and 7, the user sees the parent layout without child content. This is analogous to how `React.lazy` shows a Suspense fallback — the parent layout serves as a natural "loading shell."
+On initial load, there is no "old page" to keep visible, so the Suspense fallback is shown. The parent layout (`AdminLayout`) renders immediately — only the `<Outlet />` area shows the fallback. This provides a natural loading shell.
 
-If the parent route has no component (purely structural parent), the user sees nothing until resolution completes. In this case, the app should either:
-
-- Add a component to the parent route that renders `<Outlet />` with a loading fallback
-- Use a pathless layout wrapper with a loading state
+If `<Outlet />` is not wrapped in `<Suspense>`, the suspension propagates up to the nearest ancestor Suspense boundary. If none exists, React throws an error in development. Users should always wrap `<Outlet />` in `<Suspense>` when using lazy children — the same pattern as `React.lazy`.
 
 ### Resolution Caching
 
@@ -461,14 +458,26 @@ This means:
 
 ### Lazy resolution failure
 
-If the async function throws (e.g., network error loading the module), the route's `children` remains a function. The parent renders with `outlet = null`.
+If the async function throws (e.g., network error loading the module), the thrown promise rejects. React treats a rejected promise thrown during render as an error, which propagates to the nearest **error boundary**.
 
-The error should be surfaced to the user. Options:
+This integrates naturally with React's error handling:
 
-1. **Console warning**: Log the error with the route path for debugging.
-2. **Error state**: The Router could track resolution errors and expose them. However, this adds significant complexity.
+```tsx
+function AdminLayout() {
+  return (
+    <div>
+      <nav>Admin Navigation</nav>
+      <ErrorBoundary fallback={<div>Failed to load section</div>}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Outlet />
+        </Suspense>
+      </ErrorBoundary>
+    </div>
+  );
+}
+```
 
-For the initial implementation, option 1 (console warning) is recommended. Users who need error recovery can wrap their lazy function with retry logic:
+Users who want retry behavior can wrap their lazy function:
 
 ```typescript
 children: async () => {
@@ -490,10 +499,12 @@ Navigate to: /admin/nonexistent
 
 1. Initial `matchRoutes` returns `[adminRoute]` (partial match — lazy children not resolved)
 2. Navigation is intercepted (parent matched)
-3. Handler resolves lazy children: `[settingsRoute, usersRoute]`
-4. Re-match: `/admin` matches, but no child matches `/nonexistent`
-5. If `requireChildren` is true (default): re-match returns `null`
-6. Navigation committed to `/admin/nonexistent`, nothing renders
+3. Navigation commits → React renders in transition
+4. `PendingOutlet` suspends → lazy children resolve
+5. `lazyVersion++` → `matchRoutes` re-runs with resolved children
+6. `/admin` matches, but no child matches `/nonexistent`
+7. If `requireChildren` is true (default): re-match returns `null`
+8. Nothing renders
 
 With static children, the initial `matchRoutes` would return `null` and the navigation wouldn't be intercepted at all. With lazy children, we over-intercept because we can't know upfront whether children will match.
 
@@ -518,28 +529,28 @@ In practice, this is not a problem: for a user to submit a form on `/admin/setti
 
 If the user navigates away while lazy children are loading:
 
-- **In NavigationAPIAdapter:** The Navigation API's `event.signal` is aborted for the old navigation. The handler for the new navigation runs independently. The old resolution still completes and installs children (this is fine — the installed children are correct and will be available for future navigations).
-- **In Router effect:** The cleanup function sets `cancelled = true`, preventing the stale state update. The new URL triggers a new effect that resolves the correct path.
+- The in-flight lazy resolution continues in the background. When it resolves, it installs children into the route tree and calls `onLazyResolved()`. This is harmless — the installed children are correct and will be available for future navigations.
+- The new navigation triggers a fresh `startTransition`, which supersedes the old one. React discards the old transition's render tree.
+- If the new navigation path also requires lazy resolution, a new `PendingOutlet` handles it independently.
 
 ### Pathless routes with lazy children
 
-Pathless routes always match and don't consume any pathname. A pathless route with lazy children works the same way — the parent matches immediately, and lazy children are resolved when needed.
-
-Since pathless routes don't "claim" a path segment, `resolveLazyChildren` continues checking siblings after processing a pathless route (the `continue` instead of `break` in the pathless branch).
+Pathless routes always match and don't consume any pathname. A pathless route with lazy children works the same way — `matchRoutes` returns the pathless parent match, `RouteRenderer` produces a `<PendingOutlet>`, and Suspense handles the async resolution.
 
 ### SSR
 
-During SSR, lazy children cannot be resolved (no async in render path). Routes with lazy children behave as if they have no children during SSR:
+During SSR, `PendingOutlet` throws a promise (suspends). React's SSR Suspense support handles this:
 
-- The parent route renders (if it has a component), providing a shell
-- Child routes within lazy children are not rendered during SSR
-- After hydration on the client, the effect resolves lazy children and triggers a re-render
+- With streaming SSR (`renderToPipeableStream`): the Suspense fallback is sent initially, and the resolved content is streamed later when the promise resolves.
+- With non-streaming SSR (`renderToString`): Suspense fallbacks are rendered as the final output. Lazy children don't resolve during SSR.
+
+In both cases, the parent route renders as a shell with the Suspense fallback in the outlet area. After hydration on the client, `PendingOutlet` suspends again (or resolves immediately if children were streamed), and the full route tree renders.
 
 For SSR-critical routes, users should define children statically. Lazy children are best suited for routes that don't need server rendering (admin panels, settings pages, etc.).
 
 ### Route definitions prop change
 
-If the `routes` prop passed to `<Router>` changes (new array/new objects), previously resolved lazy children live on the old objects. The new route definitions may have fresh lazy functions that need resolution. This works correctly because `resolveLazyChildren` checks `typeof route.children === 'function'` on each call — fresh functions trigger resolution, while already-resolved arrays are skipped.
+If the `routes` prop passed to `<Router>` changes (new array/new objects), previously resolved lazy children live on the old objects. The new route definitions may have fresh lazy functions that need resolution. This works correctly because both `matchRoutes` and `PendingOutlet` check `typeof route.children === 'function'` — fresh functions trigger resolution, while already-resolved arrays are matched synchronously.
 
 ## Interaction with Existing Features
 
@@ -559,9 +570,9 @@ Blockers run before `event.intercept()`, so they execute before any lazy resolut
 
 ### `isPending` / `useTransition`
 
-On navigation to a lazy route, `isPending` becomes `true` when the navigation commits (same as today). The lazy resolution happens during the `handler` phase, so it contributes to the "pending" duration. From the user's perspective, the pending state covers both lazy loading and data loading — a single seamless transition.
+On navigation to a lazy route, `isPending` becomes `true` when the navigation commits (same as today). The `PendingOutlet` suspends inside the transition started by `startTransition`, which keeps `isPending` true until lazy children resolve and the full render completes. From the user's perspective, `isPending` covers both lazy loading and data loading — a single seamless transition.
 
-On initial page load, `isPending` is `false` throughout. The parent layout renders immediately, and the child appears after resolution. There's no transition because there's no "old page" to transition from.
+On initial page load, `isPending` is `false` throughout. The parent layout renders immediately with the Suspense fallback visible in the outlet area. There's no transition because there's no "old page" to transition from.
 
 ### `React.lazy` components
 
@@ -630,34 +641,26 @@ async function matchRoutes(
 
 **Verdict:** Keeping `matchRoutes` synchronous and using a separate async resolution step is cleaner. The sync/async boundary is explicit.
 
-### D: Suspense-based resolution in Router
+### D: `useEffect` + tree-walking resolution (no Suspense)
 
-Instead of a `useEffect` + state counter, throw a promise during render (Suspense pattern) when lazy children are encountered:
+Instead of suspending `<Outlet />`, resolve lazy children via a `useEffect` in the Router and a separate `resolveLazyChildren` function that walks the route tree along the matching path:
 
 ```typescript
-const matchedRoutesWithData = useMemo(() => {
-  const matched = matchRoutes(routes, urlObject.pathname);
-  // matchRoutes throws a promise if lazy children are hit
-  // Suspense boundary catches it, re-renders when resolved
-}, [...]);
+useEffect(() => {
+  resolveLazyChildren(routes, urlObject.pathname).then((didResolve) => {
+    if (didResolve) setLazyVersion((v) => v + 1);
+  });
+}, [routes, urlObject]);
 ```
 
-**Pros:** No extra state. Resolution blocks rendering until children are available (no flash of parent-only layout).
-**Cons:** Requires a Suspense boundary above `<Router>` or inside it. Throwing from `useMemo` is not a well-supported pattern (React docs recommend throwing only from component render or `use()`). The parent-only flash is actually desirable in most cases (progressive rendering).
+**Pros:** No Suspense requirement. The parent renders with `outlet = null`, which is simpler.
+**Cons:** Requires a separate `resolveLazyChildren` function that duplicates matching logic. The parent renders with empty outlet first, causing a flash of incomplete UI. Users have no standard way to show a loading state in the outlet area — they'd need to check if `outlet` is null and show their own fallback. The `useEffect` approach also has a timing gap: the effect fires after commit, so the first render always shows the empty outlet.
 
-**Verdict:** Too fragile and couples the router to Suspense semantics. The effect-based approach is more predictable.
+**Verdict:** The Suspense approach is more idiomatic React. It reuses React's built-in loading state mechanism (`<Suspense fallback>`), avoids duplicating matching logic, and integrates naturally with `startTransition` for seamless navigation transitions.
 
 ## Implementation Plan
 
-### Step 1: Extract `matchPath` to a shared module
-
-`matchPath` is currently a private function inside `matchRoutes.ts`. It's needed by `resolveLazyChildren`. Extract it to a shared utility:
-
-**File:** `packages/router/src/core/matchPath.ts`
-
-Export `matchPath` with its current signature. Update `matchRoutes.ts` to import from the new module.
-
-### Step 2: Update type definitions
+### Step 1: Update type definitions
 
 **File:** `packages/router/src/types.ts`
 
@@ -669,38 +672,41 @@ Export `matchPath` with its current signature. Update `matchRoutes.ts` to import
 - Update `children` in `OpaqueRouteDefinition`, `RouteDefinition`, and all internal route types (`RouteWithLoader`, `RouteWithoutLoader`, etc.) to accept `LazyRouteChildren`
 - Note: `PartialRouteDefinition` types don't have `children` (they have `children?: never`), so no changes needed there
 
-### Step 3: Update `matchRoutes` to handle lazy children
+### Step 2: Update `matchRoutes` to handle lazy children
 
 **File:** `packages/router/src/core/matchRoutes.ts`
 
 - Detect `typeof route.children === 'function'` for `hasChildren` / `isExact` determination
 - When children is a function, return parent-only match (bypass child matching and `requireChildren` check)
 
-### Step 4: Implement `resolveLazyChildren`
+### Step 3: Add `onLazyResolved` to `RouterContext`
 
-**File:** `packages/router/src/core/resolveLazyChildren.ts` (new file)
+**File:** `packages/router/src/context/RouterContext.ts`
 
-- Async function that walks route tree along a pathname
-- Resolves lazy children functions and installs the result in-place
-- Reuses `matchPath` from the shared module
-- Returns `boolean` indicating whether any resolution occurred
+- Add `onLazyResolved: () => void` to `RouterContextValue`
 
-### Step 5: Update `NavigationAPIAdapter`
+### Step 4: Implement `PendingOutlet`
 
-**File:** `packages/router/src/core/NavigationAPIAdapter.ts`
+**File:** `packages/router/src/Router/PendingOutlet.tsx` (new file)
 
-- Import `resolveLazyChildren`
-- In the `handler` callback inside `setupInterception`:
-  1. Call `await resolveLazyChildren(routes, url.pathname)` at the start
-  2. If resolution occurred, re-match with `matchRoutes`
-  3. Use the full match for actions and loaders
+- Component that throws a promise (suspends) while lazy children are being resolved
+- Uses a `WeakMap` keyed by route definition to cache resolution promises
+- On resolution: mutates `route.children` in-place, calls `onLazyResolved()`
+
+### Step 5: Update `RouteRenderer`
+
+**File:** `packages/router/src/Router/RouteRenderer.tsx`
+
+- Read `onLazyResolved` from `RouterContext`
+- When computing outlet: if current route has `typeof children === 'function'`, produce `<PendingOutlet>` instead of `null`
 
 ### Step 6: Update `Router` component
 
 **File:** `packages/router/src/Router/index.tsx`
 
 - Add `lazyVersion` state counter
-- Add `useEffect` that calls `resolveLazyChildren` and increments counter on resolution
+- Add stable `onLazyResolved` callback via `useCallback`
+- Include `onLazyResolved` in `RouterContextValue`
 - Add `lazyVersion` to the `useMemo` dependency array for `matchedRoutesWithData`
 
 ### Step 7: Add tests
@@ -709,16 +715,18 @@ Export `matchPath` with its current signature. Update `matchRoutes.ts` to import
 
 Test cases:
 
-1. **Lazy children resolve on navigation**: Navigate to `/admin/settings` where `/admin` has lazy children containing `/settings`. Verify the settings route renders.
-2. **Lazy children resolve on initial load**: Mount Router with URL at `/admin/settings`. Verify parent renders first, then child appears after resolution.
+1. **Lazy children resolve on navigation**: Navigate to `/admin/settings` where `/admin` has lazy children containing `/settings`. Verify the settings route renders after resolution (old page stays visible during transition).
+2. **Lazy children resolve on initial load**: Mount Router with URL at `/admin/settings`. Verify Suspense fallback is shown, then child appears after resolution.
 3. **Resolution is cached**: Navigate to `/admin/settings`, navigate away, navigate back. Verify the lazy function is called only once.
-4. **Nested lazy children**: `/admin` has lazy children, one of which has its own lazy children. Verify multi-level resolution works.
+4. **Nested lazy children**: `/admin` has lazy children, one of which has its own lazy children. Verify multi-level resolution works (two sequential Suspense resolutions).
 5. **Pathless route with lazy children**: Pathless layout wraps lazy children. Verify resolution and rendering.
-6. **Lazy resolution failure**: Async function throws. Verify parent renders with null outlet and error is logged.
+6. **Lazy resolution failure**: Async function rejects. Verify error propagates to error boundary.
 7. **Navigation during resolution**: Navigate to `/admin/settings`, then quickly navigate to `/home`. Verify `/home` renders correctly.
 8. **Lazy children with loaders**: Lazy child has a loader. Verify loader runs after resolution.
 9. **No over-interception for non-matching siblings**: Static route `/about` is not affected by a sibling lazy route `/admin`.
 10. **`matchRoutes` prefix matching with lazy children**: Verify parent matches as prefix even though children aren't loaded.
+11. **Suspense fallback shown on initial load**: Verify that the `<Suspense>` boundary around `<Outlet />` shows its fallback during lazy resolution on initial load.
+12. **No Suspense fallback during navigation**: Verify that during navigation, the old page stays visible (transition behavior) and no Suspense fallback is shown.
 
 ### Step 8: Export types
 
@@ -728,14 +736,14 @@ Test cases:
 
 ## Summary of Files to Change
 
-| File                                               | Change                                                                        |
-| -------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `packages/router/src/types.ts`                     | Update `InternalRouteDefinition.children` type                                |
-| `packages/router/src/route.ts`                     | Add `LazyRouteChildren` type; update `children` on all route definition types |
-| `packages/router/src/core/matchPath.ts`            | New file: extract `matchPath` from `matchRoutes.ts`                           |
-| `packages/router/src/core/matchRoutes.ts`          | Import `matchPath`; handle lazy children in matching                          |
-| `packages/router/src/core/resolveLazyChildren.ts`  | New file: async lazy resolution function                                      |
-| `packages/router/src/core/NavigationAPIAdapter.ts` | Resolve lazy children in intercept handler                                    |
-| `packages/router/src/Router/index.tsx`             | Add `lazyVersion` state + effect for initial load resolution                  |
-| `packages/router/src/index.ts`                     | Export `LazyRouteChildren` type                                               |
-| `packages/router/src/__tests__/lazy.test.tsx`      | New file: test cases for lazy route definitions                               |
+| File                                           | Change                                                                        |
+| ---------------------------------------------- | ----------------------------------------------------------------------------- |
+| `packages/router/src/types.ts`                 | Update `InternalRouteDefinition.children` type                                |
+| `packages/router/src/route.ts`                 | Add `LazyRouteChildren` type; update `children` on all route definition types |
+| `packages/router/src/core/matchRoutes.ts`      | Handle lazy children in matching logic                                        |
+| `packages/router/src/context/RouterContext.ts` | Add `onLazyResolved` to `RouterContextValue`                                  |
+| `packages/router/src/Router/PendingOutlet.tsx` | New file: component that suspends during lazy resolution                      |
+| `packages/router/src/Router/RouteRenderer.tsx` | Produce `<PendingOutlet>` outlet for routes with lazy children                |
+| `packages/router/src/Router/index.tsx`         | Add `lazyVersion` state + `onLazyResolved` callback                           |
+| `packages/router/src/index.ts`                 | Export `LazyRouteChildren` type                                               |
+| `packages/router/src/__tests__/lazy.test.tsx`  | New file: test cases for lazy route definitions                               |
