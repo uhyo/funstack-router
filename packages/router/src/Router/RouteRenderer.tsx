@@ -3,6 +3,7 @@ import { RouterContext } from "../context/RouterContext.js";
 import { RouteContext } from "../context/RouteContext.js";
 import type { MatchedRouteWithData, InternalRouteState } from "../types.js";
 import { useRouteStateCallbacks } from "./useRouteStateCallbacks.js";
+import { PendingOutlet } from "./PendingOutlet.js";
 
 export type RouteRendererProps = {
   matchedRoutes: MatchedRouteWithData[];
@@ -35,6 +36,7 @@ export function RouteRenderer({
     isPending,
     navigateAsync,
     updateCurrentEntryState,
+    lazyCache,
   } = routerContext;
 
   // Extract this route's state from internal structure
@@ -51,13 +53,24 @@ export function RouteRenderer({
     );
 
   // Create outlet for child routes
-  const outlet = useMemo(
-    () =>
-      index < matchedRoutes.length - 1 ? (
-        <RouteRenderer matchedRoutes={matchedRoutes} index={index + 1} />
-      ) : null,
-    [matchedRoutes, index],
-  );
+  const outlet = useMemo(() => {
+    if (index < matchedRoutes.length - 1) {
+      // Existing: child route matched, render it
+      return <RouteRenderer matchedRoutes={matchedRoutes} index={index + 1} />;
+    }
+
+    // If this route has unresolved lazy children, suspend via PendingOutlet
+    const currentRoute = matchedRoutes[index]?.route;
+    if (currentRoute && typeof currentRoute.children === "function") {
+      const promise = lazyCache.get(currentRoute);
+      // promise is guaranteed to exist — Router creates it before rendering
+      if (promise) {
+        return <PendingOutlet promise={promise} />;
+      }
+    }
+
+    return null;
+  }, [matchedRoutes, index, lazyCache]);
 
   // Extract id from route definition (if available)
   const routeId = (route as { id?: string }).id;

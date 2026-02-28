@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import type { NavigateOptions } from "../types.js";
+import type { InternalRouteDefinition, NavigateOptions } from "../types.js";
 
 export type RouterContextValue = {
   /**
@@ -20,6 +20,8 @@ export type RouterContextValue = {
   navigateAsync: (to: string, options?: NavigateOptions) => Promise<void>;
   /** Update current entry's state without navigation */
   updateCurrentEntryState: (state: unknown) => void;
+  /** Cache of lazy resolution promises — identity changes trigger re-match */
+  lazyCache: Map<InternalRouteDefinition, Promise<void>>;
 };
 
 export const RouterContext = createContext<RouterContextValue | null>(null);

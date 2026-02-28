@@ -18,6 +18,7 @@ import {
   createBlockerRegistry,
 } from "../context/BlockerContext.js";
 import {
+  type InternalRouteDefinition,
   type NavigateOptions,
   type OnNavigateCallback,
   type FallbackMode,
@@ -106,6 +107,19 @@ export function Router({
   ssr,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
+
+  // Cache of in-flight lazy resolution promises.
+  // Identity change (new Map reference) triggers matchedRoutesWithData recomputation.
+  const [lazyCache, setLazyCache] = useState(
+    () => new Map<InternalRouteDefinition, Promise<void>>(),
+  );
+
+  // Clear cache when routes prop changes (new route definitions)
+  const [prevRoutes, setPrevRoutes] = useState(inputRoutes);
+  if (prevRoutes !== inputRoutes) {
+    setPrevRoutes(inputRoutes);
+    setLazyCache(new Map());
+  }
 
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
@@ -229,6 +243,11 @@ export function Router({
 
   // Match routes and execute loaders
   const matchedRoutesWithData = useMemo(() => {
+    // lazyCache identity change triggers recomputation after lazy children resolve.
+    // matchRoutes calls lazy functions internally — after resolution, the user's
+    // cache returns sync, producing a full match.
+    void lazyCache;
+
     if (!runLoaders) {
       // SSR/hydration without loader execution: match routes, data is undefined.
       // Routes with loaders are skipped (skipLoaders: true).
@@ -252,7 +271,56 @@ export function Router({
     const request = createLoaderRequest(urlObject);
     const signal = adapter.getIdleAbortSignal();
     return executeLoaders(matched, entryKey, request, signal);
-  }, [routes, adapter, urlObject, runLoaders, locationKey]);
+  }, [routes, adapter, urlObject, runLoaders, locationKey, lazyCache]);
+
+  // --- Lazy children resolution (async case) ---
+  // If matchRoutes returned a partial match (lazy function returned a Promise),
+  // the deepest matched route still has typeof children === 'function'.
+  // Call the function to get the Promise (same one matchRoutes got — user caches it),
+  // register it in lazyCache, and attach a .then() handler.
+  // This is setState-during-render on Router's OWN state, so React correctly
+  // discards the current render and re-renders with the updated cache.
+  if (matchedRoutesWithData) {
+    const lastMatch = matchedRoutesWithData[matchedRoutesWithData.length - 1];
+    if (
+      lastMatch &&
+      typeof lastMatch.route.children === "function" &&
+      !lazyCache.has(lastMatch.route)
+    ) {
+      const route = lastMatch.route;
+      const lazyFn = route.children as () =>
+        | InternalRouteDefinition[]
+        | Promise<InternalRouteDefinition[]>;
+      // Call the function — user's cache returns the same Promise that
+      // matchRoutes received, so no duplicate loading is triggered.
+      const result = lazyFn();
+      if (!Array.isArray(result)) {
+        // Async result — register promise and attach .then() handler
+        const triggerRerender = () => {
+          // Trigger Router re-render for the INITIAL PAGE LOAD case.
+          // During navigation, startTransition already retries the entire
+          // transition (including Router) when the promise resolves, so
+          // this is redundant. But on initial page load there is no
+          // transition — only the Suspense subtree retries. Router is above
+          // the Suspense boundary and won't re-render on its own. Without
+          // this, PendingOutlet would return null (promise resolved) and the
+          // outlet would be empty. This state update triggers Router to
+          // re-run matchRoutes, which calls the function → sync → full match.
+          setLazyCache((prev) => new Map(prev));
+        };
+        const voidPromise = result.then(triggerRerender, (error: unknown) => {
+          triggerRerender();
+          // Re-throw so the promise stays rejected for use() to catch
+          throw error;
+        });
+        // Register promise in cache. setState-during-render on own state:
+        // React discards this render and immediately re-renders with the
+        // updated cache. On re-render, the promise is found, RouteRenderer
+        // passes it to PendingOutlet, and use() suspends.
+        setLazyCache((prev) => new Map([...prev, [route, voidPromise]]));
+      }
+    }
+  }
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;
@@ -264,6 +332,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
+      lazyCache,
     }),
     [
       locationState,
@@ -272,6 +341,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
+      lazyCache,
     ],
   );
 

@@ -31,6 +31,36 @@ export function matchRoutes(
 }
 
 /**
+ * Resolve children for a route, handling both static arrays and lazy functions.
+ * Returns the resolved children array (or undefined if async/not available),
+ * and whether the children are a lazy function with an unresolved async result.
+ */
+function resolveChildren(route: InternalRouteDefinition): {
+  children: InternalRouteDefinition[] | undefined;
+  hasUnresolvedLazy: boolean;
+} {
+  if (typeof route.children === "function") {
+    const result = route.children();
+    if (Array.isArray(result)) {
+      // Sync resolution — use returned array for matching.
+      // Cast is safe: RouteDefinition[] and InternalRouteDefinition[] have the same runtime shape.
+      return {
+        children: result as unknown as InternalRouteDefinition[],
+        hasUnresolvedLazy: false,
+      };
+    }
+    // Promise — children can't be resolved synchronously
+    return { children: undefined, hasUnresolvedLazy: true };
+  }
+
+  if (Array.isArray(route.children)) {
+    return { children: route.children, hasUnresolvedLazy: false };
+  }
+
+  return { children: undefined, hasUnresolvedLazy: false };
+}
+
+/**
  * Match a single route and its children recursively.
  */
 function matchRoute(
@@ -38,7 +68,9 @@ function matchRoute(
   pathname: string | null,
   options?: MatchRoutesOptions,
 ): MatchRouteInternalResult {
-  const hasChildren = Boolean(route.children?.length);
+  const { children, hasUnresolvedLazy } = resolveChildren(route);
+  const hasChildren =
+    (children !== undefined && children.length > 0) || hasUnresolvedLazy;
   const skipLoaders = options?.skipLoaders ?? false;
 
   // Routes with loaders can't render during SSR (no request context)
@@ -65,8 +97,13 @@ function matchRoute(
     };
 
     if (hasChildren) {
+      // If lazy children are unresolved (async), return parent match only
+      if (hasUnresolvedLazy) {
+        return [result];
+      }
+
       let anySkipped = false;
-      for (const child of route.children!) {
+      for (const child of children!) {
         const childMatch = matchRoute(child, pathname, options);
         if (childMatch === SKIPPED) {
           anySkipped = true;
@@ -119,6 +156,11 @@ function matchRoute(
 
   // If this route has children, try to match them
   if (hasChildren) {
+    // If lazy children are unresolved (async), return parent match only
+    if (hasUnresolvedLazy) {
+      return [result];
+    }
+
     // Calculate remaining pathname, ensuring it starts with /
     let remainingPathname = pathname.slice(consumedPathname.length);
     if (!remainingPathname.startsWith("/")) {
@@ -129,7 +171,7 @@ function matchRoute(
     }
 
     let anyChildSkipped = false;
-    for (const child of route.children!) {
+    for (const child of children!) {
       const childMatch = matchRoute(child, remainingPathname, options);
       if (childMatch === SKIPPED) {
         anyChildSkipped = true;

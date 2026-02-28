@@ -35,6 +35,7 @@ export type {
 export type {
   ActionArgs,
   LoaderArgs,
+  LazyRouteChildren,
   RouteDefinition,
   PathParams,
   RouteComponentProps,
