@@ -220,7 +220,7 @@ The `hasLazyChildren` branch bypasses the `requireChildren` check. A route with 
 
 ### New: `PendingOutlet` Component
 
-When `RouteRenderer` computes the outlet for a route whose children are an unresolved function, it produces a `<PendingOutlet>` element instead of `null`. This component **suspends** (throws a promise), integrating with React's Suspense mechanism:
+When `RouteRenderer` computes the outlet for a route whose children are an unresolved function, it produces a `<PendingOutlet>` element instead of `null`. This component **suspends** using React 19's `use()` API, integrating with Suspense:
 
 ```tsx
 // packages/router/src/Router/PendingOutlet.tsx
@@ -262,9 +262,11 @@ function PendingOutlet({
     lazyResolutionCache.set(route, promise);
   }
 
-  // Suspend: React catches this promise and shows the nearest
-  // Suspense boundary's fallback until the promise resolves.
-  throw promise;
+  // Suspend until lazy children are resolved.
+  // use() integrates with Suspense: React shows the nearest
+  // <Suspense> boundary's fallback until the promise resolves.
+  use(promise);
+  return null;
 }
 ```
 
@@ -290,18 +292,18 @@ const outlet = useMemo(() => {
 }, [matchedRoutes, index, onLazyResolved]);
 ```
 
-When the parent component renders `<Outlet />`, it renders the `outlet` from context — which is `<PendingOutlet>`. This component throws a promise, suspending the nearest `<Suspense>` boundary.
+When the parent component renders `<Outlet />`, it renders the `outlet` from context — which is `<PendingOutlet>`. The `use()` call inside suspends the nearest `<Suspense>` boundary.
 
-#### Why each level handles itself
+#### Nested lazy subtrees
 
-Unlike a tree-walking `resolveLazyChildren` function, `PendingOutlet` resolves only one level of lazy children. Nested lazy subtrees are handled naturally:
+`PendingOutlet` resolves only one level of lazy children at a time. When lazy subtrees are nested (e.g., `/admin` has lazy children, one of which also has lazy children), each level resolves independently:
 
 1. First `PendingOutlet` suspends → resolves admin children → `lazyVersion++` → re-render
 2. `matchRoutes` now matches deeper → finds another lazy `children` → second `PendingOutlet`
 3. Second `PendingOutlet` suspends → resolves advanced children → `lazyVersion++` → re-render
 4. Full match produced
 
-Each level has its own Suspense boundary in its parent layout, so each shows an independent loading state. No tree-walking logic is needed.
+Each level has its own Suspense boundary in its parent layout, so each shows an independent loading state.
 
 ### `NavigationAPIAdapter` Changes
 
@@ -363,7 +365,7 @@ The Router's subscription to `currententrychange` wraps updates in `startTransit
 2. `startTransition(() => setLocationEntry(newEntry))` begins a transition
 3. React starts rendering the new page (in transition)
 4. `RouteRenderer` produces a `<PendingOutlet>` outlet
-5. `<PendingOutlet>` throws a promise → **suspends inside the transition**
+5. `<PendingOutlet>` calls `use(promise)` → **suspends inside the transition**
 6. React keeps the old page visible (transition behavior)
 7. Promise resolves → `onLazyResolved()` → `lazyVersion++`
 8. React retries the transition with resolved children
@@ -392,7 +394,7 @@ User clicks link to /admin/settings
      c. outlet = <PendingOutlet route={adminRoute} />
      d. AdminLayout renders <Suspense><Outlet /></Suspense>
      e. <Outlet /> renders <PendingOutlet>
-     f. PendingOutlet throws promise → SUSPENDS
+     f. PendingOutlet calls use(promise) → SUSPENDS
      g. React keeps old page visible (startTransition behavior)
   5. Lazy children resolve asynchronously:
      a. adminRoute.children = [settingsRoute, usersRoute, ...]
@@ -417,7 +419,7 @@ Browser loads /admin/settings directly
      a. outlet = <PendingOutlet route={adminRoute} />
      b. AdminLayout renders <Suspense fallback={<Loading/>}><Outlet /></Suspense>
      c. <Outlet /> renders <PendingOutlet>
-     d. PendingOutlet throws promise → SUSPENDS
+     d. PendingOutlet calls use(promise) → SUSPENDS
      e. Suspense boundary shows <Loading />
   4. User sees AdminLayout with loading fallback in outlet area
   5. Lazy children resolve:
@@ -458,7 +460,7 @@ This means:
 
 ### Lazy resolution failure
 
-If the async function throws (e.g., network error loading the module), the thrown promise rejects. React treats a rejected promise thrown during render as an error, which propagates to the nearest **error boundary**.
+If the async function throws (e.g., network error loading the module), the promise rejects. React's `use()` treats a rejected promise as an error, which propagates to the nearest **error boundary**.
 
 This integrates naturally with React's error handling:
 
@@ -539,7 +541,7 @@ Pathless routes always match and don't consume any pathname. A pathless route wi
 
 ### SSR
 
-During SSR, `PendingOutlet` throws a promise (suspends). React's SSR Suspense support handles this:
+During SSR, `PendingOutlet` suspends via `use()`. React's SSR Suspense support handles this:
 
 - With streaming SSR (`renderToPipeableStream`): the Suspense fallback is sent initially, and the resolved content is streamed later when the promise resolves.
 - With non-streaming SSR (`renderToString`): Suspense fallbacks are rendered as the final output. Lazy children don't resolve during SSR.
@@ -689,7 +691,7 @@ useEffect(() => {
 
 **File:** `packages/router/src/Router/PendingOutlet.tsx` (new file)
 
-- Component that throws a promise (suspends) while lazy children are being resolved
+- Component that suspends via `use()` while lazy children are being resolved
 - Uses a `WeakMap` keyed by route definition to cache resolution promises
 - On resolution: mutates `route.children` in-place, calls `onLazyResolved()`
 
