@@ -407,9 +407,15 @@ export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
       // matchRoutes received, so no duplicate loading is triggered.
       const promise = lazyFn();
       const voidPromise = promise.then(() => {
-        // Trigger re-render. On re-render, matchRoutes calls the function
-        // again — user's cache now returns sync → full match.
-        // No mutation of route objects — the function stays on the route.
+        // Trigger Router re-render for the INITIAL PAGE LOAD case.
+        // During navigation, startTransition already retries the entire
+        // transition (including Router) when the promise resolves, so
+        // this is redundant. But on initial page load there is no
+        // transition — only the Suspense subtree retries. Router is above
+        // the Suspense boundary and won't re-render on its own. Without
+        // this, PendingOutlet would return null (promise resolved) and the
+        // outlet would be empty. This state update triggers Router to
+        // re-run matchRoutes, which calls the function → sync → full match.
         setLazyCache((prev) => new Map(prev));
       });
       // Register promise in cache. setState-during-render on own state:
@@ -425,7 +431,9 @@ export function Router({ routes: inputRoutes, ... }: RouterProps): ReactNode {
 }
 ```
 
-**Note:** Router calls the lazy function a second time (after `matchRoutes` already called it). This is safe because the user's caching ensures the same Promise object is returned — no duplicate import is triggered. The Router needs to call it to attach its own `.then()` handler that triggers the re-render via `setLazyCache`.
+**Note:** Router calls the lazy function a second time (after `matchRoutes` already called it). This is safe because the user's caching ensures the same Promise object is returned — no duplicate import is triggered.
+
+**Why the `.then()` handler is needed:** During navigation, `startTransition` retries the entire transition when the promise resolves, including Router — so `matchRoutes` re-runs automatically. But on initial page load, there is no transition. When the promise resolves, React only retries the subtree inside the `<Suspense>` boundary (which is inside the parent layout). Router is above that boundary and doesn't re-render. `PendingOutlet` would return `null` (promise resolved, `use()` no longer suspends), leaving an empty outlet. The `.then()` handler calls `setLazyCache` to trigger Router re-render, which re-runs `matchRoutes` → function returns sync → full match.
 
 **How the promise reaches `PendingOutlet`:**
 
