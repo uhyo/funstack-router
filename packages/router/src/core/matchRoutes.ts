@@ -38,7 +38,9 @@ function matchRoute(
   pathname: string | null,
   options?: MatchRoutesOptions,
 ): MatchRouteInternalResult {
-  const hasChildren = Boolean(route.children?.length);
+  // TODO(lazy-route-definitions): call lazy function here, handle sync (match) and async (partial match)
+  const children = Array.isArray(route.children) ? route.children : undefined;
+  const hasChildren = Boolean(children?.length);
   const skipLoaders = options?.skipLoaders ?? false;
 
   // Routes with loaders can't render during SSR (no request context)
@@ -66,7 +68,7 @@ function matchRoute(
 
     if (hasChildren) {
       let anySkipped = false;
-      for (const child of route.children!) {
+      for (const child of children!) {
         const childMatch = matchRoute(child, pathname, options);
         if (childMatch === SKIPPED) {
           anySkipped = true;
@@ -129,7 +131,7 @@ function matchRoute(
     }
 
     let anyChildSkipped = false;
-    for (const child of route.children!) {
+    for (const child of children!) {
       const childMatch = matchRoute(child, remainingPathname, options);
       if (childMatch === SKIPPED) {
         anyChildSkipped = true;

@@ -9,12 +9,12 @@ function collectPaths(routeDefs: RouteDefinition[], prefix: string): string[] {
     const routePath = r.path;
     if (routePath === undefined) {
       // Pathless route: recurse with same prefix
-      if (r.children) {
+      if (Array.isArray(r.children)) {
         paths.push(...collectPaths(r.children, prefix));
       }
     } else if (routePath.includes(":")) {
       // Parameterized route: skip (cannot be statically generated)
-    } else if (r.children) {
+    } else if (Array.isArray(r.children)) {
       // Has path and children: recurse with new prefix
       paths.push(...collectPaths(r.children, prefix + routePath));
     } else {
