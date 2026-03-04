@@ -11,15 +11,20 @@ export type MatchRoutesOptions = {
   skipLoaders?: boolean;
 };
 
+export type MatchRoutesInput = {
+  routes: InternalRouteDefinition[];
+};
+
 /**
  * Match a pathname against a route tree, returning the matched route stack.
  * Returns null if no match is found.
  */
 export function matchRoutes(
-  routes: InternalRouteDefinition[],
+  input: MatchRoutesInput,
   pathname: string | null,
   options?: MatchRoutesOptions,
 ): MatchedRoute[] | null {
+  const { routes } = input;
   for (const route of routes) {
     const matched = matchRoute(route, pathname, options);
     if (matched === SKIPPED) return null;

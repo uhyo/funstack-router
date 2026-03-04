@@ -182,7 +182,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Check if the URL matches any of our routes
       const url = new URL(event.destination.url);
-      const matched = matchRoutes(getRoutes(), url.pathname);
+      const matched = matchRoutes({ routes: getRoutes() }, url.pathname);
 
       const isFormSubmission = event.formData !== null;
 

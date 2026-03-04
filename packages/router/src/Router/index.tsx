@@ -239,7 +239,7 @@ export function Router({
     if (!runLoaders) {
       // SSR/hydration without loader execution: match routes, data is undefined.
       // Routes with loaders are skipped (skipLoaders: true).
-      const matched = matchRoutes(routes, urlObject?.pathname ?? null, {
+      const matched = matchRoutes({ routes }, urlObject?.pathname ?? null, {
         skipLoaders: true,
       });
       if (!matched) return null;
@@ -252,7 +252,7 @@ export function Router({
 
     // Unified path: SSR with loaders or client-side.
     // Both cases match routes normally and execute loaders.
-    const matched = matchRoutes(routes, urlObject.pathname);
+    const matched = matchRoutes({ routes }, urlObject.pathname);
     if (!matched) return null;
 
     const entryKey = locationKey;

@@ -11,7 +11,7 @@ describe("matchRoutes", () => {
         { path: "/about", component: () => null },
       ]);
 
-      const result = matchRoutes(routes, "/about");
+      const result = matchRoutes({ routes }, "/about");
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBe("/about");
     });
@@ -22,14 +22,14 @@ describe("matchRoutes", () => {
         { path: "/about", component: () => null },
       ]);
 
-      const result = matchRoutes(routes, "/contact");
+      const result = matchRoutes({ routes }, "/contact");
       expect(result).toBeNull();
     });
 
     it("matches root path", () => {
       const routes = internalRoutes([{ path: "/", component: () => null }]);
 
-      const result = matchRoutes(routes, "/");
+      const result = matchRoutes({ routes }, "/");
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBe("/");
     });
@@ -41,7 +41,7 @@ describe("matchRoutes", () => {
         { path: "/users/:id", component: () => null },
       ]);
 
-      const result = matchRoutes(routes, "/users/123");
+      const result = matchRoutes({ routes }, "/users/123");
       expect(result).toHaveLength(1);
       expect(result![0].params).toEqual({ id: "123" });
     });
@@ -51,7 +51,7 @@ describe("matchRoutes", () => {
         { path: "/users/:userId/posts/:postId", component: () => null },
       ]);
 
-      const result = matchRoutes(routes, "/users/42/posts/99");
+      const result = matchRoutes({ routes }, "/users/42/posts/99");
       expect(result).toHaveLength(1);
       expect(result![0].params).toEqual({ userId: "42", postId: "99" });
     });
@@ -70,7 +70,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, "/about");
+      const result = matchRoutes({ routes }, "/about");
       expect(result).toHaveLength(2);
       expect(result![0].route.path).toBe("/");
       expect(result![1].route.path).toBe("about");
@@ -91,7 +91,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, "/users/123");
+      const result = matchRoutes({ routes }, "/users/123");
       expect(result).toHaveLength(3);
       expect(result![0].route.path).toBe("/");
       expect(result![1].route.path).toBe("users");
@@ -108,7 +108,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, "/org/acme/users/123");
+      const result = matchRoutes({ routes }, "/org/acme/users/123");
       expect(result).toHaveLength(2);
       expect(result![1].params).toEqual({ orgId: "acme", userId: "123" });
     });
@@ -122,7 +122,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, "/");
+      const result = matchRoutes({ routes }, "/");
       expect(result).toHaveLength(2);
       expect(result![0].route.path).toBe("/");
       expect(result![1].route.path).toBe("");
@@ -136,7 +136,7 @@ describe("matchRoutes", () => {
         { path: "/users/:id", component: () => null },
       ]);
 
-      const result = matchRoutes(routes, "/users/new");
+      const result = matchRoutes({ routes }, "/users/new");
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBe("/users/new");
     });
@@ -149,7 +149,7 @@ describe("matchRoutes", () => {
       ]);
 
       // Should match /files/foo/bar as a prefix
-      const result = matchRoutes(routes, "/files/foo/bar");
+      const result = matchRoutes({ routes }, "/files/foo/bar");
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBe("/files");
       expect(result![0].pathname).toBe("/files");
@@ -167,11 +167,11 @@ describe("matchRoutes", () => {
       ]);
 
       // Children become unreachable when parent has exact: true
-      const childResult = matchRoutes(routes, "/users/123");
+      const childResult = matchRoutes({ routes }, "/users/123");
       expect(childResult).toBeNull();
 
       // But exact match on parent still works (with requireChildren: false)
-      const exactResult = matchRoutes(routes, "/users");
+      const exactResult = matchRoutes({ routes }, "/users");
       expect(exactResult).toHaveLength(1);
       expect(exactResult![0].route.path).toBe("/users");
     });
@@ -187,12 +187,12 @@ describe("matchRoutes", () => {
       ]);
 
       // Parent matches as prefix (default)
-      const result = matchRoutes(routes, "/about");
+      const result = matchRoutes({ routes }, "/about");
       expect(result).toHaveLength(2);
 
       // Leaf requires exact match (default) - child "about" doesn't match "/about/extra"
       // But parent "/" has a component and requireChildren: false, so it's still a valid match (just the parent)
-      const partialMatch = matchRoutes(routes, "/about/extra");
+      const partialMatch = matchRoutes({ routes }, "/about/extra");
       expect(partialMatch).toHaveLength(1);
       expect(partialMatch![0].route.path).toBe("/");
     });
@@ -207,7 +207,7 @@ describe("matchRoutes", () => {
       ]);
 
       // Leaf requires exact match (default), parent has no component fallback
-      const noMatch = matchRoutes(routes, "/about/extra");
+      const noMatch = matchRoutes({ routes }, "/about/extra");
       expect(noMatch).toBeNull();
     });
 
@@ -216,9 +216,9 @@ describe("matchRoutes", () => {
         { path: "/api", component: () => null, exact: false },
       ]);
 
-      expect(matchRoutes(routes, "/api")).toHaveLength(1);
-      expect(matchRoutes(routes, "/api/users")).toHaveLength(1);
-      expect(matchRoutes(routes, "/api/users/123/posts")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/api")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/api/users")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/api/users/123/posts")).toHaveLength(1);
     });
 
     it("works with path parameters", () => {
@@ -226,7 +226,7 @@ describe("matchRoutes", () => {
         { path: "/users/:id", component: () => null, exact: false },
       ]);
 
-      const result = matchRoutes(routes, "/users/123/posts/456");
+      const result = matchRoutes({ routes }, "/users/123/posts/456");
       expect(result).toHaveLength(1);
       expect(result![0].params).toEqual({ id: "123" });
       expect(result![0].pathname).toBe("/users/123");
@@ -237,15 +237,15 @@ describe("matchRoutes", () => {
     it("pathless route always matches any pathname", () => {
       const routes = internalRoutes([{ component: () => null }]);
 
-      expect(matchRoutes(routes, "/")).toHaveLength(1);
-      expect(matchRoutes(routes, "/about")).toHaveLength(1);
-      expect(matchRoutes(routes, "/users/123/posts")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/about")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/users/123/posts")).toHaveLength(1);
     });
 
     it("pathless route has empty params and empty pathname", () => {
       const routes = internalRoutes([{ component: () => null }]);
 
-      const result = matchRoutes(routes, "/users/123");
+      const result = matchRoutes({ routes }, "/users/123");
       expect(result).toHaveLength(1);
       expect(result![0].params).toEqual({});
       expect(result![0].pathname).toBe("");
@@ -259,7 +259,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, "/users/123");
+      const result = matchRoutes({ routes }, "/users/123");
       expect(result).toHaveLength(2);
       expect(result![0].params).toEqual({});
       expect(result![0].pathname).toBe("");
@@ -285,7 +285,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, "/about");
+      const result = matchRoutes({ routes }, "/about");
       expect(result).toHaveLength(3);
       expect(result![0].route.path).toBe("/");
       expect(result![1].route.path).toBeUndefined();
@@ -307,7 +307,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, "/org/acme/users/123");
+      const result = matchRoutes({ routes }, "/org/acme/users/123");
       expect(result).toHaveLength(3);
       // Child should inherit params from parent through pathless route
       expect(result![2].params).toEqual({ orgId: "acme", userId: "123" });
@@ -319,11 +319,15 @@ describe("matchRoutes", () => {
         { component: () => null }, // Catch-all
       ]);
 
-      expect(matchRoutes(routes, "/specific")).toHaveLength(1);
-      expect(matchRoutes(routes, "/specific")![0].route.path).toBe("/specific");
+      expect(matchRoutes({ routes }, "/specific")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/specific")![0].route.path).toBe(
+        "/specific",
+      );
 
-      expect(matchRoutes(routes, "/anything")).toHaveLength(1);
-      expect(matchRoutes(routes, "/anything")![0].route.path).toBeUndefined();
+      expect(matchRoutes({ routes }, "/anything")).toHaveLength(1);
+      expect(
+        matchRoutes({ routes }, "/anything")![0].route.path,
+      ).toBeUndefined();
     });
 
     it("pathless route without component requires matching children", () => {
@@ -335,10 +339,10 @@ describe("matchRoutes", () => {
       ]);
 
       // Should match when child matches
-      expect(matchRoutes(routes, "/about")).toHaveLength(2);
+      expect(matchRoutes({ routes }, "/about")).toHaveLength(2);
 
       // Should not match when no child matches
-      expect(matchRoutes(routes, "/contact")).toBeNull();
+      expect(matchRoutes({ routes }, "/contact")).toBeNull();
     });
 
     it("multiple pathless routes in sequence", () => {
@@ -362,7 +366,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, "/deep");
+      const result = matchRoutes({ routes }, "/deep");
       expect(result).toHaveLength(4);
       expect(result![0].route.path).toBe("/");
       expect(result![1].route.path).toBeUndefined();
@@ -380,8 +384,8 @@ describe("matchRoutes", () => {
           children: [{ path: "/main", component: () => null }],
         },
       ]);
-      expect(matchRoutes(routes, "/dashboard/sub")).toBeNull();
-      expect(matchRoutes(routes, "/dashboard")).toBeNull();
+      expect(matchRoutes({ routes }, "/dashboard/sub")).toBeNull();
+      expect(matchRoutes({ routes }, "/dashboard")).toBeNull();
     });
 
     it("parent with requireChildren: false matches when no children match", () => {
@@ -393,8 +397,8 @@ describe("matchRoutes", () => {
           children: [{ path: "/main", component: () => null }],
         },
       ]);
-      expect(matchRoutes(routes, "/dashboard/sub")).toHaveLength(1);
-      expect(matchRoutes(routes, "/dashboard")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/dashboard/sub")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/dashboard")).toHaveLength(1);
     });
 
     it("catch-all NotFound works with requireChildren: true (default)", () => {
@@ -406,7 +410,7 @@ describe("matchRoutes", () => {
         },
         { path: "/*", component: () => null }, // NotFound
       ]);
-      const result = matchRoutes(routes, "/dashboard/sub");
+      const result = matchRoutes({ routes }, "/dashboard/sub");
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBe("/*");
     });
@@ -420,9 +424,9 @@ describe("matchRoutes", () => {
         },
       ]);
       // Child matches
-      expect(matchRoutes(routes, "/specific")).toHaveLength(2);
+      expect(matchRoutes({ routes }, "/specific")).toHaveLength(2);
       // No child matches, but pathless route has component and requireChildren: false
-      expect(matchRoutes(routes, "/other")).toHaveLength(1);
+      expect(matchRoutes({ routes }, "/other")).toHaveLength(1);
     });
 
     it("pathless route with children does not match when no children match (default)", () => {
@@ -433,9 +437,9 @@ describe("matchRoutes", () => {
         },
       ]);
       // Child matches
-      expect(matchRoutes(routes, "/specific")).toHaveLength(2);
+      expect(matchRoutes({ routes }, "/specific")).toHaveLength(2);
       // No child matches, default requireChildren is true
-      expect(matchRoutes(routes, "/other")).toBeNull();
+      expect(matchRoutes({ routes }, "/other")).toBeNull();
     });
 
     it("requireChildren: false without component still does not match", () => {
@@ -447,7 +451,7 @@ describe("matchRoutes", () => {
         },
       ]);
       // No component means no match even with requireChildren: false
-      expect(matchRoutes(routes, "/dashboard")).toBeNull();
+      expect(matchRoutes({ routes }, "/dashboard")).toBeNull();
     });
   });
 
@@ -455,7 +459,7 @@ describe("matchRoutes", () => {
     it("pathless route matches when pathname is null", () => {
       const routes = internalRoutes([{ component: () => null }]);
 
-      const result = matchRoutes(routes, null);
+      const result = matchRoutes({ routes }, null);
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBeUndefined();
       expect(result![0].params).toEqual({});
@@ -468,7 +472,7 @@ describe("matchRoutes", () => {
         { path: "/about", component: () => null },
       ]);
 
-      expect(matchRoutes(routes, null)).toBeNull();
+      expect(matchRoutes({ routes }, null)).toBeNull();
     });
 
     it("nested pathless routes all match when pathname is null", () => {
@@ -479,7 +483,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, null);
+      const result = matchRoutes({ routes }, null);
       expect(result).toHaveLength(2);
       expect(result![0].route.path).toBeUndefined();
       expect(result![1].route.path).toBeUndefined();
@@ -496,7 +500,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      const result = matchRoutes(routes, null);
+      const result = matchRoutes({ routes }, null);
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBeUndefined();
     });
@@ -507,7 +511,7 @@ describe("matchRoutes", () => {
         { path: "/about", component: () => null },
       ]);
 
-      expect(matchRoutes(routes, null)).toBeNull();
+      expect(matchRoutes({ routes }, null)).toBeNull();
     });
 
     it("pathless route without component and only path-based children does not match", () => {
@@ -517,7 +521,7 @@ describe("matchRoutes", () => {
         },
       ]);
 
-      expect(matchRoutes(routes, null)).toBeNull();
+      expect(matchRoutes({ routes }, null)).toBeNull();
     });
 
     it("pathless route with loader does NOT match when pathname is null", () => {
@@ -528,7 +532,7 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
-      expect(matchRoutes(routes, null)).toBeNull();
+      expect(matchRoutes({ routes }, null)).toBeNull();
     });
 
     it("pathless route with loader is skipped, sibling without loader matches", () => {
@@ -542,7 +546,7 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
-      const result = matchRoutes(routes, null);
+      const result = matchRoutes({ routes }, null);
       expect(result).toHaveLength(1);
       expect(result![0].route.loader).toBeUndefined();
     });
@@ -561,7 +565,7 @@ describe("matchRoutes", () => {
       ] as unknown as InternalRouteDefinition[];
 
       // Outer pathless route matches alone (child with loader is skipped)
-      const result = matchRoutes(routes, null);
+      const result = matchRoutes({ routes }, null);
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBeUndefined();
       expect(result![0].route.loader).toBeUndefined();
@@ -576,7 +580,7 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
-      const result = matchRoutes(routes, "/about");
+      const result = matchRoutes({ routes }, "/about");
       expect(result).toHaveLength(2);
       expect(result![0].route.loader).toBeDefined();
     });
@@ -592,7 +596,9 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
-      expect(matchRoutes(routes, "/about", { skipLoaders: true })).toBeNull();
+      expect(
+        matchRoutes({ routes }, "/about", { skipLoaders: true }),
+      ).toBeNull();
     });
 
     it("matches path-based route without loader when skipLoaders is true", () => {
@@ -600,7 +606,7 @@ describe("matchRoutes", () => {
         { path: "/about", component: () => null },
       ]);
 
-      const result = matchRoutes(routes, "/about", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/about", { skipLoaders: true });
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBe("/about");
     });
@@ -613,7 +619,9 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
-      expect(matchRoutes(routes, "/about", { skipLoaders: true })).toBeNull();
+      expect(
+        matchRoutes({ routes }, "/about", { skipLoaders: true }),
+      ).toBeNull();
     });
 
     it("skipped route with matching path prevents catch-all from matching", () => {
@@ -631,7 +639,7 @@ describe("matchRoutes", () => {
 
       // The /about route would match but is skipped due to loader;
       // this should prevent the catch-all from matching
-      const result = matchRoutes(routes, "/about", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/about", { skipLoaders: true });
       expect(result).toBeNull();
     });
 
@@ -650,7 +658,9 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
-      const result = matchRoutes(routes, "/dashboard", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/dashboard", {
+        skipLoaders: true,
+      });
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBe("/");
     });
@@ -670,7 +680,7 @@ describe("matchRoutes", () => {
       ] as unknown as InternalRouteDefinition[];
 
       // Pathless route matches alone as SSR shell since child with loader is skipped
-      const result = matchRoutes(routes, "/about", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/about", { skipLoaders: true });
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBeUndefined();
     });
@@ -684,7 +694,7 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
-      const result = matchRoutes(routes, "/about", { skipLoaders: false });
+      const result = matchRoutes({ routes }, "/about", { skipLoaders: false });
       expect(result).toHaveLength(1);
     });
 
@@ -693,7 +703,9 @@ describe("matchRoutes", () => {
         { path: "/users/:id", component: () => null },
       ]);
 
-      const result = matchRoutes(routes, "/users/42", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/users/42", {
+        skipLoaders: true,
+      });
       expect(result).toHaveLength(1);
       expect(result![0].params).toEqual({ id: "42" });
     });
@@ -713,7 +725,9 @@ describe("matchRoutes", () => {
         },
       ] as unknown as InternalRouteDefinition[];
 
-      const result = matchRoutes(routes, "/users/42", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/users/42", {
+        skipLoaders: true,
+      });
       expect(result).toHaveLength(3);
       expect(result![2].params).toEqual({ id: "42" });
     });
@@ -733,7 +747,7 @@ describe("matchRoutes", () => {
 
       // /other does NOT match /about, so the loader route is not skipped (returns null).
       // The catch-all should still match.
-      const result = matchRoutes(routes, "/other", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/other", { skipLoaders: true });
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBe("/*");
     });
@@ -757,7 +771,7 @@ describe("matchRoutes", () => {
 
       // /about child would match but is skipped; catch-all sibling should NOT match.
       // Parent pathless layout renders as shell.
-      const result = matchRoutes(routes, "/about", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/about", { skipLoaders: true });
       expect(result).toHaveLength(1);
       expect(result![0].route.path).toBeUndefined();
       expect(result![0].route.loader).toBeUndefined();
@@ -775,7 +789,9 @@ describe("matchRoutes", () => {
       ] as unknown as InternalRouteDefinition[];
 
       // Pathless route with loader would always match; should be SKIPPED, blocking siblings
-      const result = matchRoutes(routes, "/anything", { skipLoaders: true });
+      const result = matchRoutes({ routes }, "/anything", {
+        skipLoaders: true,
+      });
       expect(result).toBeNull();
     });
   });
