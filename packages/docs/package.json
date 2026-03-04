@@ -14,7 +14,7 @@
     "@funstack/static": "^0.0.9",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "shiki": "^3.22.0"
+    "shiki": "^4.0.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
