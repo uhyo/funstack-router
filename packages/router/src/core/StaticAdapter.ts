@@ -56,7 +56,7 @@ export class StaticAdapter implements RouterAdapter {
   }
 
   setupInterception(
-    _routes: InternalRouteDefinition[],
+    _getRoutes: () => InternalRouteDefinition[],
     _onNavigate?: OnNavigateCallback,
     _checkBlockers?: () => boolean,
   ): (() => void) | undefined {

@@ -143,7 +143,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
   }
 
   setupInterception(
-    routes: InternalRouteDefinition[],
+    getRoutes: () => InternalRouteDefinition[],
     onNavigate?: OnNavigateCallback,
     checkBlockers?: () => boolean,
   ): (() => void) | undefined {
@@ -182,7 +182,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Check if the URL matches any of our routes
       const url = new URL(event.destination.url);
-      const matched = matchRoutes(routes, url.pathname);
+      const matched = matchRoutes(getRoutes(), url.pathname);
 
       const isFormSubmission = event.formData !== null;
 

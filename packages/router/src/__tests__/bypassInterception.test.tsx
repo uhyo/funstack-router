@@ -38,7 +38,7 @@ describe("bypass interception", () => {
 
       const onNavigate = vi.fn();
       const adapter = new NavigationAPIAdapter();
-      adapter.setupInterception(routes, onNavigate);
+      adapter.setupInterception(() => routes, onNavigate);
 
       // Call hardNavigate to capture the bypass info value from the mock
       hardNavigate("/about");
@@ -112,7 +112,7 @@ describe("bypass interception", () => {
 
       const onNavigate = vi.fn();
       const adapter = new NavigationAPIAdapter();
-      adapter.setupInterception(routes, onNavigate);
+      adapter.setupInterception(() => routes, onNavigate);
 
       // Simulate a normal navigate event (without bypass marker)
       const { event } = mockNavigation.__simulateNavigationWithEvent("/about");

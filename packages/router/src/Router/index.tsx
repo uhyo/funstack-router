@@ -2,6 +2,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -165,14 +166,20 @@ export function Router({
     });
   }, [adapter, startTransition]);
 
+  // Wrap in useEffectEvent so interception doesn't re-setup when routes or onNavigate change
+  const getRoutes = useEffectEvent(() => routes);
+  const handleNavigate = useEffectEvent<OnNavigateCallback>((...args) =>
+    onNavigate?.(...args),
+  );
+
   // Set up navigation interception via adapter
   useEffect(() => {
     return adapter.setupInterception(
-      routes,
-      onNavigate,
+      getRoutes,
+      handleNavigate,
       blockerRegistry.checkAll,
     );
-  }, [adapter, routes, onNavigate, blockerRegistry]);
+  }, [adapter, blockerRegistry]);
 
   // Navigate function that returns a Promise
   const navigateAsync = useCallback(
