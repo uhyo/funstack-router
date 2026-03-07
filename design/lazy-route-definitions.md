@@ -33,7 +33,7 @@ Lazy route definitions solve this by allowing entire subtrees of the route tree 
 
 The overall direction is good: keep `matchRoutes` synchronous, let a parent route match as a prefix while its children are loading, and use Suspense for the outlet area instead of inventing a custom loading protocol.
 
-The main design change I would make is to move the caching contract out of user-land examples and into the router's public API. A router-provided helper such as `lazyRouteChildren()` (name bikesheddable; it is clearer than a bare `lazy()` because React already has `React.lazy`) should be the primary documented API. Raw functions can still be supported internally, but the public design should not rely on every user discovering and correctly implementing a subtle caching requirement.
+The main design change I would make is to move the caching contract out of user-land examples and into the router's public API. A router-provided helper such as `lazyRouteChildren()` (name bikeshedable; it is clearer than a bare `lazy()` because React already has `React.lazy`) should be the primary documented API. Raw functions can still be supported internally, but the public design should not rely on every user discovering and correctly implementing a subtle caching requirement.
 
 The document should also explicitly call out three technology constraints:
 
@@ -876,7 +876,7 @@ Test cases:
 **File:** `packages/router/src/index.ts`
 
 - Export `LazyRouteChildren` and `lazyRouteChildren`
-- Document `lazyRouteChildren()` as the recommended API in package docs / README
+- Document `lazyRouteChildren()` as the recommended API in `README.md`
 
 ## Summary of Files to Change
 
