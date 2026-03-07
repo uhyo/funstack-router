@@ -25,7 +25,10 @@ describe("setupInterception", () => {
   describe("canIntercept is false", () => {
     it("calls onNavigate with empty matched routes when canIntercept is false", () => {
       const onNavigate = vi.fn();
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       // Create a navigate event with canIntercept = false
       const event = createNavigateEvent("http://localhost/about", {
@@ -46,7 +49,10 @@ describe("setupInterception", () => {
 
     it("does not call event.intercept when canIntercept is false", () => {
       const onNavigate = vi.fn();
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       const event = createNavigateEvent("http://localhost/about", {
         canIntercept: false,
@@ -61,7 +67,10 @@ describe("setupInterception", () => {
   describe("hash change navigations", () => {
     it("calls onNavigate with matched routes for hash change navigations", () => {
       const onNavigate = vi.fn();
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       const event = createNavigateEvent("http://localhost/about#section", {
         hashChange: true,
@@ -78,7 +87,10 @@ describe("setupInterception", () => {
     });
 
     it("does not intercept hash change navigations", () => {
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const event = createNavigateEvent("http://localhost/about#section", {
         hashChange: true,
@@ -94,7 +106,10 @@ describe("setupInterception", () => {
   describe("download requests", () => {
     it("calls onNavigate with matched routes for download requests", () => {
       const onNavigate = vi.fn();
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       const event = createNavigateEvent("http://localhost/about", {
         downloadRequest: "file.pdf",
@@ -111,7 +126,10 @@ describe("setupInterception", () => {
     });
 
     it("does not intercept download requests", () => {
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const event = createNavigateEvent("http://localhost/about", {
         downloadRequest: "file.pdf",
@@ -126,7 +144,10 @@ describe("setupInterception", () => {
 
   describe("normal navigation", () => {
     it("intercepts matching routes", () => {
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const event = createNavigateEvent("http://localhost/about");
 
@@ -136,7 +157,10 @@ describe("setupInterception", () => {
     });
 
     it("does not intercept non-matching routes", () => {
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const event = createNavigateEvent("http://localhost/nonexistent");
 
@@ -147,7 +171,10 @@ describe("setupInterception", () => {
 
     it("calls onNavigate with matched routes", () => {
       const onNavigate = vi.fn();
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       const event = createNavigateEvent("http://localhost/users/123");
 
@@ -165,7 +192,10 @@ describe("setupInterception", () => {
       const onNavigate = vi.fn((event: NavigateEvent) => {
         event.preventDefault();
       });
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       const event = createNavigateEvent("http://localhost/about");
 

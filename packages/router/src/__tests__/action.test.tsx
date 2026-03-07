@@ -27,7 +27,10 @@ describe("Form Submission / Action", () => {
         { path: "/submit", component: () => null },
       ]);
 
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const formData = new FormData();
       formData.set("name", "Alice");
@@ -52,7 +55,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const formData = new FormData();
       formData.set("name", "Alice");
@@ -77,7 +83,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       const formData = new FormData();
       formData.set("name", "Alice");
@@ -102,7 +111,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       mockNavigation.__simulateNavigationWithEvent("http://localhost/about");
 
@@ -118,7 +130,10 @@ describe("Form Submission / Action", () => {
         { path: "/submit", component: () => null },
       ]);
 
-      adapter.setupInterception(() => routes, onNavigate);
+      adapter.setupInterception(
+        () => ({ routes, lazyRouteCache: new Map() as never }),
+        onNavigate,
+      );
 
       const formData = new FormData();
       formData.set("name", "Alice");
@@ -153,7 +168,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const formData = new FormData();
 
@@ -206,7 +224,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const formData = new FormData();
 
@@ -280,7 +301,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const formData = new FormData();
       formData.set("name", "Alice");
@@ -325,7 +349,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const formData = new FormData();
 
@@ -367,7 +394,10 @@ describe("Form Submission / Action", () => {
 
       // Set up initial navigation to /page
       mockNavigation.__simulateNavigation("http://localhost/page");
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       // First load — simulate the initial loader execution
       // (In a real scenario, Router.tsx would trigger this)
@@ -405,7 +435,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const formData = new FormData();
 
@@ -443,7 +476,10 @@ describe("Form Submission / Action", () => {
         }),
       ]);
 
-      adapter.setupInterception(() => routes);
+      adapter.setupInterception(() => ({
+        routes,
+        lazyRouteCache: new Map() as never,
+      }));
 
       const formData = new FormData();
 
