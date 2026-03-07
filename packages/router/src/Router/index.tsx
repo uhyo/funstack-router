@@ -110,9 +110,9 @@ export function Router({
   const [lazyCache, setLazyCache] = useState(
     () => new Map<InternalRouteDefinition, Promise<void>>(),
   );
-  const previousRoutesRef = useRef(routes);
-  if (previousRoutesRef.current !== routes) {
-    previousRoutesRef.current = routes;
+  const [previousRoutes, setPreviousRoutes] = useState(routes);
+  if (previousRoutes !== routes) {
+    setPreviousRoutes(routes);
     if (lazyCache.size > 0) {
       setLazyCache(new Map());
     }
@@ -239,10 +239,7 @@ export function Router({
     "ssr";
 
   // Match routes and execute loaders
-  const matchedRoutesWithData = useMemo(() => {
-    // Recompute this memo when lazy cache identity changes after lazy children resolution.
-    void lazyCache;
-
+  const matchedRoutesWithData = (() => {
     if (!runLoaders) {
       // SSR/hydration without loader execution: match routes, data is undefined.
       // Routes with loaders are skipped (skipLoaders: true).
@@ -266,7 +263,7 @@ export function Router({
     const request = createLoaderRequest(urlObject);
     const signal = adapter.getIdleAbortSignal();
     return executeLoaders(matched, entryKey, request, signal);
-  }, [routes, adapter, urlObject, runLoaders, locationKey, lazyCache]);
+  })();
 
   if (matchedRoutesWithData) {
     const lastMatch = matchedRoutesWithData[matchedRoutesWithData.length - 1];
