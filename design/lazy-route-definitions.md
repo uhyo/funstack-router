@@ -29,60 +29,73 @@ For large applications, this means every route module is part of the initial bun
 
 Lazy route definitions solve this by allowing entire subtrees of the route tree to be loaded on demand, only when a user navigates to a matching path.
 
+## Review Summary
+
+The overall direction is good: keep `matchRoutes` synchronous, let a parent route match as a prefix while its children are loading, and use Suspense for the outlet area instead of inventing a custom loading protocol.
+
+The main design change I would make is to move the caching contract out of user-land examples and into the router's public API. A router-provided helper such as `lazyRouteChildren()` (name bikesheddable; it is clearer than a bare `lazy()` because React already has `React.lazy`) should be the primary documented API. Raw functions can still be supported internally, but the public design should not rely on every user discovering and correctly implementing a subtle caching requirement.
+
+The document should also explicitly call out three technology constraints:
+
+1. **Navigation API:** `event.intercept()` itself must be decided synchronously during the `navigate` event. Returning a partial parent match is therefore the right mechanism; the router cannot wait for async child discovery before deciding whether to intercept.
+2. **React transitions and Suspense:** during router-driven navigations, the existing screen is usually kept visible because the router already updates location state inside `startTransition`. The fallback is mainly an initial-load / hydration shell, not the primary navigation UX.
+3. **Stable async resource identity:** the "same promise" requirement is not a magical rule specific to `use()`; it is a consequence of React retrying suspended renders. If the route function creates a fresh promise every time, the work never converges.
+
 ## Proposed API
 
-Allow `children` to accept a function that returns route definitions — either synchronously or as a promise:
+Allow `children` to accept either static route definitions or a lazy child resolver:
 
 ```typescript
+import { lazyRouteChildren, route } from "@funstack/router";
+
 route({
   path: "admin",
   component: AdminLayout,
-  children: async () => {
-    const { adminRoutes } = await import("./admin/routes");
-    return adminRoutes;
-  },
+  children: lazyRouteChildren(() =>
+    import("./admin/routes").then((module) => module.adminRoutes),
+  ),
 });
 ```
+
+The underlying lazy contract can still be expressed as `() => RouteDefinition[] | Promise<RouteDefinition[]>`, so the router remains flexible. However, the documented "golden path" should use a router helper that caches the in-flight promise and the resolved route array.
 
 The function is called when the router first needs the children (either on navigation to a matching path or on initial page load). If it returns a promise, the parent's `<Outlet />` suspends until the promise resolves. If it returns an array synchronously, matching continues immediately with no suspension.
 
 ### Caching contract
 
-The children function **may be called multiple times**. It is the user's responsibility to cache the result so that:
+The lazy children function **may be called multiple times**. For correctness, repeated calls must behave like a stable async resource:
 
-1. The **same `Promise` reference** is returned on repeat calls while loading (required by `use()` — a new promise on each call causes infinite suspension).
-2. After the promise resolves, the function returns the **resolved array synchronously** on subsequent calls.
+1. While loading, repeat calls must return the **same promise** rather than starting a fresh load.
+2. After the promise resolves, repeat calls should return the **resolved array synchronously**.
 
-This caching contract is important for resilience: if the Router component itself cannot commit (e.g., a Suspense boundary above Router causes the tree to be discarded), React state is lost and the function will be called again. A function that always returns a fresh promise would cause infinite suspension in this edge case. A function that returns the cached result synchronously avoids suspension entirely on retry.
+This matters because the Router component can be re-rendered or even discarded and retried by React before the suspended tree commits. If the route function creates a fresh promise on every call, React keeps retrying unfinished work. If it returns the previously created promise while loading — and the resolved array after loading — the system converges correctly.
 
-The recommended pattern uses a `lazy()` helper (user-land, not provided by the router):
+That is why this design should provide an official helper instead of only documenting a user-land pattern:
 
 ```typescript
-// helpers/lazy.ts
-function lazy<T>(load: () => Promise<T>): () => T | Promise<T> {
-  let value: { result: T } | undefined;
+// packages/router/src/lazyRouteChildren.ts (proposed)
+export function lazyRouteChildren<T>(
+  load: () => Promise<T>,
+): () => T | Promise<T> {
+  let value: T | undefined;
   let promise: Promise<T> | undefined;
+
   return () => {
-    if (value) return value.result;
+    if (value !== undefined) {
+      return value;
+    }
     if (!promise) {
       promise = load().then((result) => {
-        value = { result };
+        value = result;
         return result;
       });
     }
     return promise;
   };
 }
-
-// routes.ts
-route({
-  path: "admin",
-  component: AdminLayout,
-  children: lazy(() => import("./admin/routes").then((m) => m.adminRoutes)),
-});
 ```
 
-Simple `async () => { ... }` functions (as shown in the examples below) work for the common case where Router is committed, but do not satisfy the caching contract — they create a new promise on each call. For production use, the `lazy()` pattern is recommended.
+Raw `async () => { ... }` functions may appear to work in the happy path, but they do not satisfy this contract because they allocate a new promise on each call. The router can continue to accept them structurally, but the documentation should describe them as a low-level escape hatch, not the recommended production pattern.
 
 ### Usage Examples
 
@@ -98,18 +111,16 @@ const routes = [
   route({
     path: "admin",
     component: AdminLayout,
-    children: async () => {
-      const { adminRoutes } = await import("./admin/routes");
-      return adminRoutes;
-    },
+    children: lazyRouteChildren(() =>
+      import("./admin/routes").then((module) => module.adminRoutes),
+    ),
   }),
   route({
     path: "dashboard",
     component: DashboardLayout,
-    children: async () => {
-      const { dashboardRoutes } = await import("./dashboard/routes");
-      return dashboardRoutes;
-    },
+    children: lazyRouteChildren(() =>
+      import("./dashboard/routes").then((module) => module.dashboardRoutes),
+    ),
   }),
 ];
 ```
@@ -134,10 +145,9 @@ export const adminRoutes = [
   route({
     path: "advanced",
     component: AdvancedLayout,
-    children: async () => {
-      const { advancedRoutes } = await import("./advanced/routes");
-      return advancedRoutes;
-    },
+    children: lazyRouteChildren(() =>
+      import("./advanced/routes").then((module) => module.advancedRoutes),
+    ),
   }),
 ];
 ```
@@ -150,10 +160,11 @@ Navigating to `/admin/advanced/audit` would trigger two sequential resolutions: 
 route({
   // Pathless layout route — always matches, adds a shared layout
   component: AuthenticatedLayout,
-  children: async () => {
-    const { authenticatedRoutes } = await import("./authenticated/routes");
-    return authenticatedRoutes;
-  },
+  children: lazyRouteChildren(() =>
+    import("./authenticated/routes").then(
+      (module) => module.authenticatedRoutes,
+    ),
+  ),
 });
 ```
 
@@ -163,16 +174,15 @@ route({
 routeState<AdminState>()({
   path: "admin",
   component: AdminLayout,
-  children: async () => {
-    const { adminRoutes } = await import("./admin/routes");
-    return adminRoutes;
-  },
+  children: lazyRouteChildren(() =>
+    import("./admin/routes").then((module) => module.adminRoutes),
+  ),
 });
 ```
 
 #### Parent layout with Suspense
 
-Parent components should wrap `<Outlet />` in a `<Suspense>` boundary to show a loading fallback while lazy children load:
+Parent components should wrap `<Outlet />` in a `<Suspense>` boundary so the outlet area has an explicit loading shell when lazy children suspend:
 
 ```tsx
 function AdminLayout() {
@@ -187,7 +197,7 @@ function AdminLayout() {
 }
 ```
 
-During navigation, `startTransition` keeps the old page visible while lazy children resolve — the `<Suspense>` fallback is only shown on initial page load (when there is no "old page" to keep visible). See [Detailed Behavior](#detailed-behavior) for the full flow.
+During router-driven navigation, the router already updates location state inside `startTransition`, so React usually keeps the old page visible while the lazy children resolve. In practice that means the `<Suspense>` fallback is mainly an initial-load or hydration shell. It can still appear if there is no previously committed UI to preserve, or if the user places additional Suspense boundaries above the router. See [Detailed Behavior](#detailed-behavior) for the full flow.
 
 ### What lazy children do NOT receive
 
@@ -215,6 +225,11 @@ All route definition types that have a `children` property need to accept the la
 
 ```typescript
 type LazyRouteChildren = () => RouteDefinition[] | Promise<RouteDefinition[]>;
+
+// Export a helper whose return type satisfies LazyRouteChildren.
+export function lazyRouteChildren(
+  load: () => Promise<RouteDefinition[]>,
+): LazyRouteChildren;
 
 // Applied to OpaqueRouteDefinition, TypefulOpaqueRouteDefinition,
 // and all internal route types (RouteWithLoader, RouteWithoutLoader, etc.)
@@ -348,7 +363,7 @@ The handler continues to work with the partial match — it runs loaders for mat
 
 The initial (possibly partial) `matched` result is used to decide _whether_ to intercept. A partial match (parent matched, async lazy children pending) is sufficient — if the parent path matches, the URL belongs to our route tree and should be intercepted. When the initial `matched` is `null`, no route matches even as a prefix, and the navigation isn't intercepted.
 
-**Note:** `matchRoutes` calls the lazy function inside the NavigationAPIAdapter's synchronous `handleNavigate`. This is the first call, so it triggers the dynamic import (a side effect). The Promise is returned and discarded here — the actual suspension and resolution happen later in the React render cycle.
+**Technology clarification:** `matchRoutes` can call the lazy function inside `NavigationAPIAdapter`'s synchronous `handleNavigate`, but the important synchronous step is the `event.intercept(...)` decision itself. The router is not "awaiting lazy children inside the Navigation API"; it is using a partial parent match to decide interception synchronously, then letting React rendering deal with the async subtree resolution later.
 
 ### `Router` Component Changes
 
@@ -604,9 +619,17 @@ Navigate to: /admin/nonexistent
 7. If `requireChildren` is true (default): re-match returns `null`
 8. Nothing renders
 
-With static children, the initial `matchRoutes` would return `null` and the navigation wouldn't be intercepted at all. With lazy children, we over-intercept because we can't know upfront whether children will match.
+With static children, the initial `matchRoutes` would return `null` and the navigation would not be intercepted at all. With lazy children, the router necessarily over-intercepts because the Navigation API decision must be made before async child discovery finishes.
 
-**Mitigation:** Users should define catch-all routes for 404 handling, which is a best practice regardless. Alternatively, `requireChildren: false` on the parent ensures the parent layout renders even when no child matches.
+This is not just a matching detail; it affects user experience and history behavior. The navigation is already intercepted and committed before the router learns that no lazy child matches.
+
+**Mitigation:** the design should document one of these as a required pattern for lazy parents:
+
+- define a catch-all child route for subtree-level 404 handling,
+- set `requireChildren: false` if rendering the parent shell without a child is acceptable, or
+- keep the parent non-lazy if the subtree must reject unknown paths before interception.
+
+The first option is the most generally useful and should be the primary recommendation.
 
 ### Form submission to a lazy route
 
@@ -637,14 +660,14 @@ Pathless routes always match and don't consume any pathname. A pathless route wi
 
 ### SSR
 
-During SSR, `PendingOutlet` suspends via `use()`. React's SSR Suspense support handles this:
+During SSR, `PendingOutlet` suspends via `use()`, so the outcome depends on the renderer strategy:
 
-- With streaming SSR (`renderToPipeableStream`): the Suspense fallback is sent initially, and the resolved content is streamed later when the promise resolves.
-- With non-streaming SSR (`renderToString`): Suspense fallbacks are rendered as the final output. Lazy children don't resolve during SSR.
+- With streaming SSR (`renderToPipeableStream`), React can emit the parent shell and later stream the resolved child content.
+- With non-streaming SSR (`renderToString`), the fallback becomes the final HTML for that request; async child discovery is not completed on the server.
 
-In both cases, the parent route renders as a shell with the Suspense fallback in the outlet area. After hydration on the client, `PendingOutlet` suspends again (or resolves immediately if children were streamed), and the full route tree renders.
+That means lazy children are a poor fit for SEO-critical or "must be fully rendered in the first response" routes. The design should say this plainly: use static children for those routes, and reserve lazy children for places where a shell + later reveal is acceptable (admin areas, settings, feature dashboards, etc.).
 
-For SSR-critical routes, users should define children statically. Lazy children are best suited for routes that don't need server rendering (admin panels, settings pages, etc.).
+This is also why the official helper matters. The client may hydrate and retry the same lazy subtree more than once before the tree stabilizes, especially when Suspense boundaries are involved.
 
 ### Route definitions prop change
 
@@ -720,24 +743,26 @@ route({
 
 **Verdict:** Overloading `children` is simpler and more intuitive. The type union `RouteDefinition[] | (() => RouteDefinition[] | Promise<RouteDefinition[]>)` is clear.
 
-### B: `lazy()` wrapper helper
+### B: Official lazy-children helper (recommended)
 
 ```typescript
-import { lazy } from "@funstack/router";
+import { lazyRouteChildren } from "@funstack/router";
 
 route({
   path: "admin",
   component: AdminLayout,
-  children: lazy(() => import("./admin/routes").then((m) => m.adminRoutes)),
+  children: lazyRouteChildren(() =>
+    import("./admin/routes").then((module) => module.adminRoutes),
+  ),
 });
 ```
 
-Where `lazy()` returns a branded object that the router recognizes.
+The helper does **not** need to return a branded object. It can simply return a function whose runtime shape is still `() => RouteDefinition[] | Promise<RouteDefinition[]>`, while encapsulating the required caching semantics.
 
-**Pros:** Could carry metadata (retry config, loading indicators). More explicit intent.
-**Cons:** Extra API surface. The function-vs-array check is sufficient to distinguish lazy from static. Metadata can be added later if needed.
+**Pros:** Makes the correctness contract explicit, avoids copy-pasted user-land caching code, and reduces confusion around React retries and Suspense.
+**Cons:** Adds a small API surface area.
 
-**Verdict:** Not needed for the initial implementation. Can be added later as a non-breaking enhancement.
+**Verdict:** This should be the recommended API, even if the lower-level function form remains supported for power users.
 
 ### C: Async `matchRoutes`
 
@@ -774,7 +799,7 @@ useEffect(() => {
 
 ## Implementation Plan
 
-### Step 1: Update type definitions
+### Step 1: Update type definitions and helper API
 
 **File:** `packages/router/src/types.ts`
 
@@ -783,6 +808,7 @@ useEffect(() => {
 **File:** `packages/router/src/route.ts`
 
 - Define `LazyRouteChildren = () => RouteDefinition[] | Promise<RouteDefinition[]>`
+- Add and export a `lazyRouteChildren()` helper that returns `LazyRouteChildren`
 - Update `children` in `OpaqueRouteDefinition`, `RouteDefinition`, and all internal route types (`RouteWithLoader`, `RouteWithoutLoader`, etc.) to accept `LazyRouteChildren`
 - Note: `PartialRouteDefinition` types don't have `children` (they have `children?: never`), so no changes needed there
 
@@ -845,22 +871,24 @@ Test cases:
 13. **Sync resolution (cached function)**: Lazy function returns array synchronously on second call. Verify `matchRoutes` resolves it immediately with no suspension.
 14. **`matchRoutes` handles sync return**: Call `matchRoutes` with a route whose children function returns an array. Verify full match is returned and `route.children` is NOT mutated (still a function).
 
-### Step 8: Export types
+### Step 8: Export helper and types
 
 **File:** `packages/router/src/index.ts`
 
-- Export `LazyRouteChildren` type (if users need it for type annotations)
+- Export `LazyRouteChildren` and `lazyRouteChildren`
+- Document `lazyRouteChildren()` as the recommended API in package docs / README
 
 ## Summary of Files to Change
 
 | File                                           | Change                                                                        |
 | ---------------------------------------------- | ----------------------------------------------------------------------------- |
 | `packages/router/src/types.ts`                 | Update `InternalRouteDefinition.children` type                                |
-| `packages/router/src/route.ts`                 | Add `LazyRouteChildren` type; update `children` on all route definition types |
+| `packages/router/src/route.ts`                 | Add `LazyRouteChildren`; add `lazyRouteChildren()`; update `children` typings |
 | `packages/router/src/core/matchRoutes.ts`      | Call lazy function; handle sync (match) and async (partial match)             |
 | `packages/router/src/context/RouterContext.ts` | Add `lazyCache` to `RouterContextValue`                                       |
 | `packages/router/src/Router/PendingOutlet.tsx` | New file: thin component that suspends via `use(promise)`                     |
 | `packages/router/src/Router/RouteRenderer.tsx` | Produce `<PendingOutlet>` outlet for routes with lazy children                |
 | `packages/router/src/Router/index.tsx`         | Add `lazyCache` state; create lazy promises; clear on routes change           |
-| `packages/router/src/index.ts`                 | Export `LazyRouteChildren` type                                               |
+| `packages/router/src/index.ts`                 | Export `LazyRouteChildren` and `lazyRouteChildren()`                          |
+| `README.md`                                    | Document the recommended helper, SSR limits, and subtree 404 guidance         |
 | `packages/router/src/__tests__/lazy.test.tsx`  | New file: test cases for lazy route definitions                               |
