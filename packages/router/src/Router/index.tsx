@@ -110,13 +110,9 @@ export function Router({
   const [lazyCache, setLazyCache] = useState(
     () => new Map<InternalRouteDefinition, Promise<void>>(),
   );
-  const [previousRoutes, setPreviousRoutes] = useState(routes);
-  if (previousRoutes !== routes) {
-    setPreviousRoutes(routes);
-    if (lazyCache.size > 0) {
-      setLazyCache(new Map());
-    }
-  }
+  useEffect(() => {
+    setLazyCache((prev) => (prev.size === 0 ? prev : new Map()));
+  }, [routes]);
 
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
