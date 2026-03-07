@@ -1,3 +1,4 @@
+import type { LazyRouteCache } from "../Router/LazyRouteCache.js";
 import type {
   InternalRouteDefinition,
   NavigateOptions,
@@ -25,6 +26,11 @@ export type LocationEntry = {
   /** Ephemeral info from current navigation (undefined if not from navigation event) */
   info: unknown;
 };
+
+export interface RoutesInput {
+  routes: InternalRouteDefinition[];
+  lazyRouteCache: LazyRouteCache;
+}
 
 /**
  * Interface for navigation adapters.
@@ -65,7 +71,7 @@ export interface RouterAdapter {
    *                        If this function returns true, navigation is prevented.
    */
   setupInterception(
-    getRoutes: () => InternalRouteDefinition[],
+    getRoutes: () => RoutesInput,
     onNavigate?: OnNavigateCallback,
     checkBlockers?: () => boolean,
   ): (() => void) | undefined;

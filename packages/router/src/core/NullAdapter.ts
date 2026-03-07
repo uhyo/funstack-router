@@ -2,12 +2,9 @@ import type {
   RouterAdapter,
   LocationEntry,
   EntryChangeType,
+  RoutesInput,
 } from "./RouterAdapter.js";
-import type {
-  InternalRouteDefinition,
-  NavigateOptions,
-  OnNavigateCallback,
-} from "../types.js";
+import type { NavigateOptions, OnNavigateCallback } from "../types.js";
 
 /**
  * Null adapter for when Navigation API is unavailable and no fallback is configured.
@@ -36,7 +33,7 @@ export class NullAdapter implements RouterAdapter {
   }
 
   setupInterception(
-    _getRoutes: () => InternalRouteDefinition[],
+    _getRoutes: () => RoutesInput,
     _onNavigate?: OnNavigateCallback,
     _checkBlockers?: () => boolean,
   ): (() => void) | undefined {

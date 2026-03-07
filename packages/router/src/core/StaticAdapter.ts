@@ -2,12 +2,9 @@ import type {
   RouterAdapter,
   LocationEntry,
   EntryChangeType,
+  RoutesInput,
 } from "./RouterAdapter.js";
-import type {
-  InternalRouteDefinition,
-  NavigateOptions,
-  OnNavigateCallback,
-} from "../types.js";
+import type { NavigateOptions, OnNavigateCallback } from "../types.js";
 
 /**
  * Static adapter for fallback mode when Navigation API is unavailable.
@@ -56,7 +53,7 @@ export class StaticAdapter implements RouterAdapter {
   }
 
   setupInterception(
-    _getRoutes: () => InternalRouteDefinition[],
+    _getRoutes: () => RoutesInput,
     _onNavigate?: OnNavigateCallback,
     _checkBlockers?: () => boolean,
   ): (() => void) | undefined {

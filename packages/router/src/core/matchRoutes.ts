@@ -1,7 +1,11 @@
+import type { LazyRouteCache } from "../Router/LazyRouteCache.js";
 import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
 
 const SKIPPED = Symbol("skipped");
-type MatchRouteInternalResult = MatchedRoute[] | typeof SKIPPED | null;
+type MatchRouteInternalResult =
+  | (MatchedRoute | Promise<unknown>)[]
+  | typeof SKIPPED
+  | null;
 
 export type MatchRoutesOptions = {
   /**
@@ -13,6 +17,7 @@ export type MatchRoutesOptions = {
 
 export type MatchRoutesInput = {
   routes: InternalRouteDefinition[];
+  lazyRouteCache: LazyRouteCache;
 };
 
 /**
@@ -23,10 +28,10 @@ export function matchRoutes(
   input: MatchRoutesInput,
   pathname: string | null,
   options?: MatchRoutesOptions,
-): MatchedRoute[] | null {
-  const { routes } = input;
+): (MatchedRoute | Promise<unknown>)[] | null {
+  const { routes, lazyRouteCache } = input;
   for (const route of routes) {
-    const matched = matchRoute(route, pathname, options);
+    const matched = matchRoute(route, lazyRouteCache, pathname, options);
     if (matched === SKIPPED) return null;
     if (matched) {
       return matched;
@@ -40,11 +45,33 @@ export function matchRoutes(
  */
 function matchRoute(
   route: InternalRouteDefinition,
+  lazyRouteCache: LazyRouteCache,
   pathname: string | null,
   options?: MatchRoutesOptions,
 ): MatchRouteInternalResult {
-  // TODO(lazy-route-definitions): call lazy function here, handle sync (match) and async (partial match)
-  const children = Array.isArray(route.children) ? route.children : undefined;
+  const children = (() => {
+    if (route.children === undefined || Array.isArray(route.children)) {
+      return route.children;
+    }
+    const cacheEntry = lazyRouteCache.get(route.children);
+    if (cacheEntry) {
+      if (cacheEntry.status === "loaded") {
+        return cacheEntry.children;
+      }
+      return cacheEntry.promise;
+    }
+    // This is the first time we've hit this lazy route - call the function and cache the promise
+    const result = route.children();
+    // TODO: update the cache
+    return result;
+  })();
+
+  if (children instanceof Promise) {
+    // For now, treat pending promise as having children to allow matching to continue and show loading states
+    return [children];
+  }
+
+  // Promise (not yet loaded) is treated as having children, to allow matching to continue and show loading states
   const hasChildren = Boolean(children?.length);
   const skipLoaders = options?.skipLoaders ?? false;
 
@@ -74,7 +101,7 @@ function matchRoute(
     if (hasChildren) {
       let anySkipped = false;
       for (const child of children!) {
-        const childMatch = matchRoute(child, pathname, options);
+        const childMatch = matchRoute(child, lazyRouteCache, pathname, options);
         if (childMatch === SKIPPED) {
           anySkipped = true;
           break;
@@ -137,7 +164,12 @@ function matchRoute(
 
     let anyChildSkipped = false;
     for (const child of children!) {
-      const childMatch = matchRoute(child, remainingPathname, options);
+      const childMatch = matchRoute(
+        child,
+        lazyRouteCache,
+        remainingPathname,
+        options,
+      );
       if (childMatch === SKIPPED) {
         anyChildSkipped = true;
         break;
@@ -146,10 +178,14 @@ function matchRoute(
         // Merge params from parent into children
         return [
           result,
-          ...childMatch.map((m) => ({
-            ...m,
-            params: { ...params, ...m.params },
-          })),
+          ...childMatch.map((m) =>
+            m instanceof Promise
+              ? m
+              : {
+                  ...m,
+                  params: { ...params, ...m.params },
+                },
+          ),
         ];
       }
     }

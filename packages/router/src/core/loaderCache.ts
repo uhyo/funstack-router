@@ -58,13 +58,16 @@ export function createActionRequest(url: URL, formData: FormData): Request {
  * Results are cached by navigation entry id to prevent duplicate execution.
  */
 export function executeLoaders(
-  matchedRoutes: MatchedRoute[],
+  matchedRoutes: (MatchedRoute | Promise<unknown>)[],
   entryId: string,
   request: Request,
   signal: AbortSignal,
   actionResult?: unknown,
-): MatchedRouteWithData[] {
+): (MatchedRouteWithData | Promise<unknown>)[] {
   return matchedRoutes.map((match, index) => {
+    if (match instanceof Promise) {
+      return match;
+    }
     const { route, params } = match;
     const args: LoaderArgs<Record<string, string>, unknown> = {
       params,

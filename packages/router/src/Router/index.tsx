@@ -34,6 +34,7 @@ import {
   noopSubscribe,
 } from "./ServerLocationSnapshot.js";
 import { RouteRenderer } from "./RouteRenderer.js";
+import type { LazyRouteCache } from "./LazyRouteCache.js";
 
 /**
  * SSR configuration for the router.
@@ -107,6 +108,7 @@ export function Router({
   ssr,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
+  const [lazyRouteCache] = useState<LazyRouteCache>(() => new Map());
 
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
@@ -167,7 +169,7 @@ export function Router({
   }, [adapter, startTransition]);
 
   // Wrap in useEffectEvent so interception doesn't re-setup when routes or onNavigate change
-  const getRoutes = useEffectEvent(() => routes);
+  const getRoutes = useEffectEvent(() => ({ routes, lazyRouteCache }));
   const handleNavigate = useEffectEvent<OnNavigateCallback>((...args) =>
     onNavigate?.(...args),
   );
@@ -239,9 +241,13 @@ export function Router({
     if (!runLoaders) {
       // SSR/hydration without loader execution: match routes, data is undefined.
       // Routes with loaders are skipped (skipLoaders: true).
-      const matched = matchRoutes({ routes }, urlObject?.pathname ?? null, {
-        skipLoaders: true,
-      });
+      const matched = matchRoutes(
+        { routes, lazyRouteCache },
+        urlObject?.pathname ?? null,
+        {
+          skipLoaders: true,
+        },
+      );
       if (!matched) return null;
       return matched.map((m) => ({ ...m, data: undefined }));
     }
@@ -252,14 +258,14 @@ export function Router({
 
     // Unified path: SSR with loaders or client-side.
     // Both cases match routes normally and execute loaders.
-    const matched = matchRoutes({ routes }, urlObject.pathname);
+    const matched = matchRoutes({ routes, lazyRouteCache }, urlObject.pathname);
     if (!matched) return null;
 
     const entryKey = locationKey;
     const request = createLoaderRequest(urlObject);
     const signal = adapter.getIdleAbortSignal();
     return executeLoaders(matched, entryKey, request, signal);
-  }, [routes, adapter, urlObject, runLoaders, locationKey]);
+  }, [routes, lazyRouteCache, adapter, urlObject, runLoaders, locationKey]);
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;

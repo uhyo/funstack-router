@@ -3,9 +3,10 @@ import { RouterContext } from "../context/RouterContext.js";
 import { RouteContext } from "../context/RouteContext.js";
 import type { MatchedRouteWithData, InternalRouteState } from "../types.js";
 import { useRouteStateCallbacks } from "./useRouteStateCallbacks.js";
+import { PendingOutlet } from "./PendingOutlet.js";
 
 export type RouteRendererProps = {
-  matchedRoutes: MatchedRouteWithData[];
+  matchedRoutes: (MatchedRouteWithData | Promise<unknown>)[];
   index: number;
 };
 
@@ -19,15 +20,11 @@ export function RouteRenderer({
   // Get parent route context (null for root route)
   const parentRouteContext = useContext(RouteContext);
 
-  const match = matchedRoutes[index];
-  if (!match) return null;
-
-  const { route, params, pathname, data } = match;
-
   const routerContext = useContext(RouterContext);
   if (!routerContext) {
     throw new Error("RouteRenderer must be used within RouterContext");
   }
+
   const {
     locationState,
     locationInfo,
@@ -58,6 +55,15 @@ export function RouteRenderer({
       ) : null,
     [matchedRoutes, index],
   );
+
+  const match = matchedRoutes[index];
+
+  if (!match) return null;
+  if (match instanceof Promise) {
+    return <PendingOutlet promise={match} />;
+  }
+
+  const { route, params, pathname, data } = match;
 
   // Extract id from route definition (if available)
   const routeId = (route as { id?: string }).id;
