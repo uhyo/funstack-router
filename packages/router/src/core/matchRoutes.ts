@@ -38,7 +38,11 @@ function matchRoute(
   pathname: string | null,
   options?: MatchRoutesOptions,
 ): MatchRouteInternalResult {
-  const hasChildren = Boolean(route.children?.length);
+  const {
+    children,
+    hasChildren,
+    hasUnresolvedLazyChildren,
+  } = resolveRouteChildren(route);
   const skipLoaders = options?.skipLoaders ?? false;
 
   // Routes with loaders can't render during SSR (no request context)
@@ -64,9 +68,9 @@ function matchRoute(
       pathname: "",
     };
 
-    if (hasChildren) {
+    if (children?.length) {
       let anySkipped = false;
-      for (const child of route.children!) {
+      for (const child of children) {
         const childMatch = matchRoute(child, pathname, options);
         if (childMatch === SKIPPED) {
           anySkipped = true;
@@ -80,6 +84,11 @@ function matchRoute(
         if (route.component) return [result]; // render as shell
         return SKIPPED; // propagate
       }
+    }
+    if (hasUnresolvedLazyChildren) {
+      return [result];
+    }
+    if (hasChildren) {
       // No children matched - only valid if requireChildren is false and route has a component
       if (route.component && route.requireChildren === false) {
         return [result];
@@ -118,7 +127,7 @@ function matchRoute(
   };
 
   // If this route has children, try to match them
-  if (hasChildren) {
+  if (children?.length) {
     // Calculate remaining pathname, ensuring it starts with /
     let remainingPathname = pathname.slice(consumedPathname.length);
     if (!remainingPathname.startsWith("/")) {
@@ -129,7 +138,7 @@ function matchRoute(
     }
 
     let anyChildSkipped = false;
-    for (const child of route.children!) {
+    for (const child of children) {
       const childMatch = matchRoute(child, remainingPathname, options);
       if (childMatch === SKIPPED) {
         anyChildSkipped = true;
@@ -151,7 +160,11 @@ function matchRoute(
       if (route.component) return [result]; // render as shell
       return SKIPPED; // propagate
     }
-
+  }
+  if (hasUnresolvedLazyChildren) {
+    return [result];
+  }
+  if (hasChildren) {
     // If no children matched - only valid if requireChildren is false and route has a component
     if (route.component && route.requireChildren === false) {
       return [result];
@@ -166,6 +179,34 @@ function matchRoute(
   }
 
   return [result];
+}
+
+function resolveRouteChildren(route: InternalRouteDefinition): {
+  children: InternalRouteDefinition[] | undefined;
+  hasChildren: boolean;
+  hasUnresolvedLazyChildren: boolean;
+} {
+  const routeChildren = route.children;
+  if (typeof routeChildren === "function") {
+    const result = routeChildren();
+    if (Array.isArray(result)) {
+      return {
+        children: result,
+        hasChildren: result.length > 0,
+        hasUnresolvedLazyChildren: false,
+      };
+    }
+    return {
+      children: undefined,
+      hasChildren: true,
+      hasUnresolvedLazyChildren: true,
+    };
+  }
+  return {
+    children: routeChildren,
+    hasChildren: Boolean(routeChildren?.length),
+    hasUnresolvedLazyChildren: false,
+  };
 }
 
 /**

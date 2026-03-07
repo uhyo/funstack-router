@@ -21,6 +21,7 @@ import {
   type NavigateOptions,
   type OnNavigateCallback,
   type FallbackMode,
+  type InternalRouteDefinition,
   internalRoutes,
 } from "../types.js";
 import { matchRoutes } from "../core/matchRoutes.js";
@@ -106,6 +107,16 @@ export function Router({
   ssr,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
+  const [lazyCache, setLazyCache] = useState(
+    () => new Map<InternalRouteDefinition, Promise<void>>(),
+  );
+  const previousRoutesRef = useRef(routes);
+  if (previousRoutesRef.current !== routes) {
+    previousRoutesRef.current = routes;
+    if (lazyCache.size > 0) {
+      setLazyCache(new Map());
+    }
+  }
 
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
@@ -229,6 +240,9 @@ export function Router({
 
   // Match routes and execute loaders
   const matchedRoutesWithData = useMemo(() => {
+    // Recompute this memo when lazy cache identity changes after lazy children resolution.
+    void lazyCache;
+
     if (!runLoaders) {
       // SSR/hydration without loader execution: match routes, data is undefined.
       // Routes with loaders are skipped (skipLoaders: true).
@@ -252,7 +266,27 @@ export function Router({
     const request = createLoaderRequest(urlObject);
     const signal = adapter.getIdleAbortSignal();
     return executeLoaders(matched, entryKey, request, signal);
-  }, [routes, adapter, urlObject, runLoaders, locationKey]);
+  }, [routes, adapter, urlObject, runLoaders, locationKey, lazyCache]);
+
+  if (matchedRoutesWithData) {
+    const lastMatch = matchedRoutesWithData[matchedRoutesWithData.length - 1];
+    const route = lastMatch?.route;
+    if (route && typeof route.children === "function" && !lazyCache.has(route)) {
+      const lazyResult = route.children();
+      if (!Array.isArray(lazyResult)) {
+        const voidPromise = lazyResult.then(() => {
+          setLazyCache((prev) => {
+            if (!prev.has(route)) return prev;
+            return new Map(prev);
+          });
+        });
+        setLazyCache((prev) => {
+          if (prev.has(route)) return prev;
+          return new Map([...prev, [route, voidPromise]]);
+        });
+      }
+    }
+  }
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;
@@ -264,6 +298,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
+      lazyCache,
     }),
     [
       locationState,
@@ -272,6 +307,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
+      lazyCache,
     ],
   );
 

@@ -67,6 +67,9 @@ export function ApiReferenceIndexPage() {
             <code>routeState()</code> — Typed navigation state management
           </li>
           <li>
+            <code>lazyRouteChildren()</code> — Cached lazy child route loader
+          </li>
+          <li>
             <code>hardReload()</code> — Full page reload bypassing the router
           </li>
           <li>

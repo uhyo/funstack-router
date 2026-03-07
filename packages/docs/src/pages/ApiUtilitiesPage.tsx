@@ -113,7 +113,7 @@ const myRoute = route({
                 <code>children</code>
               </td>
               <td>
-                <code>RouteDefinition[]</code>
+                <code>RouteDefinition[] | LazyRouteChildren</code>
               </td>
               <td>Nested child routes</td>
             </tr>
@@ -147,6 +147,36 @@ const myRoute = route({
             </tr>
           </tbody>
         </table>
+      </article>
+
+      <article className="api-item">
+        <h3>
+          <code>lazyRouteChildren()</code>
+        </h3>
+        <p>
+          Helper for defining lazy route subtrees with built-in caching semantics.
+          Use this when a route's <code>children</code> should be loaded on
+          demand.
+        </p>
+        <CodeBlock language="tsx">{`import { lazyRouteChildren, route } from "@funstack/router";
+
+const adminChildren = lazyRouteChildren(async () => [
+  route({ path: "settings", component: SettingsPage }),
+  route({ path: "users", component: AdminUsersPage }),
+]);
+
+const routes = [
+  route({
+    path: "/admin",
+    component: AdminLayout,
+    children: adminChildren,
+  }),
+];`}</CodeBlock>
+        <p>
+          The helper caches the first Promise and returns resolved children
+          synchronously on later calls, which keeps matching resilient across
+          retries and transitions.
+        </p>
       </article>
 
       <article className="api-item">
@@ -309,12 +339,13 @@ hardNavigate("/other-page");`}</CodeBlock>
       <article className="api-item">
         <h3>Server Entry Point</h3>
         <p>
-          The <code>route()</code> and <code>routeState()</code> helpers are
-          also available from a server-compatible entry point. Use this when
-          defining routes in React Server Components or other server-side code.
+          The <code>route()</code>, <code>routeState()</code>, and{" "}
+          <code>lazyRouteChildren()</code> helpers are also available from a
+          server-compatible entry point. Use this when defining routes in React
+          Server Components or other server-side code.
         </p>
         <CodeBlock language="tsx">{`// In Server Components or server-side route definitions
-import { route, routeState } from "@funstack/router/server";
+import { route, routeState, lazyRouteChildren } from "@funstack/router/server";
 
 // Define routes without the "use client" directive
 const routes = [
@@ -344,7 +375,10 @@ const routes = [
             <code>route</code> - Route definition helper
           </li>
           <li>
-            <code>routeState</code> - Route definition helper with typed state
+           <code>routeState</code> - Route definition helper with typed state
+          </li>
+          <li>
+            <code>lazyRouteChildren</code> - Helper for lazy child route loading
           </li>
           <li>
             <code>bindRoute</code> - Binds a component to a partial route

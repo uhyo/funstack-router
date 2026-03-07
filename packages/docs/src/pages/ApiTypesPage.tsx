@@ -247,6 +247,19 @@ type SettingsPageProps = RouteComponentPropsOf<typeof settingsRoute>;
 
       <article className="api-item">
         <h3>
+          <code>LazyRouteChildren</code>
+        </h3>
+        <p>
+          Function type used for lazy route children definitions. It can return
+          child routes synchronously (after resolution) or asynchronously (during
+          first load).
+        </p>
+        <CodeBlock language="typescript">{`type LazyRouteChildren = () =>
+  RouteDefinition[] | Promise<RouteDefinition[]>;`}</CodeBlock>
+      </article>
+
+      <article className="api-item">
+        <h3>
           <code>RouteDefinition</code>
         </h3>
         <p>

@@ -16,7 +16,7 @@ export { useRouteData } from "./hooks/useRouteData.js";
 export { useIsPending } from "./hooks/useIsPending.js";
 
 // Route Definition Helpers
-export { route, routeState } from "./route.js";
+export { route, routeState, lazyRouteChildren } from "./route.js";
 export { bindRoute } from "./bindRoute.js";
 
 // Bypass Interception
@@ -47,4 +47,5 @@ export type {
   ExtractRouteData,
   RouteComponentPropsOf,
   PartialRouteDefinition,
+  LazyRouteChildren,
 } from "./route.js";

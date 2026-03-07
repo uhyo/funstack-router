@@ -20,7 +20,9 @@ export type InternalRouteDefinition = {
   /** Path pattern to match (e.g., "users/:id"). If omitted, the route is pathless (always matches, consumes nothing). */
   path?: string;
   /** Child routes for nested routing */
-  children?: InternalRouteDefinition[];
+  children?:
+    | InternalRouteDefinition[]
+    | (() => InternalRouteDefinition[] | Promise<InternalRouteDefinition[]>);
   /**
    * Whether this route requires an exact match.
    * - true: Only matches exact pathname

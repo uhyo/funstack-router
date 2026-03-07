@@ -3,6 +3,8 @@ import type { ComponentType, ReactNode } from "react";
 const routeDefinitionSymbol = Symbol();
 const partialRouteDefinitionSymbol = Symbol();
 
+export type LazyRouteChildren = () => RouteDefinition[] | Promise<RouteDefinition[]>;
+
 /**
  * Extracts parameter names from a path pattern.
  * E.g., "/users/:id/posts/:postId" -> "id" | "postId"
@@ -101,7 +103,7 @@ export interface RouteComponentPropsWithData<
 export interface OpaqueRouteDefinition {
   [routeDefinitionSymbol]: unknown;
   path?: string;
-  children?: RouteDefinition[];
+  children?: RouteDefinition[] | LazyRouteChildren;
   exact?: boolean;
   requireChildren?: boolean;
 }
@@ -123,7 +125,7 @@ export interface TypefulOpaqueRouteDefinition<
     data: Data;
   };
   path?: string;
-  children?: RouteDefinition[];
+  children?: RouteDefinition[] | LazyRouteChildren;
   exact?: boolean;
   requireChildren?: boolean;
 }
@@ -266,7 +268,7 @@ export type RouteDefinition =
   | {
       path?: string;
       component?: ComponentType<object> | ReactNode;
-      children?: RouteDefinition[];
+      children?: RouteDefinition[] | LazyRouteChildren;
       exact?: boolean;
       requireChildren?: boolean;
     };
@@ -293,7 +295,7 @@ type RouteWithActionAndLoader<
         RouteComponentPropsWithData<PathParams<TPath>, TData, TState>
       >
     | ReactNode;
-  children?: RouteDefinition[];
+  children?: RouteDefinition[] | LazyRouteChildren;
   exact?: boolean;
   requireChildren?: boolean;
 };
@@ -313,7 +315,7 @@ type RouteWithActionOnly<
   component?:
     | ComponentType<RouteComponentProps<PathParams<TPath>, TState>>
     | ReactNode;
-  children?: RouteDefinition[];
+  children?: RouteDefinition[] | LazyRouteChildren;
   exact?: boolean;
   requireChildren?: boolean;
 };
@@ -338,7 +340,7 @@ type RouteWithLoader<
         RouteComponentPropsWithData<PathParams<TPath>, TData, TState>
       >
     | ReactNode;
-  children?: RouteDefinition[];
+  children?: RouteDefinition[] | LazyRouteChildren;
   exact?: boolean;
   requireChildren?: boolean;
 };
@@ -359,7 +361,7 @@ type RouteWithoutLoader<
   component?:
     | ComponentType<RouteComponentProps<PathParams<TPath>, TState>>
     | ReactNode;
-  children?: RouteDefinition[];
+  children?: RouteDefinition[] | LazyRouteChildren;
   exact?: boolean;
   requireChildren?: boolean;
 };
@@ -381,7 +383,7 @@ type PathlessRouteWithLoader<
         RouteComponentPropsWithData<Record<string, never>, TData, TState>
       >
     | ReactNode;
-  children?: RouteDefinition[];
+  children?: RouteDefinition[] | LazyRouteChildren;
   requireChildren?: boolean;
 };
 
@@ -398,9 +400,26 @@ type PathlessRouteWithoutLoader<
   component?:
     | ComponentType<RouteComponentProps<Record<string, never>, TState>>
     | ReactNode;
-  children?: RouteDefinition[];
+  children?: RouteDefinition[] | LazyRouteChildren;
   requireChildren?: boolean;
 };
+
+export function lazyRouteChildren(
+  load: () => Promise<RouteDefinition[]>,
+): LazyRouteChildren {
+  let value: RouteDefinition[] | undefined;
+  let promise: Promise<RouteDefinition[]> | undefined;
+  return () => {
+    if (value !== undefined) return value;
+    if (!promise) {
+      promise = load().then((result) => {
+        value = result;
+        return result;
+      });
+    }
+    return promise;
+  };
+}
 
 /**
  * Partial route definition with action and loader (no component).

@@ -62,7 +62,7 @@ pnpm test
 ## Quick Start
 
 ```tsx
-import { Router, Outlet, route } from "@funstack/router";
+import { Router, Outlet, route, lazyRouteChildren } from "@funstack/router";
 import type { RouteDefinition, RouteComponentProps } from "@funstack/router";
 
 function Layout() {
@@ -101,6 +101,20 @@ const routes: RouteDefinition[] = [
     ],
   }),
 ];
+
+const adminChildren = lazyRouteChildren(async () => [
+  route({ path: "settings", component: SettingsPage }),
+  route({ path: "users", component: AdminUsersPage }),
+]);
+
+// lazy children can be attached to any route
+routes.push(
+  route({
+    path: "/admin",
+    component: Layout,
+    children: adminChildren,
+  }),
+);
 
 function App() {
   return <Router routes={routes} />;

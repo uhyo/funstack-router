@@ -779,4 +779,38 @@ describe("matchRoutes", () => {
       expect(result).toBeNull();
     });
   });
+
+  describe("lazy children", () => {
+    it("matches nested route when lazy children resolve synchronously", () => {
+      const routes = internalRoutes([
+        {
+          path: "/admin",
+          component: () => null,
+          children: () => [{ path: "settings", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/admin/settings");
+      expect(result).toHaveLength(2);
+      expect(result![0].route.path).toBe("/admin");
+      expect(result![1].route.path).toBe("settings");
+    });
+
+    it("returns parent-only partial match when lazy children are unresolved", () => {
+      const lazyChildren = () =>
+        Promise.resolve([{ path: "settings", component: () => null }]);
+      const routes = internalRoutes([
+        {
+          path: "/admin",
+          component: () => null,
+          children: lazyChildren,
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/admin/settings");
+      expect(result).toHaveLength(1);
+      expect(result![0].route.path).toBe("/admin");
+      expect(routes[0]?.children).toBeTypeOf("function");
+    });
+  });
 });

@@ -13,11 +13,13 @@ import type {
   RouteComponentPropsWithData,
   ActionArgs,
   LoaderArgs,
+  LazyRouteChildren,
 } from "../route.js";
 import { bindRoute } from "../bindRoute.js";
 import { useRouteParams } from "../hooks/useRouteParams.js";
 import { useRouteState } from "../hooks/useRouteState.js";
 import { useRouteData } from "../hooks/useRouteData.js";
+import { lazyRouteChildren } from "../route.js";
 
 describe("route() type inference", () => {
   it("returns OpaqueRouteDefinition when id is not provided", () => {
@@ -68,6 +70,27 @@ describe("route() type inference", () => {
         { name: string }
       >
     >();
+  });
+});
+
+describe("lazyRouteChildren() type inference", () => {
+  it("returns LazyRouteChildren-compatible function", () => {
+    const children = lazyRouteChildren(async () => [
+      route({ path: "settings", component: () => null }),
+    ]);
+    expectTypeOf(children).toEqualTypeOf<LazyRouteChildren>();
+  });
+
+  it("accepts lazy children in route definitions", () => {
+    const children = lazyRouteChildren(async () => [
+      route({ path: "settings", component: () => null }),
+    ]);
+    const r = route({
+      path: "/admin",
+      component: () => null,
+      children,
+    });
+    expectTypeOf(r).toEqualTypeOf<OpaqueRouteDefinition>();
   });
 });
 

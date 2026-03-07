@@ -2,7 +2,7 @@
 // Use this entry point when defining routes in server components
 
 // Route Definition Helpers
-export { route, routeState } from "./route.js";
+export { route, routeState, lazyRouteChildren } from "./route.js";
 export { bindRoute } from "./bindRoute.js";
 
 // Types
@@ -13,4 +13,5 @@ export type {
   RouteComponentProps,
   RouteComponentPropsWithData,
   PartialRouteDefinition,
+  LazyRouteChildren,
 } from "./route.js";
