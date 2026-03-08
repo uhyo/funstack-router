@@ -237,19 +237,19 @@ export function Router({
     "ssr";
 
   // Match routes and execute loaders
-  const matchedRoutesWithData = useMemo(() => {
+  const [matchedRoutesWithData, pendingPromise] = useMemo(() => {
     if (!runLoaders) {
       // SSR/hydration without loader execution: match routes, data is undefined.
       // Routes with loaders are skipped (skipLoaders: true).
-      const matched = matchRoutes(
+      const [matched, pendingPromise] = matchRoutes(
         { routes, lazyRouteCache },
         urlObject?.pathname ?? null,
         {
           skipLoaders: true,
         },
       );
-      if (!matched) return null;
-      return matched.map((m) => ({ ...m, data: undefined }));
+      if (!matched) return [null, null];
+      return [matched.map((m) => ({ ...m, data: undefined })), pendingPromise];
     }
 
     if (urlObject === null) {
@@ -258,13 +258,16 @@ export function Router({
 
     // Unified path: SSR with loaders or client-side.
     // Both cases match routes normally and execute loaders.
-    const matched = matchRoutes({ routes, lazyRouteCache }, urlObject.pathname);
-    if (!matched) return null;
+    const [matched, pendingPromise] = matchRoutes(
+      { routes, lazyRouteCache },
+      urlObject.pathname,
+    );
+    if (!matched) return [null, null];
 
     const entryKey = locationKey;
     const request = createLoaderRequest(urlObject);
     const signal = adapter.getIdleAbortSignal();
-    return executeLoaders(matched, entryKey, request, signal);
+    return [executeLoaders(matched, entryKey, request, signal), pendingPromise];
   }, [routes, lazyRouteCache, adapter, urlObject, runLoaders, locationKey]);
 
   const locationState = locationEntry?.state;
@@ -295,10 +298,19 @@ export function Router({
       <BlockerContext.Provider value={blockerContextValue}>
         <RouterContext.Provider value={routerContextValue}>
           {matchedRoutesWithData ? (
-            <RouteRenderer matchedRoutes={matchedRoutesWithData} index={0} />
+            <RouteRenderer
+              matchedRoutes={matchedRoutesWithData}
+              index={0}
+              pendingRoutePromise={pendingPromise ?? undefined}
+            />
           ) : null}
         </RouterContext.Provider>
       </BlockerContext.Provider>
     );
-  }, [routerContextValue, matchedRoutesWithData, blockerRegistry]);
+  }, [
+    routerContextValue,
+    matchedRoutesWithData,
+    pendingPromise,
+    blockerRegistry,
+  ]);
 }

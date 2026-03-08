@@ -2,10 +2,10 @@ import type { LazyRouteCache } from "../Router/LazyRouteCache.js";
 import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
 
 const SKIPPED = Symbol("skipped");
-type MatchRouteInternalResult =
-  | (MatchedRoute | Promise<unknown>)[]
-  | typeof SKIPPED
-  | null;
+type MatchRouteInternalResult = [
+  matches: MatchedRoute[] | typeof SKIPPED | null,
+  pendingPromise: Promise<unknown> | null,
+];
 
 export type MatchRoutesOptions = {
   /**
@@ -28,16 +28,18 @@ export function matchRoutes(
   input: MatchRoutesInput,
   pathname: string | null,
   options?: MatchRoutesOptions,
-): (MatchedRoute | Promise<unknown>)[] | null {
+): [matches: MatchedRoute[] | null, pendingPromise: Promise<unknown> | null] {
   const { routes, lazyRouteCache } = input;
+  let pendingPromise = null;
   for (const route of routes) {
-    const matched = matchRoute(route, lazyRouteCache, pathname, options);
-    if (matched === SKIPPED) return null;
+    const [matched, p] = matchRoute(route, lazyRouteCache, pathname, options);
+    pendingPromise ??= p;
+    if (matched === SKIPPED) return [null, pendingPromise];
     if (matched) {
-      return matched;
+      return [matched, pendingPromise];
     }
   }
-  return null;
+  return [null, pendingPromise];
 }
 
 /**
@@ -68,7 +70,7 @@ function matchRoute(
 
   if (children instanceof Promise) {
     // For now, treat pending promise as having children to allow matching to continue and show loading states
-    return [children];
+    return [[], children];
   }
 
   // Promise (not yet loaded) is treated as having children, to allow matching to continue and show loading states
@@ -81,13 +83,13 @@ function matchRoute(
       // This route can't render (loader skipped), but check if it would match.
       // If it would, return SKIPPED to prevent fallback routes from matching.
       if (route.path === undefined) {
-        return SKIPPED; // pathless always matches
+        return [SKIPPED, null]; // pathless always matches
       }
       const isExact = route.exact ?? !hasChildren;
       const { matched } = matchPath(route.path, pathname, isExact);
-      if (matched) return SKIPPED;
+      if (matched) return [SKIPPED, null];
     }
-    return null;
+    return [null, null];
   }
 
   // Handle pathless routes - always match, consume nothing
@@ -101,36 +103,41 @@ function matchRoute(
     if (hasChildren) {
       let anySkipped = false;
       for (const child of children!) {
-        const childMatch = matchRoute(child, lazyRouteCache, pathname, options);
+        const [childMatch, pendingPromise] = matchRoute(
+          child,
+          lazyRouteCache,
+          pathname,
+          options,
+        );
         if (childMatch === SKIPPED) {
           anySkipped = true;
           break;
         }
         if (childMatch) {
-          return [result, ...childMatch];
+          return [[result, ...childMatch], pendingPromise];
         }
       }
       if (anySkipped) {
-        if (route.component) return [result]; // render as shell
-        return SKIPPED; // propagate
+        if (route.component) return [[result], null]; // render as shell
+        return [SKIPPED, null]; // propagate
       }
       // No children matched - only valid if requireChildren is false and route has a component
       if (route.component && route.requireChildren === false) {
-        return [result];
+        return [[result], null];
       }
       // During SSR, pathless route with component matches alone (SSR shell)
       if ((pathname === null || skipLoaders) && route.component) {
-        return [result];
+        return [[result], null];
       }
-      return null;
+      return [null, null];
     }
 
-    return [result];
+    return [[result], null];
   }
 
   // Path-based routes cannot match when pathname is null
   if (pathname === null) {
-    return null;
+    return [null, null];
   }
 
   const isExact = route.exact ?? !hasChildren;
@@ -142,7 +149,7 @@ function matchRoute(
   );
 
   if (!matched) {
-    return null;
+    return [null, null];
   }
 
   const result: MatchedRoute = {
@@ -164,7 +171,7 @@ function matchRoute(
 
     let anyChildSkipped = false;
     for (const child of children!) {
-      const childMatch = matchRoute(
+      const [childMatch, pendingPromise] = matchRoute(
         child,
         lazyRouteCache,
         remainingPathname,
@@ -177,38 +184,37 @@ function matchRoute(
       if (childMatch) {
         // Merge params from parent into children
         return [
-          result,
-          ...childMatch.map((m) =>
-            m instanceof Promise
-              ? m
-              : {
-                  ...m,
-                  params: { ...params, ...m.params },
-                },
-          ),
+          [
+            result,
+            ...childMatch.map((m) => ({
+              ...m,
+              params: { ...params, ...m.params },
+            })),
+          ],
+          pendingPromise,
         ];
       }
     }
 
     if (anyChildSkipped) {
-      if (route.component) return [result]; // render as shell
-      return SKIPPED; // propagate
+      if (route.component) return [[result], null]; // render as shell
+      return [SKIPPED, null]; // propagate
     }
 
     // If no children matched - only valid if requireChildren is false and route has a component
     if (route.component && route.requireChildren === false) {
-      return [result];
+      return [[result], null];
     }
 
     // During SSR, path-based route with component matches alone (SSR shell)
     if (skipLoaders && route.component) {
-      return [result];
+      return [[result], null];
     }
 
-    return null;
+    return [null, null];
   }
 
-  return [result];
+  return [[result], null];
 }
 
 /**

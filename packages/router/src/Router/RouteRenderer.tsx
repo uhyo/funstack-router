@@ -6,8 +6,12 @@ import { useRouteStateCallbacks } from "./useRouteStateCallbacks.js";
 import { PendingOutlet } from "./PendingOutlet.js";
 
 export type RouteRendererProps = {
-  matchedRoutes: (MatchedRouteWithData | Promise<unknown>)[];
+  matchedRoutes: MatchedRouteWithData[];
   index: number;
+  /**
+   * Promise is passed when the matched route has a lazy route yet to load
+   */
+  pendingRoutePromise: Promise<unknown> | undefined;
 };
 
 /**
@@ -16,6 +20,7 @@ export type RouteRendererProps = {
 export function RouteRenderer({
   matchedRoutes,
   index,
+  pendingRoutePromise,
 }: RouteRendererProps): ReactNode {
   // Get parent route context (null for root route)
   const parentRouteContext = useContext(RouteContext);
@@ -48,20 +53,26 @@ export function RouteRenderer({
     );
 
   // Create outlet for child routes
-  const outlet = useMemo(
-    () =>
-      index < matchedRoutes.length - 1 ? (
-        <RouteRenderer matchedRoutes={matchedRoutes} index={index + 1} />
-      ) : null,
-    [matchedRoutes, index],
-  );
+  const outlet = useMemo(() => {
+    if (index < matchedRoutes.length - 1) {
+      return (
+        <RouteRenderer
+          matchedRoutes={matchedRoutes}
+          index={index + 1}
+          pendingRoutePromise={pendingRoutePromise}
+        />
+      );
+    }
+    if (index === matchedRoutes.length - 1 && pendingRoutePromise) {
+      // Has a loading route at the end of matched routes chain
+      return <PendingOutlet promise={pendingRoutePromise} />;
+    }
+    return null;
+  }, [matchedRoutes, index, pendingRoutePromise]);
 
   const match = matchedRoutes[index];
 
   if (!match) return null;
-  if (match instanceof Promise) {
-    return <PendingOutlet promise={match} />;
-  }
 
   const { route, params, pathname, data } = match;
 

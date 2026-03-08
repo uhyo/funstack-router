@@ -9,13 +9,12 @@ import { internalRoutes } from "../types.js";
 
 const lazyRouteCache = new Map();
 
-// Wrapper that casts away Promise<unknown> from the union, since tests don't use lazy routes
 function matchRoutes(
   input: MatchRoutesInput,
   pathname: string | null,
   options?: MatchRoutesOptions,
 ): MatchedRoute[] | null {
-  return matchRoutesRaw(input, pathname, options) as MatchedRoute[] | null;
+  return matchRoutesRaw(input, pathname, options)[0];
 }
 
 describe("matchRoutes", () => {

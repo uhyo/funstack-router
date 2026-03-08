@@ -182,20 +182,17 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Check if the URL matches any of our routes
       const url = new URL(event.destination.url);
-      const matched = matchRoutes(getRoutes(), url.pathname);
-      const settledMatches =
-        matched &&
-        matched.filter((m): m is MatchedRoute => !(m instanceof Promise));
+      const [matched] = matchRoutes(getRoutes(), url.pathname);
 
       const isFormSubmission = event.formData !== null;
 
       // For POST form submissions, don't intercept if no matched route has an action
-      if (isFormSubmission && settledMatches !== null) {
-        const hasAction = settledMatches.some((m) => m.route.action);
+      if (isFormSubmission && matched !== null) {
+        const hasAction = matched.some((m) => m.route.action);
         if (!hasAction) {
           // Don't intercept — let browser submit the form normally
           onNavigate?.(event, {
-            matches: settledMatches,
+            matches: matched,
             intercepting: false,
             formData: event.formData,
           });
@@ -205,14 +202,12 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Compute whether we will intercept this navigation (before user's preventDefault)
       const willIntercept =
-        settledMatches !== null &&
-        !event.hashChange &&
-        event.downloadRequest === null;
+        matched !== null && !event.hashChange && event.downloadRequest === null;
 
       // Call onNavigate callback if provided (regardless of route match)
       if (onNavigate) {
         onNavigate(event, {
-          matches: settledMatches,
+          matches: matched,
           intercepting: willIntercept,
           formData: event.formData,
         });
@@ -246,7 +241,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
           if (isFormSubmission) {
             // Find the deepest matched route with an action
-            const actionRoute = findActionRoute(settledMatches);
+            const actionRoute = findActionRoute(matched);
             if (actionRoute) {
               const actionRequest = createActionRequest(url, event.formData!);
               actionResult = await actionRoute.route.action!({
@@ -266,7 +261,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
           // Here we run executeLoader to retrieve cached results.
           // For form submissions, cache was cleared above so loaders re-execute with actionResult.
           const results = executeLoaders(
-            settledMatches,
+            matched,
             currentEntry.id,
             request,
             event.signal,
