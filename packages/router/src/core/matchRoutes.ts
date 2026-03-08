@@ -1,10 +1,17 @@
-import type { LazyRouteCache } from "../Router/LazyRouteCache.js";
+import type { LazyRouteChildren } from "../route.js";
+import type {
+  LazyRouteCache,
+  LazyRouteCacheEntry,
+} from "../Router/LazyRouteCache.js";
 import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
+
+type CacheUpdates = [[LazyRouteChildren, LazyRouteCacheEntry]][];
 
 const SKIPPED = Symbol("skipped");
 type MatchRouteInternalResult = [
   matches: MatchedRoute[] | typeof SKIPPED | null,
   pendingPromise: Promise<unknown> | null,
+  cacheUpdates: CacheUpdates | null,
 ];
 
 export type MatchRoutesOptions = {
@@ -28,18 +35,29 @@ export function matchRoutes(
   input: MatchRoutesInput,
   pathname: string | null,
   options?: MatchRoutesOptions,
-): [matches: MatchedRoute[] | null, pendingPromise: Promise<unknown> | null] {
+): [
+  matches: MatchedRoute[] | null,
+  pendingPromise: Promise<unknown> | null,
+  cacheUpdates: [[LazyRouteChildren, LazyRouteCacheEntry]][] | null,
+] {
   const { routes, lazyRouteCache } = input;
   let pendingPromise = null;
+  let cacheUpdates = null;
   for (const route of routes) {
-    const [matched, p] = matchRoute(route, lazyRouteCache, pathname, options);
+    const [matched, p, updates] = matchRoute(
+      route,
+      lazyRouteCache,
+      pathname,
+      options,
+    );
     pendingPromise ??= p;
-    if (matched === SKIPPED) return [null, pendingPromise];
+    cacheUpdates = concatCacheUpdates(cacheUpdates, updates);
+    if (matched === SKIPPED) return [null, pendingPromise, cacheUpdates];
     if (matched) {
-      return [matched, pendingPromise];
+      return [matched, pendingPromise, cacheUpdates];
     }
   }
-  return [null, pendingPromise];
+  return [null, pendingPromise, cacheUpdates];
 }
 
 /**
@@ -51,21 +69,28 @@ function matchRoute(
   pathname: string | null,
   options?: MatchRoutesOptions,
 ): MatchRouteInternalResult {
-  const children = (() => {
+  const [children, cacheUpdates] = ((): [
+    InternalRouteDefinition[] | Promise<unknown> | undefined,
+    CacheUpdates | null,
+  ] => {
     if (route.children === undefined || Array.isArray(route.children)) {
-      return route.children;
+      return [route.children, null];
     }
     const cacheEntry = lazyRouteCache.get(route.children);
     if (cacheEntry) {
       if (cacheEntry.status === "loaded") {
-        return cacheEntry.children;
+        return [cacheEntry.children, null];
       }
-      return cacheEntry.promise;
+      return [cacheEntry.promise, null];
     }
     // This is the first time we've hit this lazy route - call the function and cache the promise
     const result = route.children();
     // TODO: update the cache
-    return result;
+    const entry =
+      result instanceof Promise
+        ? { status: "pending", promise: result }
+        : { status: "loaded", children: result };
+    return [result, [[route.children, entry]]];
   })();
 
   if (children instanceof Promise) {
@@ -275,4 +300,17 @@ function matchPath(
   }
 
   return { matched: true, params, consumedPathname };
+}
+
+function concatCacheUpdates(
+  cacheUpdates1: CacheUpdates | null,
+  cacheUpdates2: CacheUpdates | null,
+): CacheUpdates | null {
+  if (cacheUpdates1 === null) {
+    return cacheUpdates2;
+  }
+  if (cacheUpdates2 === null) {
+    return cacheUpdates1;
+  }
+  return cacheUpdates1.concat(cacheUpdates2);
 }
