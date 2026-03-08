@@ -24,8 +24,8 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^0.0.9
-        version: 0.0.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))
+        specifier: ^0.0.10
+        version: 0.0.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -89,8 +89,8 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^0.0.9
-        version: 0.0.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))
+        specifier: ^0.0.10
+        version: 0.0.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -689,8 +689,8 @@ packages:
     resolution: {integrity: sha512-lEYZQ4tFOLidvxy60tE7/28LUy4bJOlbT8o0ebcolaFV/cluSGtnDpWEUWIQWORtnGhrWnYl7Gr9aHvjHYkoEQ==}
     hasBin: true
 
-  '@funstack/static@0.0.9':
-    resolution: {integrity: sha512-Elze7q6lqK9ohQYiVwDHBA77iUVT4AfQ9IiWtbl1rGnY6Q9Cpds8rbguj4b61Bj5jrnDc6XWwSTRPxXqoWbjrA==}
+  '@funstack/static@0.0.10':
+    resolution: {integrity: sha512-2rRQJRObxQ82Z3XF7HsNz0MTksA4E77l2XBtwjriWAJNnDKvQvX5Ci8JBqAXUB0p5SJoQwZndI/TL38xpO4m8A==}
     hasBin: true
     peerDependencies:
       react: ^19.2.3
@@ -1065,8 +1065,8 @@ packages:
   '@rolldown/pluginutils@1.0.0-rc.3':
     resolution: {integrity: sha512-eybk3TjzzzV97Dlj5c+XrBFW57eTNhzod66y9HrBlzJ6NsCrWCp/2kaPS3K9wJmurBC0Tdw4yPjXKZqlznim3Q==}
 
-  '@rolldown/pluginutils@1.0.0-rc.4':
-    resolution: {integrity: sha512-1BrrmTu0TWfOP1riA8uakjFc9bpIUGzVKETsOtzY39pPga8zELGDl8eu1Dx7/gjM5CAz14UknsUMpBO8L+YntQ==}
+  '@rolldown/pluginutils@1.0.0-rc.5':
+    resolution: {integrity: sha512-RxlLX/DPoarZ9PtxVrQgZhPoor987YtKQqCo5zkjX+0S0yLJ7Vv515Wk6+xtTL67VONKJKxETWZwuZjss2idYw==}
 
   '@rollup/rollup-android-arm-eabi@4.55.1':
     resolution: {integrity: sha512-9R0DM/ykwfGIlNu6+2U09ga0WXeZ9MRC2Ter8jnz8415VbuIykVuc6bhdrbORFZANDmTDvq26mJrEVTl8TdnDg==}
@@ -1316,8 +1316,8 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
 
-  '@vitejs/plugin-rsc@0.5.20':
-    resolution: {integrity: sha512-JHPqfR8SSE2oNzCDRoyzEpbgxCxDks0PJAlo0KpK+OldYUxvozHroYpn0QtSdbZWq9YQ/ok1JUJ3GMc1xOmN0g==}
+  '@vitejs/plugin-rsc@0.5.21':
+    resolution: {integrity: sha512-uNayLT8IKvWoznvQyfwKuGiEFV28o7lxUDnw/Av36VCuGpDFZnMmvVCwR37gTvnSmnpul9V0tdJqY3tBKEaDqw==}
     peerDependencies:
       react: '*'
       react-dom: '*'
@@ -1846,8 +1846,8 @@ packages:
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
 
-  srvx@0.11.5:
-    resolution: {integrity: sha512-MbQgu/gbLcXjg1bhUhPXXOpeMfmDMTGSKPWeht5acXnlQNldD925eS4+bIH/qESecSkP71dU3Fmvunlai1+yzw==}
+  srvx@0.11.8:
+    resolution: {integrity: sha512-2n9t0YnAXPJjinytvxccNgs7rOA5gmE7Wowt/8Dy2dx2fDC6sBhfBpbrCvjYKALlVukPS/Uq3QwkolKNa7P/2Q==}
     engines: {node: '>=20.16.0'}
     hasBin: true
 
@@ -1959,8 +1959,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  turbo-stream@3.1.0:
-    resolution: {integrity: sha512-tVI25WEXl4fckNEmrq70xU1XumxUwEx/FZD5AgEcV8ri7Wvrg2o7GEq8U7htrNx3CajciGm+kDyhRf5JB6t7/A==}
+  turbo-stream@3.2.0:
+    resolution: {integrity: sha512-EK+bZ9UVrVh7JLslVFOV0GEMsociOqVOvEMTAd4ixMyffN5YNIEdLZWXUx5PJqDbTxSIBWw04HS9gCY4frYQDQ==}
 
   turbo-windows-64@2.8.13:
     resolution: {integrity: sha512-717bVk1+Pn2Jody7OmWludhEirEe0okoj1NpRbSm5kVZz/yNN/jfjbxWC6ilimXMz7xoMT3IDfQFJsFR3PMANA==}
@@ -2075,10 +2075,10 @@ packages:
       yaml:
         optional: true
 
-  vitefu@1.1.1:
-    resolution: {integrity: sha512-B/Fegf3i8zh0yFbpzZ21amWzHmuNlLlmJT6n7bu5e+pCHUKQIfXSYokrqOBGEMMe9UG2sostKQF9mml/vYaWJQ==}
+  vitefu@1.1.2:
+    resolution: {integrity: sha512-zpKATdUbzbsycPFBN71nS2uzBUQiVnFoOrr2rvqv34S1lcAgMKKkjWleLGeiJlZ8lwCXvtWaRn7R3ZC16SYRuw==}
     peerDependencies:
-      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-beta.0
     peerDependenciesMeta:
       vite:
         optional: true
@@ -2576,15 +2576,15 @@ snapshots:
 
   '@funstack/skill-installer@1.0.0': {}
 
-  '@funstack/static@0.0.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))':
+  '@funstack/static@0.0.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))':
     dependencies:
       '@funstack/skill-installer': 1.0.0
-      '@vitejs/plugin-rsc': 0.5.20(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))
+      '@vitejs/plugin-rsc': 0.5.21(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       react-error-boundary: 6.1.1(react@19.2.4)
       rsc-html-stream: 0.0.7
-      srvx: 0.11.5
+      srvx: 0.11.8
       vite: 7.3.1(@types/node@25.3.3)
     transitivePeerDependencies:
       - react-server-dom-webpack
@@ -2834,7 +2834,7 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.0-rc.3': {}
 
-  '@rolldown/pluginutils@1.0.0-rc.4': {}
+  '@rolldown/pluginutils@1.0.0-rc.5': {}
 
   '@rollup/rollup-android-arm-eabi@4.55.1':
     optional: true
@@ -3062,20 +3062,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-rsc@0.5.20(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))':
+  '@vitejs/plugin-rsc@0.5.21(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.3.3))':
     dependencies:
-      '@rolldown/pluginutils': 1.0.0-rc.4
+      '@rolldown/pluginutils': 1.0.0-rc.5
       es-module-lexer: 2.0.0
       estree-walker: 3.0.3
       magic-string: 0.30.21
       periscopic: 4.0.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      srvx: 0.11.5
+      srvx: 0.11.8
       strip-literal: 3.1.0
-      turbo-stream: 3.1.0
+      turbo-stream: 3.2.0
       vite: 7.3.1(@types/node@25.3.3)
-      vitefu: 1.1.1(vite@7.3.1(@types/node@25.3.3))
+      vitefu: 1.1.2(vite@7.3.1(@types/node@25.3.3))
 
   '@vitest/expect@4.0.18':
     dependencies:
@@ -3693,7 +3693,7 @@ snapshots:
 
   space-separated-tokens@2.0.2: {}
 
-  srvx@0.11.5: {}
+  srvx@0.11.8: {}
 
   stackback@0.0.2: {}
 
@@ -3787,7 +3787,7 @@ snapshots:
   turbo-linux-arm64@2.8.13:
     optional: true
 
-  turbo-stream@3.1.0: {}
+  turbo-stream@3.2.0: {}
 
   turbo-windows-64@2.8.13:
     optional: true
@@ -3876,7 +3876,7 @@ snapshots:
       '@types/node': 25.3.3
       fsevents: 2.3.3
 
-  vitefu@1.1.1(vite@7.3.1(@types/node@25.3.3)):
+  vitefu@1.1.2(vite@7.3.1(@types/node@25.3.3)):
     optionalDependencies:
       vite: 7.3.1(@types/node@25.3.3)
 
