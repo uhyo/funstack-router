@@ -74,6 +74,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     destinationUrl: string,
     eventInfo?: unknown,
     eventFormData?: FormData | null,
+    eventNavigationType?: "push" | "replace" | "reload" | "traverse",
   ): NavigateEvent & { defaultPrevented: boolean } => {
     let defaultPrevented = false;
     return {
@@ -88,7 +89,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
         sameDocument: true,
         getState: () => undefined,
       },
-      navigationType: "push",
+      navigationType: eventNavigationType ?? "push",
       userInitiated: false,
       signal: new AbortController().signal,
       formData: eventFormData ?? null,
@@ -252,6 +253,43 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
           }
         },
       };
+    },
+
+    // Test helper to simulate reload navigation
+    // Dispatches navigate event with navigationType: "reload", then
+    // dispatches currententrychange without changing the entry.
+    __simulateReload() {
+      const reloadUrl = currentEntry.url;
+      const event = createMockNavigateEvent(
+        reloadUrl,
+        undefined,
+        null,
+        "reload",
+      );
+
+      // Override destination to point to the current entry (reload stays on same entry)
+      (event as unknown as Record<string, unknown>).destination = {
+        url: reloadUrl,
+        key: currentEntry.key,
+        id: currentEntry.id,
+        index: currentEntry.index,
+        sameDocument: true,
+        getState: () => currentEntry.getState(),
+      };
+
+      // Dispatch navigate event
+      dispatchEvent("navigate", event);
+
+      if (!event.defaultPrevented) {
+        // For reload, the entry doesn't change, but currententrychange still fires
+        const changeEvent = Object.assign(new Event("currententrychange"), {
+          navigationType: "reload" as const,
+          from: currentEntry,
+        });
+        dispatchEvent("currententrychange", changeEvent);
+      }
+
+      return { event };
     },
 
     // Test helper to simulate traverse navigation (back/forward)

@@ -43,6 +43,9 @@ export class NavigationAPIAdapter implements RouterAdapter {
   #cachedEntryId: string | null = null;
   // Ephemeral info from the current navigation event (not persisted in history)
   #currentNavigationInfo: unknown = undefined;
+  // Counter for reload navigations, used to generate unique cache keys
+  // so that loaders re-execute on reload instead of returning cached results.
+  #reloadCount = 0;
 
   getSnapshot(): LocationEntry | null {
     const entry = navigation.currentEntry;
@@ -59,7 +62,8 @@ export class NavigationAPIAdapter implements RouterAdapter {
     this.#cachedEntryId = entry.id;
     this.#cachedSnapshot = {
       url: new URL(entry.url),
-      key: entry.id,
+      key:
+        this.#reloadCount > 0 ? `${entry.id}:r${this.#reloadCount}` : entry.id,
       state: entry.getState(),
       info: this.#currentNavigationInfo,
     };
@@ -222,6 +226,26 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Route match, so intercept
 
+      // Update reload count for cache keying.
+      // On reload, increment so loaders get a fresh cache key and re-execute.
+      // On other navigations, reset since the new entry has its own id.
+      if (event.navigationType === "reload") {
+        this.#reloadCount++;
+        // Invalidate snapshot again so getSnapshot() picks up the new reload key
+        this.#cachedSnapshot = null;
+      } else {
+        this.#reloadCount = 0;
+      }
+
+      // Capture the effective cache key before intercepting.
+      // For reload, this includes the reload count suffix so loaders see a cache miss.
+      // The old cache (under the previous key) remains intact for the pending UI
+      // shown during the React transition.
+      const effectiveKey =
+        this.#reloadCount > 0
+          ? `${navigation.currentEntry!.id}:r${this.#reloadCount}`
+          : navigation.currentEntry!.id;
+
       // Abort initial load's loaders if this is the first navigation
       if (idleController) {
         idleController.abort();
@@ -262,7 +286,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
           // For form submissions, cache was cleared above so loaders re-execute with actionResult.
           const results = executeLoaders(
             matched,
-            currentEntry.id,
+            effectiveKey,
             request,
             event.signal,
             actionResult,

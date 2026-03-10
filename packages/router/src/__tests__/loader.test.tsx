@@ -385,6 +385,127 @@ describe("Data Loader", () => {
     });
   });
 
+  describe("reload navigation", () => {
+    it("re-executes loader on reload", () => {
+      let callCount = 0;
+      const loaderSpy = vi.fn(() => {
+        callCount++;
+        return { count: callCount };
+      });
+
+      function Page({ data }: { data: { count: number } }) {
+        return <div>Count: {data.count}</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/",
+          component: Page,
+          loader: loaderSpy,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(loaderSpy).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Count: 1")).toBeInTheDocument();
+
+      // Simulate a reload (like location.reload())
+      act(() => {
+        mockNavigation.__simulateReload();
+      });
+
+      // Loader should be called again with a fresh cache key
+      expect(loaderSpy).toHaveBeenCalledTimes(2);
+      expect(screen.getByText("Count: 2")).toBeInTheDocument();
+    });
+
+    it("re-executes loader on consecutive reloads", () => {
+      let callCount = 0;
+      const loaderSpy = vi.fn(() => {
+        callCount++;
+        return { count: callCount };
+      });
+
+      function Page({ data }: { data: { count: number } }) {
+        return <div>Count: {data.count}</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/",
+          component: Page,
+          loader: loaderSpy,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(loaderSpy).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        mockNavigation.__simulateReload();
+      });
+      expect(loaderSpy).toHaveBeenCalledTimes(2);
+      expect(screen.getByText("Count: 2")).toBeInTheDocument();
+
+      act(() => {
+        mockNavigation.__simulateReload();
+      });
+      expect(loaderSpy).toHaveBeenCalledTimes(3);
+      expect(screen.getByText("Count: 3")).toBeInTheDocument();
+    });
+
+    it("re-executes nested route loaders on reload", () => {
+      mockNavigation = setupNavigationMock("http://localhost/users/123");
+
+      const parentLoaderSpy = vi.fn(() => ({ title: "Users" }));
+      const childLoaderSpy = vi.fn(
+        ({ params }: LoaderArgs<Record<string, string>>) => ({
+          id: params.id,
+        }),
+      );
+
+      function Layout({ data }: { data: { title: string } }) {
+        return (
+          <div>
+            <h1>{data.title}</h1>
+            <Outlet />
+          </div>
+        );
+      }
+
+      function UserDetail({ data }: { data: { id: string } }) {
+        return <div>User ID: {data.id}</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/users",
+          component: Layout,
+          loader: parentLoaderSpy,
+          children: [
+            route({
+              path: ":id",
+              component: UserDetail,
+              loader: childLoaderSpy,
+            }),
+          ],
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(parentLoaderSpy).toHaveBeenCalledTimes(1);
+      expect(childLoaderSpy).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        mockNavigation.__simulateReload();
+      });
+
+      // Both loaders should re-execute
+      expect(parentLoaderSpy).toHaveBeenCalledTimes(2);
+      expect(childLoaderSpy).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe("route helper type inference", () => {
     it("infers loader return type for component data prop", () => {
       // This test mainly verifies that TypeScript compiles correctly
