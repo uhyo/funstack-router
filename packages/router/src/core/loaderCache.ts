@@ -28,7 +28,17 @@ function getOrCreateLoaderResult(
   const cacheKey = `${entryId}:${matchIndex}`;
 
   if (!loaderCache.has(cacheKey)) {
-    loaderCache.set(cacheKey, route.loader(args));
+    try {
+      loaderCache.set(cacheKey, route.loader(args));
+    } catch (error) {
+      // Convert synchronous loader errors to rejected promises
+      // so they are handled uniformly via React's use() + Error Boundary
+      const rejected = Promise.reject(error);
+      // Prevent unhandled rejection warnings; the rejection will be
+      // consumed by React's use() which surfaces it to Error Boundaries.
+      rejected.catch(() => {});
+      loaderCache.set(cacheKey, rejected);
+    }
   }
 
   return loaderCache.get(cacheKey);

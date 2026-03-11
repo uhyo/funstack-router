@@ -79,6 +79,74 @@ hardReload();
 // Full page navigation — bypasses the router and all blockers
 hardNavigate("/other-page");`}</CodeBlock>
       </section>
+      <section>
+        <h2>Handling loader errors</h2>
+        <p>
+          When a loader throws an error (or returns a rejected promise), the
+          error is surfaced as a rejected promise in the component's{" "}
+          <code>data</code> prop. When you call <code>use(data)</code>, React
+          re-throws the rejection, which can be caught by an{" "}
+          <a href="https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary">
+            Error Boundary
+          </a>
+          .
+        </p>
+        <p>
+          The recommended pattern is to place an error boundary in your{" "}
+          <b>root layout route</b>. This catches errors from any loader in the
+          route tree without crashing the entire application:
+        </p>
+        <CodeBlock language="tsx">{`import { Router, route, Outlet } from "@funstack/router";
+import { ErrorBoundary } from "./ErrorBoundary";
+
+function RootLayout() {
+  return (
+    <div>
+      <header>My App</header>
+      <ErrorBoundary fallback={<div>Something went wrong.</div>}>
+        <Outlet />
+      </ErrorBoundary>
+    </div>
+  );
+}
+
+const routes = [
+  route({
+    path: "/",
+    component: RootLayout,
+    children: [
+      route({
+        path: "/",
+        component: HomePage,
+      }),
+      route({
+        path: "/users/:id",
+        component: UserPage,
+        loader: async ({ params }) => {
+          const res = await fetch(\`/api/users/\${params.id}\`);
+          if (!res.ok) throw new Error("Failed to load user");
+          return res.json();
+        },
+      }),
+    ],
+  }),
+];
+
+function App() {
+  return <Router routes={routes} />;
+}`}</CodeBlock>
+        <p>
+          This works for both synchronous and asynchronous loaders. The router
+          internally converts synchronous loader errors into rejected promises,
+          so the behavior is consistent regardless of whether a loader is sync
+          or async.
+        </p>
+        <p>
+          You can also place error boundaries at more granular levels (e.g.,
+          wrapping individual route components or <code>{"<Suspense>"}</code>{" "}
+          boundaries) for fine-grained error handling.
+        </p>
+      </section>
     </div>
   );
 }

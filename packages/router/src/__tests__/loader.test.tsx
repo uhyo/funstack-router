@@ -560,6 +560,91 @@ describe("Data Loader", () => {
     });
   });
 
+  describe("loader errors", () => {
+    it("converts sync loader error to rejected promise instead of crashing Router", () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const error = new Error("Sync loader failure");
+
+      function ErrorPage({ data }: { data: Promise<never> }) {
+        // Don't use() the data — just verify the component receives a rejected promise
+        expect(data).toBeInstanceOf(Promise);
+        return <div>Error page rendered</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/",
+          component: ErrorPage,
+          loader: (): never => {
+            throw error;
+          },
+        }),
+      ];
+
+      // Router should NOT throw during render
+      render(<Router routes={routes} />);
+      expect(screen.getByText("Error page rendered")).toBeInTheDocument();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("sync loader error results in a rejected promise with the original error", async () => {
+      const error = new Error("Original error");
+      let receivedData: unknown;
+
+      function Page({ data }: { data: unknown }) {
+        receivedData = data;
+        return <div>Page</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/",
+          component: Page,
+          loader: (): never => {
+            throw error;
+          },
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+
+      // The rejected promise should contain the original error
+      await expect(receivedData).rejects.toBe(error);
+    });
+
+    it("caches the rejected promise from sync loader error", () => {
+      const promises: unknown[] = [];
+
+      function Page({ data }: { data: unknown }) {
+        promises.push(data);
+        return <div>Page</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/",
+          component: Page,
+          loader: (): never => {
+            throw new Error("fail");
+          },
+        }),
+      ];
+
+      const { rerender } = render(<Router routes={routes} />);
+      rerender(<Router routes={routes} />);
+
+      // Both renders should receive the same Promise instance (from cache)
+      expect(promises.length).toBeGreaterThanOrEqual(1);
+      if (promises.length > 1) {
+        expect(promises[0]).toBe(promises[1]);
+      }
+    });
+  });
+
   describe("route helper type inference", () => {
     it("infers loader return type for component data prop", () => {
       // This test mainly verifies that TypeScript compiles correctly
