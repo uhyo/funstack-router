@@ -1,11 +1,34 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
+import { Component, type ReactNode } from "react";
 import { Router } from "../Router/index.js";
 import { Outlet } from "../Outlet.js";
 import { route, type LoaderArgs } from "../route.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
 import { internalRoutes } from "../types.js";
 import { clearLoaderCache } from "../core/loaderCache.js";
+
+class ErrorBoundary extends Component<
+  { children: ReactNode; fallback: (error: unknown) => ReactNode },
+  { error: unknown; hasError: boolean }
+> {
+  constructor(props: {
+    children: ReactNode;
+    fallback: (error: unknown) => ReactNode;
+  }) {
+    super(props);
+    this.state = { error: undefined, hasError: false };
+  }
+  static getDerivedStateFromError(error: unknown) {
+    return { error, hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback(this.state.error);
+    }
+    return this.props.children;
+  }
+}
 
 describe("Data Loader", () => {
   let mockNavigation: ReturnType<typeof setupNavigationMock>;
@@ -561,43 +584,52 @@ describe("Data Loader", () => {
   });
 
   describe("loader errors", () => {
-    it("converts sync loader error to rejected promise instead of crashing Router", () => {
+    it("sync loader error is caught by Error Boundary instead of crashing Router", () => {
       const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
       const error = new Error("Sync loader failure");
 
-      function ErrorPage({ data }: { data: Promise<never> }) {
-        // Don't use() the data — just verify the component receives a rejected promise
-        expect(data).toBeInstanceOf(Promise);
-        return <div>Error page rendered</div>;
+      function Page({ data }: { data: string }) {
+        return <div>{data}</div>;
       }
 
       const routes = [
         route({
           path: "/",
-          component: ErrorPage,
+          component: Page,
           loader: (): never => {
             throw error;
           },
         }),
       ];
 
-      // Router should NOT throw during render
-      render(<Router routes={routes} />);
-      expect(screen.getByText("Error page rendered")).toBeInTheDocument();
+      // The error should be caught by the Error Boundary, not crash Router
+      render(
+        <ErrorBoundary
+          fallback={(e) => <div>Caught: {(e as Error).message}</div>}
+        >
+          <Router routes={routes} />
+        </ErrorBoundary>,
+      );
+      expect(
+        screen.getByText("Caught: Sync loader failure"),
+      ).toBeInTheDocument();
 
       consoleErrorSpy.mockRestore();
     });
 
-    it("sync loader error results in a rejected promise with the original error", async () => {
-      const error = new Error("Original error");
-      let receivedData: unknown;
+    it("sync loader error preserves the original error object", () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
-      function Page({ data }: { data: unknown }) {
-        receivedData = data;
-        return <div>Page</div>;
+      const error = new Error("Original error");
+      let caughtError: unknown;
+
+      function Page({ data }: { data: string }) {
+        return <div>{data}</div>;
       }
 
       const routes = [
@@ -610,38 +642,72 @@ describe("Data Loader", () => {
         }),
       ];
 
-      render(<Router routes={routes} />);
+      render(
+        <ErrorBoundary
+          fallback={(e) => {
+            caughtError = e;
+            return <div>Error caught</div>;
+          }}
+        >
+          <Router routes={routes} />
+        </ErrorBoundary>,
+      );
 
-      // The rejected promise should contain the original error
-      await expect(receivedData).rejects.toBe(error);
+      expect(caughtError).toBe(error);
+
+      consoleErrorSpy.mockRestore();
     });
 
-    it("caches the rejected promise from sync loader error", () => {
-      const promises: unknown[] = [];
+    it("sync loader error in nested route is caught by Error Boundary around Outlet", () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
-      function Page({ data }: { data: unknown }) {
-        promises.push(data);
-        return <div>Page</div>;
+      mockNavigation = setupNavigationMock("http://localhost/child");
+
+      function Layout() {
+        return (
+          <div>
+            <h1>Layout</h1>
+            <ErrorBoundary
+              fallback={(e) => <div>Caught: {(e as Error).message}</div>}
+            >
+              <Outlet />
+            </ErrorBoundary>
+          </div>
+        );
+      }
+
+      function ChildPage({ data }: { data: string }) {
+        return <div>{data}</div>;
       }
 
       const routes = [
         route({
           path: "/",
-          component: Page,
-          loader: (): never => {
-            throw new Error("fail");
-          },
+          component: Layout,
+          children: [
+            route({
+              path: "/child",
+              component: ChildPage,
+              loader: (): never => {
+                throw new Error("Child loader failed");
+              },
+            }),
+          ],
         }),
       ];
 
-      const { rerender } = render(<Router routes={routes} />);
-      rerender(<Router routes={routes} />);
+      render(<Router routes={routes} />);
 
-      // Both renders should receive the same Promise instance (from cache)
-      expect(promises.length).toBeGreaterThanOrEqual(1);
-      if (promises.length > 1) {
-        expect(promises[0]).toBe(promises[1]);
-      }
+      // Layout should still render
+      expect(screen.getByText("Layout")).toBeInTheDocument();
+      // Child error should be caught by the Error Boundary in the layout
+      expect(
+        screen.getByText("Caught: Child loader failed"),
+      ).toBeInTheDocument();
+
+      consoleErrorSpy.mockRestore();
     });
   });
 

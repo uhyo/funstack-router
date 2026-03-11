@@ -1,6 +1,7 @@
 import { type ReactNode, useContext, useMemo } from "react";
 import { RouterContext } from "../context/RouterContext.js";
 import { RouteContext } from "../context/RouteContext.js";
+import { LoaderError } from "../core/loaderCache.js";
 import type { MatchedRouteWithData, InternalRouteState } from "../types.js";
 import { useRouteStateCallbacks } from "./useRouteStateCallbacks.js";
 
@@ -106,6 +107,11 @@ export function RouteRenderer({
     // When loader exists, data is defined and component expects data prop
     // When loader doesn't exist, data is undefined and component doesn't expect data prop
     // TypeScript can't narrow this union, so we use runtime check with type assertion
+    if (data instanceof LoaderError) {
+      // Re-throw synchronous loader errors during rendering so that
+      // the nearest Error Boundary can catch them.
+      throw data.error;
+    }
     if (route.loader) {
       const ComponentWithData = Component as React.ComponentType<{
         data: unknown;

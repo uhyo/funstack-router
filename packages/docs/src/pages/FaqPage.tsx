@@ -82,14 +82,16 @@ hardNavigate("/other-page");`}</CodeBlock>
       <section>
         <h2>Handling loader errors</h2>
         <p>
-          When a loader throws an error (or returns a rejected promise), the
-          error is surfaced as a rejected promise in the component's{" "}
-          <code>data</code> prop. When you call <code>use(data)</code>, React
-          re-throws the rejection, which can be caught by an{" "}
+          When a loader throws an error, the router catches it and re-throws it
+          during rendering of that route's component. This means the error can
+          be caught by an{" "}
           <a href="https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary">
             Error Boundary
-          </a>
-          .
+          </a>{" "}
+          placed above the route in the component tree. For async loaders that
+          return a rejected promise, the error is surfaced when{" "}
+          <code>use(data)</code> is called, which is also caught by Error
+          Boundaries.
         </p>
         <p>
           The recommended pattern is to place an error boundary in your{" "}
@@ -136,10 +138,11 @@ function App() {
   return <Router routes={routes} />;
 }`}</CodeBlock>
         <p>
-          This works for both synchronous and asynchronous loaders. The router
-          internally converts synchronous loader errors into rejected promises,
-          so the behavior is consistent regardless of whether a loader is sync
-          or async.
+          This works for both synchronous and asynchronous loaders. For sync
+          loaders, the router catches the error and re-throws it during route
+          rendering. For async loaders, the rejected promise naturally surfaces
+          through <code>use()</code>. Either way, Error Boundaries catch the
+          error.
         </p>
         <p>
           You can also place error boundaries at more granular levels (e.g.,
