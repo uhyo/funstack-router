@@ -21,6 +21,7 @@ const learnNavItems: NavEntry[] = [
   { path: "/learn/type-safety", label: "Type Safety" },
   { path: "/learn/actions", label: "Form Actions" },
   { path: "/learn/transitions", label: "Transitions" },
+  { path: "/learn/loaders", label: "How Loaders Run" },
   {
     label: "SSR",
     items: [

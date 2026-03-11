@@ -66,6 +66,11 @@ const LearnTransitionsPage = lazy(() =>
     default: m.LearnTransitionsPage,
   })),
 );
+const LearnLoadersPage = lazy(() =>
+  import("./pages/LearnLoadersPage.js").then((m) => ({
+    default: m.LearnLoadersPage,
+  })),
+);
 const ApiReferenceIndexPage = lazy(() =>
   import("./pages/ApiReferenceIndexPage.js").then((m) => ({
     default: m.ApiReferenceIndexPage,
@@ -209,6 +214,12 @@ export const routes = [
                 path: "/transitions",
                 component: defer(<LearnTransitionsPage />, {
                   name: "LearnTransitionsPage",
+                }),
+              }),
+              route({
+                path: "/loaders",
+                component: defer(<LearnLoadersPage />, {
+                  name: "LearnLoadersPage",
                 }),
               }),
             ],
