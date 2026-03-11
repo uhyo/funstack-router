@@ -212,6 +212,76 @@ function UserDetail({ data }: { data: Promise<User> }) {
       </section>
 
       <section>
+        <h3>Error Handling</h3>
+        <p>
+          When a loader throws an error, the router catches it and re-throws it
+          during rendering of that route&rsquo;s component. This means the error
+          can be caught by a React{" "}
+          <a href="https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary">
+            Error Boundary
+          </a>{" "}
+          placed above the route in the component tree. For async loaders that
+          return a rejected promise, the error is surfaced when{" "}
+          <code>use(data)</code> is called, which is also caught by Error
+          Boundaries.
+        </p>
+        <p>
+          The recommended pattern is to place an error boundary in your{" "}
+          <strong>root layout route</strong>, wrapping the{" "}
+          <code>{"<Outlet />"}</code>. This catches errors from any loader in
+          the route tree while keeping the root layout (header, navigation,
+          etc.) intact:
+        </p>
+        <CodeBlock language="tsx">{`import { Router, route, Outlet } from "@funstack/router";
+import { ErrorBoundary } from "./ErrorBoundary";
+
+function RootLayout() {
+  return (
+    <div>
+      <header>My App</header>
+      <ErrorBoundary fallback={<div>Something went wrong.</div>}>
+        <Outlet />
+      </ErrorBoundary>
+    </div>
+  );
+}
+
+const routes = [
+  route({
+    path: "/",
+    component: RootLayout,
+    children: [
+      route({
+        path: "/",
+        component: HomePage,
+      }),
+      route({
+        path: "/users/:id",
+        component: UserPage,
+        loader: async ({ params }) => {
+          const res = await fetch(\`/api/users/\${params.id}\`);
+          if (!res.ok) throw new Error("Failed to load user");
+          return res.json();
+        },
+      }),
+    ],
+  }),
+];`}</CodeBlock>
+        <p>
+          This works for both synchronous and asynchronous loaders. For sync
+          loaders, the router catches the error and re-throws it during route
+          rendering. For async loaders, the rejected promise naturally surfaces
+          through <code>use()</code>. Either way, Error Boundaries catch the
+          error.
+        </p>
+        <p>
+          You can also place error boundaries at more granular levels (e.g.,
+          wrapping a specific route&rsquo;s <code>{"<Outlet />"}</code> or{" "}
+          <code>{"<Suspense>"}</code> boundary) for fine-grained error handling.
+        </p>
+      </section>
+
+      <section>
         <h3>Summary</h3>
         <table className="summary-table">
           <thead>
