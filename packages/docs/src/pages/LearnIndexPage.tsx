@@ -108,6 +108,18 @@ export function LearnIndexPage() {
 
       <section className="learn-category">
         <h2>
+          <a href="/learn/loaders">How Loaders Run</a>
+        </h2>
+        <p>
+          Understand when loaders execute, how their results are cached by
+          navigation entry, and how different navigation types &mdash; push,
+          back/forward, reload, and form submissions &mdash; affect whether
+          loaders re-run.
+        </p>
+      </section>
+
+      <section className="learn-category">
+        <h2>
           <a href="/learn/transitions">Controlling Transitions</a>
         </h2>
         <p>
