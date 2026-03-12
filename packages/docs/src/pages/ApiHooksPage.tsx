@@ -21,6 +21,8 @@ function MyComponent() {
   console.log(location.pathname);  // "/users/123"
   console.log(location.search);    // "?tab=profile"
   console.log(location.hash);      // "#section"
+  console.log(location.entryId);   // NavigationHistoryEntry.id or null
+  console.log(location.entryKey);  // NavigationHistoryEntry.key or null
 }`}</CodeBlock>
       </article>
 

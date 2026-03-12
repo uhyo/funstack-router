@@ -335,7 +335,15 @@ routeState<{ tab: string }>()({
   pathname: string;
   search: string;
   hash: string;
+  entryId: string | null;   // NavigationHistoryEntry.id
+  entryKey: string | null;  // NavigationHistoryEntry.key
 }`}</CodeBlock>
+        <p>
+          <code>entryId</code> and <code>entryKey</code> expose the
+          corresponding properties from the Navigation API's{" "}
+          <code>NavigationHistoryEntry</code>. They are <code>null</code> when
+          the Navigation API is unavailable (e.g., in static fallback mode).
+        </p>
       </article>
 
       <article className="api-item">
