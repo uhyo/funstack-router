@@ -263,8 +263,18 @@ export function Router({
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;
-  const entryId = locationEntry?.entryId ?? null;
-  const entryKey = locationEntry?.entryKey ?? null;
+  const entryId =
+    locationEntry?.entryId ??
+    (isServerSnapshot(locationEntryInternal)
+      ? locationEntryInternal.actualLocationEntry?.entryId
+      : null) ??
+    null;
+  const entryKey =
+    locationEntry?.entryKey ??
+    (isServerSnapshot(locationEntryInternal)
+      ? locationEntryInternal.actualLocationEntry?.entryKey
+      : null) ??
+    null;
   const routerContextValue: RouterContextValue = useMemo(
     () => ({
       locationState,
