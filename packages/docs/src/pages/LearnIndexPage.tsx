@@ -120,6 +120,18 @@ export function LearnIndexPage() {
 
       <section className="learn-category">
         <h2>
+          <a href="/learn/error-handling">Error Handling</a>
+        </h2>
+        <p>
+          Learn where to place Error Boundaries in your route tree, how to reset
+          them on navigation with <code>useLocation().entryId</code>, and how
+          loader errors bubble to the nearest boundary that wraps an{" "}
+          <code>{"<Outlet>"}</code>.
+        </p>
+      </section>
+
+      <section className="learn-category">
+        <h2>
           <a href="/learn/transitions">Controlling Transitions</a>
         </h2>
         <p>

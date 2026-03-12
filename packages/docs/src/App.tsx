@@ -61,6 +61,11 @@ const LearnActionsPage = lazy(() =>
     default: m.LearnActionsPage,
   })),
 );
+const LearnErrorHandlingPage = lazy(() =>
+  import("./pages/LearnErrorHandlingPage.js").then((m) => ({
+    default: m.LearnErrorHandlingPage,
+  })),
+);
 const LearnTransitionsPage = lazy(() =>
   import("./pages/LearnTransitionsPage.js").then((m) => ({
     default: m.LearnTransitionsPage,
@@ -208,6 +213,12 @@ export const routes = [
                 path: "/actions",
                 component: defer(<LearnActionsPage />, {
                   name: "LearnActionsPage",
+                }),
+              }),
+              route({
+                path: "/error-handling",
+                component: defer(<LearnErrorHandlingPage />, {
+                  name: "LearnErrorHandlingPage",
                 }),
               }),
               route({
