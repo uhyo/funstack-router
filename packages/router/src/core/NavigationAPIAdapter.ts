@@ -64,6 +64,8 @@ export class NavigationAPIAdapter implements RouterAdapter {
     this.#cachedSnapshot = {
       url: new URL(entry.url),
       key: this.#effectiveKey(entry.id),
+      entryId: entry.id,
+      entryKey: entry.key,
       state: entry.getState(),
       info: this.#currentNavigationInfo,
     };

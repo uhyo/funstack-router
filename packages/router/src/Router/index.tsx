@@ -263,11 +263,15 @@ export function Router({
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;
+  const entryId = locationEntry?.entryId ?? null;
+  const entryKey = locationEntry?.entryKey ?? null;
   const routerContextValue: RouterContextValue = useMemo(
     () => ({
       locationState,
       locationInfo,
       url: urlObject,
+      entryId,
+      entryKey,
       isPending,
       navigateAsync,
       updateCurrentEntryState,
@@ -276,6 +280,8 @@ export function Router({
       locationState,
       locationInfo,
       urlObject,
+      entryId,
+      entryKey,
       isPending,
       navigateAsync,
       updateCurrentEntryState,

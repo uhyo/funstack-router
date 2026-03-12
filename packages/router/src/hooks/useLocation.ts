@@ -12,7 +12,7 @@ export function useLocation(): Location {
     throw new Error("useLocation must be used within a Router");
   }
 
-  const { url } = context;
+  const { url, entryId, entryKey } = context;
 
   if (url === null) {
     throw new Error("useLocation: URL is not available during SSR.");
@@ -23,6 +23,8 @@ export function useLocation(): Location {
       pathname: url.pathname,
       search: url.search,
       hash: url.hash,
+      entryId,
+      entryKey,
     };
-  }, [url]);
+  }, [url, entryId, entryKey]);
 }

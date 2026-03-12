@@ -47,6 +47,28 @@ describe("hooks", () => {
       expect(screen.getByTestId("hash").textContent).toBe("#section");
     });
 
+    it("returns entryId and entryKey from Navigation API", () => {
+      function TestComponent() {
+        const location = useLocation();
+        return (
+          <div>
+            <span data-testid="entryId">{location.entryId ?? "null"}</span>
+            <span data-testid="entryKey">{location.entryKey ?? "null"}</span>
+          </div>
+        );
+      }
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: TestComponent },
+      ];
+
+      render(<Router routes={routes} />);
+
+      // The mock navigation generates UUIDs for id and key
+      expect(screen.getByTestId("entryId").textContent).not.toBe("null");
+      expect(screen.getByTestId("entryKey").textContent).not.toBe("null");
+    });
+
     it("throws when used outside Router", () => {
       function TestComponent() {
         useLocation();

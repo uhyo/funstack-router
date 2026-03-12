@@ -20,6 +20,10 @@ export type LocationEntry = {
   url: URL;
   /** Unique key for this entry (used for loader caching) */
   key: string;
+  /** NavigationHistoryEntry.id — stable unique identifier for this entry */
+  entryId: string | null;
+  /** NavigationHistoryEntry.key — unique key that changes when entry is replaced */
+  entryKey: string | null;
   /** State associated with this entry */
   state: unknown;
   /** Ephemeral info from current navigation (undefined if not from navigation event) */

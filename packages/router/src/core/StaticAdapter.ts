@@ -28,6 +28,8 @@ export class StaticAdapter implements RouterAdapter {
       this.#cachedSnapshot = {
         url: new URL(window.location.href),
         key: "__static__",
+        entryId: null,
+        entryKey: null,
         state: undefined,
         info: undefined,
       };

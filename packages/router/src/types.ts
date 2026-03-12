@@ -123,6 +123,10 @@ export type Location = {
   pathname: string;
   search: string;
   hash: string;
+  /** NavigationHistoryEntry.id — stable unique identifier. Null when Navigation API is unavailable. */
+  entryId: string | null;
+  /** NavigationHistoryEntry.key — unique key that changes when entry is replaced. Null when Navigation API is unavailable. */
+  entryKey: string | null;
 };
 
 /**
