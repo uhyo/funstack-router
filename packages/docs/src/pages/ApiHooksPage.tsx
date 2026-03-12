@@ -24,6 +24,13 @@ function MyComponent() {
   console.log(location.entryId);   // NavigationHistoryEntry.id or null
   console.log(location.entryKey);  // NavigationHistoryEntry.key or null
 }`}</CodeBlock>
+        <p>
+          <code>entryId</code> and <code>entryKey</code> are <code>null</code>{" "}
+          when the Navigation API is unavailable. Do not render them directly in
+          DOM — they are not available during SSR and will cause a hydration
+          mismatch. Use them as a React <code>key</code> or in effects/callbacks
+          instead.
+        </p>
       </article>
 
       <article className="api-item">

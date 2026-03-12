@@ -20,9 +20,9 @@ export type LocationEntry = {
   url: URL;
   /** Unique key for this entry (used for loader caching) */
   key: string;
-  /** NavigationHistoryEntry.id — stable unique identifier for this entry */
+  /** NavigationHistoryEntry.id — unique identifier for this entry. A new id is assigned when the entry is replaced. */
   entryId: string | null;
-  /** NavigationHistoryEntry.key — unique key that changes when entry is replaced */
+  /** NavigationHistoryEntry.key — represents the slot in the entry list. Stable across replacements. */
   entryKey: string | null;
   /** State associated with this entry */
   state: unknown;
