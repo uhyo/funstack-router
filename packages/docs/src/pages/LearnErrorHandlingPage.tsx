@@ -23,8 +23,9 @@ export function LearnErrorHandlingPage() {
         <p>
           A boundary <strong>outside</strong> the Router can still act as a
           last-resort safeguard, but it cannot use router hooks like{" "}
-          <code>useLocation()</code> to reset on navigation. For day-to-day route
-          errors, prefer a boundary <strong>inside</strong> your root layout:
+          <code>useLocation()</code> to reset on navigation. For day-to-day
+          route errors, prefer a boundary <strong>inside</strong> your root
+          layout:
         </p>
         <CodeBlock language="tsx">{`import { Outlet, useLocation } from "@funstack/router";
 import { ErrorBoundary } from "react-error-boundary";
@@ -84,15 +85,16 @@ function RootLayout() {
         </p>
         <ul>
           <li>
-            <strong>Synchronous loader throws</strong> &mdash; when React renders
-            that route&rsquo;s <code>{"<Outlet />"}</code>, the error is thrown
-            there, so the nearest Error Boundary above that outlet catches it.
+            <strong>Synchronous loader throws</strong> &mdash; when React
+            renders that route&rsquo;s <code>{"<Outlet />"}</code>, the error is
+            thrown there, so the nearest Error Boundary above that outlet
+            catches it.
           </li>
           <li>
             <strong>Asynchronous loader rejects</strong> &mdash; the route
-            component receives a Promise and the rejection surfaces when you call{" "}
-            <code>use(data)</code>. That rejection is also caught by the nearest
-            Error Boundary.
+            component receives a Promise and the rejection surfaces when you
+            call <code>use(data)</code>. That rejection is also caught by the
+            nearest Error Boundary.
           </li>
         </ul>
         <CodeBlock language="tsx">{`import { Suspense, use } from "react";
@@ -122,7 +124,8 @@ function UserDetails({ data }: { data: Promise<User> }) {
           A root layout boundary is a good default, but you can also add
           boundaries to nested layouts when a section of the app should recover
           independently. For example, a dashboard layout can catch errors from
-          dashboard child routes while the rest of the application keeps working.
+          dashboard child routes while the rest of the application keeps
+          working.
         </p>
         <p>
           Think of each boundary as owning the routes rendered through its{" "}
@@ -137,8 +140,7 @@ function UserDetails({ data }: { data: Promise<User> }) {
         <p>
           This page focuses on recovery and error propagation. For when loaders
           execute, how results are cached, and when they re-run after navigation
-          or form submissions, see{" "}
-          <a href="/learn/loaders">How Loaders Run</a>.
+          or form submissions, see <a href="/learn/loaders">How Loaders Run</a>.
         </p>
       </section>
     </div>
