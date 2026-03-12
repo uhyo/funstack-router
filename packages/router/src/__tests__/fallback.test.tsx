@@ -143,6 +143,26 @@ describe("Fallback Mode", () => {
       expect(screen.getByTestId("hash").textContent).toBe("#section");
     });
 
+    it("returns null for entryId and entryKey when Navigation API is unavailable", () => {
+      setupStaticLocation("http://localhost/");
+
+      function Page() {
+        const location = useLocation();
+        return (
+          <div>
+            <span data-testid="entryId">{location.entryId ?? "null"}</span>
+            <span data-testid="entryKey">{location.entryKey ?? "null"}</span>
+          </div>
+        );
+      }
+
+      const routes: RouteDefinition[] = [{ path: "/", component: Page }];
+
+      render(<Router routes={routes} fallback="static" />);
+      expect(screen.getByTestId("entryId").textContent).toBe("null");
+      expect(screen.getByTestId("entryKey").textContent).toBe("null");
+    });
+
     it("renders nothing when no route matches", () => {
       setupStaticLocation("http://localhost/unknown");
 
@@ -429,6 +449,24 @@ describe("ssr", () => {
     expect(screen.getByTestId("pathname").textContent).toBe("/about");
     expect(screen.getByTestId("search").textContent).toBe("");
     expect(screen.getByTestId("hash").textContent).toBe("");
+  });
+
+  it("returns null for entryId and entryKey during SSR", () => {
+    function Page() {
+      const location = useLocation();
+      return (
+        <div>
+          <span data-testid="entryId">{location.entryId ?? "null"}</span>
+          <span data-testid="entryKey">{location.entryKey ?? "null"}</span>
+        </div>
+      );
+    }
+
+    const routes: RouteDefinition[] = [{ path: "/about", component: Page }];
+
+    render(<Router routes={routes} ssr={{ path: "/about" }} />);
+    expect(screen.getByTestId("entryId").textContent).toBe("null");
+    expect(screen.getByTestId("entryKey").textContent).toBe("null");
   });
 
   it("pathless route wrapping path-based children works with ssr.path", () => {
