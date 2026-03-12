@@ -67,7 +67,7 @@ function RootLayout() {
           <code>entryId</code> comes from the Navigation API&rsquo;s current
           history entry. It changes when the router moves to a different entry,
           so using it in <code>resetKeys</code> lets the boundary recover when
-          the user clicks another link, goes back/forward, or triggers a reload.
+          the user clicks another link or goes back/forward to a different page.
         </p>
         <p>
           If you place more boundaries deeper in the tree, apply the same
@@ -84,10 +84,9 @@ function RootLayout() {
         </p>
         <ul>
           <li>
-            <strong>Synchronous loader throws</strong> &mdash; the router catches
-            the error while preparing the matched route and re-throws it during
-            that route&rsquo;s render. The nearest Error Boundary above the route
-            catches it.
+            <strong>Synchronous loader throws</strong> &mdash; when React renders
+            that route&rsquo;s <code>{"<Outlet />"}</code>, the error is thrown
+            there, so the nearest Error Boundary above that outlet catches it.
           </li>
           <li>
             <strong>Asynchronous loader rejects</strong> &mdash; the route
