@@ -13,9 +13,9 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "oxlint": "^1.56.0",
+    "oxlint": "^1.57.0",
     "prettier": "^3.8.1",
-    "turbo": "^2.8.18"
+    "turbo": "^2.8.20"
   },
   "packageManager": "pnpm@10.25.0"
 }
