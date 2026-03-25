@@ -24,8 +24,8 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^1.1.0
-        version: 1.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4))
+        specifier: ^1.1.2
+        version: 1.1.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4))
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -89,8 +89,8 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^1.1.0
-        version: 1.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4))
+        specifier: ^1.1.2
+        version: 1.1.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4))
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -625,13 +625,13 @@ packages:
     resolution: {integrity: sha512-lEYZQ4tFOLidvxy60tE7/28LUy4bJOlbT8o0ebcolaFV/cluSGtnDpWEUWIQWORtnGhrWnYl7Gr9aHvjHYkoEQ==}
     hasBin: true
 
-  '@funstack/static@1.1.0':
-    resolution: {integrity: sha512-UVO7A+KFmXT73OKd/9j9UAQ6g5G3EryDYbfecxs5v26p+3RIgeVTEvtkajNbbdZV05y7eLSFpE417zg/HUP+lg==}
+  '@funstack/static@1.1.2':
+    resolution: {integrity: sha512-VqMAHNAIeAVhNjP9M3KkASJwxRW2aA0djySP7gXMsVsdK7Wckmdcxh2fr1RYXKKqcUQAfYhLyHVYH2VK54zJnQ==}
     hasBin: true
     peerDependencies:
       react: ^19.2.3
       react-dom: ^19.2.3
-      vite: ^7.3.1
+      vite: ^7.0.0 || ^8.0.0
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1690,8 +1690,8 @@ packages:
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
 
-  srvx@0.11.9:
-    resolution: {integrity: sha512-97wWJS6F0KTKAhDlHVmBzMvlBOp5FiNp3XrLoodIgYJpXxgG5tE9rX4Pg7s46n2shI4wtEsMATTS1+rI3/ubzA==}
+  srvx@0.11.13:
+    resolution: {integrity: sha512-oknN6qduuMPafxKtHucUeG32Q963pjriA5g3/Bl05cwEsUe5VVbIU4qR9LrALHbipSCyBe+VmfDGGydqazDRkw==}
     engines: {node: '>=20.16.0'}
     hasBin: true
 
@@ -2285,7 +2285,7 @@ snapshots:
 
   '@funstack/skill-installer@1.0.0': {}
 
-  '@funstack/static@1.1.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4))':
+  '@funstack/static@1.1.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4))':
     dependencies:
       '@funstack/skill-installer': 1.0.0
       '@vitejs/plugin-rsc': 0.5.21(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.0(@types/node@25.5.0)(esbuild@0.27.4))
@@ -2293,7 +2293,7 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
       react-error-boundary: 6.1.1(react@19.2.4)
       rsc-html-stream: 0.0.7
-      srvx: 0.11.9
+      srvx: 0.11.13
       vite: 8.0.0(@types/node@25.5.0)(esbuild@0.27.4)
     transitivePeerDependencies:
       - react-server-dom-webpack
@@ -2700,7 +2700,7 @@ snapshots:
       periscopic: 4.0.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      srvx: 0.11.9
+      srvx: 0.11.13
       strip-literal: 3.1.0
       turbo-stream: 3.2.0
       vite: 8.0.0(@types/node@25.5.0)(esbuild@0.27.4)
@@ -3283,7 +3283,7 @@ snapshots:
 
   space-separated-tokens@2.0.2: {}
 
-  srvx@0.11.9: {}
+  srvx@0.11.13: {}
 
   stackback@0.0.2: {}
 
