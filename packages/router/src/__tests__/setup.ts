@@ -27,7 +27,8 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     id: string;
     index: number;
     sameDocument = true;
-    #state: unknown;
+    /** @internal */
+    _state: unknown;
 
     constructor(url: string, index: number, state?: unknown) {
       super();
@@ -35,11 +36,11 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       this.key = getKeyForSlot(index);
       this.id = crypto.randomUUID();
       this.index = index;
-      this.#state = state;
+      this._state = state;
     }
 
     getState() {
-      return this.#state;
+      return this._state;
     }
 
     /**
@@ -47,7 +48,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
      * Used internally by updateCurrentEntry mock.
      */
     __updateState(state: unknown) {
-      this.#state = state;
+      this._state = state;
     }
 
     /**
