@@ -53,9 +53,9 @@
     "@types/react": "^19.2.14",
     "jsdom": "^29.0.1",
     "react": "^19.2.4",
-    "tsdown": "^0.21.5",
+    "tsdown": "^0.21.7",
     "typescript": "^6.0.2",
     "urlpattern-polyfill": "^10.1.0",
-    "vitest": "^4.1.1"
+    "vitest": "^4.1.2"
   }
 }
