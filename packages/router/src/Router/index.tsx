@@ -98,6 +98,19 @@ export type RouterProps = {
    * ```
    */
   ssr?: SSRConfig;
+  /**
+   * Enable React's experimental `unstable_postpone` API for pathless SSR.
+   *
+   * When enabled, `<Outlet />` calls `React.unstable_postpone()` instead of
+   * rendering `null` when no child route can be matched during pathless SSR.
+   * This avoids hydration mismatches by telling React to defer rendering of
+   * the outlet content to the client.
+   *
+   * **Requires React Canary or experimental builds.**
+   *
+   * @default false
+   */
+  experimentalPostpone?: boolean;
 };
 
 export function Router({
@@ -105,6 +118,7 @@ export function Router({
   onNavigate,
   fallback = "none",
   ssr,
+  experimentalPostpone = false,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
@@ -285,6 +299,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
+      experimentalPostpone,
     }),
     [
       locationState,
@@ -295,6 +310,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
+      experimentalPostpone,
     ],
   );
 
