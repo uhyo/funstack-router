@@ -24,8 +24,8 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^1.1.2
-        version: 1.1.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
+        specifier: ^1.2.0
+        version: 1.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -89,8 +89,8 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^1.1.2
-        version: 1.1.2(react-dom@19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402))(react@19.3.0-canary-1b45e243-20260402)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
+        specifier: ^1.2.0
+        version: 1.2.0(react-dom@19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402))(react@19.3.0-canary-1b45e243-20260402)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
       react:
         specifier: 19.3.0-canary-1b45e243-20260402
         version: 19.3.0-canary-1b45e243-20260402
@@ -120,8 +120,8 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^1.1.2
-        version: 1.1.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
+        specifier: ^1.2.0
+        version: 1.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -662,8 +662,8 @@ packages:
     resolution: {integrity: sha512-lEYZQ4tFOLidvxy60tE7/28LUy4bJOlbT8o0ebcolaFV/cluSGtnDpWEUWIQWORtnGhrWnYl7Gr9aHvjHYkoEQ==}
     hasBin: true
 
-  '@funstack/static@1.1.2':
-    resolution: {integrity: sha512-VqMAHNAIeAVhNjP9M3KkASJwxRW2aA0djySP7gXMsVsdK7Wckmdcxh2fr1RYXKKqcUQAfYhLyHVYH2VK54zJnQ==}
+  '@funstack/static@1.2.0':
+    resolution: {integrity: sha512-oB5BrlwyQt+4GkZriPt7MzaF7Nt1a+A6ttvA+Kgpc2/zkWzr/0l58J0LtMzyap1gor42lSOSrJy5MUIYpw1OWA==}
     hasBin: true
     peerDependencies:
       react: ^19.2.3
@@ -1151,9 +1151,6 @@ packages:
   '@rolldown/pluginutils@1.0.0-rc.13':
     resolution: {integrity: sha512-3ngTAv6F/Py35BsYbeeLeecvhMKdsKm4AoOETVhAA+Qc8nrA2I0kF7oa93mE9qnIurngOSpMnQ0x2nQY2FPviA==}
 
-  '@rolldown/pluginutils@1.0.0-rc.5':
-    resolution: {integrity: sha512-RxlLX/DPoarZ9PtxVrQgZhPoor987YtKQqCo5zkjX+0S0yLJ7Vv515Wk6+xtTL67VONKJKxETWZwuZjss2idYw==}
-
   '@rolldown/pluginutils@1.0.0-rc.7':
     resolution: {integrity: sha512-qujRfC8sFVInYSPPMLQByRh7zhwkGFS4+tyMQ83srV1qrxL4g8E2tyxVVyxd0+8QeBM1mIk9KbWxkegRr76XzA==}
 
@@ -1305,8 +1302,8 @@ packages:
       babel-plugin-react-compiler:
         optional: true
 
-  '@vitejs/plugin-rsc@0.5.21':
-    resolution: {integrity: sha512-uNayLT8IKvWoznvQyfwKuGiEFV28o7lxUDnw/Av36VCuGpDFZnMmvVCwR37gTvnSmnpul9V0tdJqY3tBKEaDqw==}
+  '@vitejs/plugin-rsc@0.5.23':
+    resolution: {integrity: sha512-CV6kWPE4E241qDStwK3ErYjuZqW1i1xun3/P1wsm94RJoActLTrQsGzGsf75ioeVxEK0roPqLGhcV2WlSlPePQ==}
     peerDependencies:
       react: '*'
       react-dom: '*'
@@ -1529,9 +1526,6 @@ packages:
   is-potential-custom-element-name@1.0.1:
     resolution: {integrity: sha512-bCYeRA2rVibKZd+s2625gGnGF/t7DSqDs4dP7CrLA1m7jKWz6pps0LpYLJN8Q64HtmPKJ1hrN3nzPNKFEKOUiQ==}
 
-  is-reference@3.0.3:
-    resolution: {integrity: sha512-ixkJoqQvAP88E6wLydLGGqCJsrFUnqoH6HnaczB8XmDH1oaWU+xxdptvikTgaEhtZ53Ky6YXiBuUI2WXLMCwjw==}
-
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -1700,9 +1694,6 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
-  periscopic@4.0.2:
-    resolution: {integrity: sha512-sqpQDUy8vgB7ycLkendSKS6HnVz1Rneoc3Rc+ZBUCe2pbqlVuCC5vF52l0NJ1aiMg/r1qfYF9/myz8CZeI2rjA==}
-
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -1844,8 +1835,8 @@ packages:
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
 
-  srvx@0.11.13:
-    resolution: {integrity: sha512-oknN6qduuMPafxKtHucUeG32Q963pjriA5g3/Bl05cwEsUe5VVbIU4qR9LrALHbipSCyBe+VmfDGGydqazDRkw==}
+  srvx@0.11.15:
+    resolution: {integrity: sha512-iXsux0UcOjdvs0LCMa2Ws3WwcDUozA3JN3BquNXkaFPP7TpRqgunKdEgoZ/uwb1J6xaYHfxtz9Twlh6yzwM6Tg==}
     engines: {node: '>=20.16.0'}
     hasBin: true
 
@@ -2054,10 +2045,10 @@ packages:
       yaml:
         optional: true
 
-  vitefu@1.1.2:
-    resolution: {integrity: sha512-zpKATdUbzbsycPFBN71nS2uzBUQiVnFoOrr2rvqv34S1lcAgMKKkjWleLGeiJlZ8lwCXvtWaRn7R3ZC16SYRuw==}
+  vitefu@1.1.3:
+    resolution: {integrity: sha512-ub4okH7Z5KLjb6hDyjqrGXqWtWvoYdU3IGm/NorpgHncKoLTCfRIbvlhBm7r0YstIaQRYlp4yEbFqDcKSzXSSg==}
     peerDependencies:
-      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-beta.0
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
     peerDependenciesMeta:
       vite:
         optional: true
@@ -2163,9 +2154,6 @@ packages:
 
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
-
-  zimmerframe@1.1.4:
-    resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -2460,28 +2448,28 @@ snapshots:
 
   '@funstack/skill-installer@1.0.0': {}
 
-  '@funstack/static@1.1.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))':
+  '@funstack/static@1.2.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))':
     dependencies:
       '@funstack/skill-installer': 1.0.0
-      '@vitejs/plugin-rsc': 0.5.21(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
+      '@vitejs/plugin-rsc': 0.5.23(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       react-error-boundary: 6.1.1(react@19.2.4)
       rsc-html-stream: 0.0.7
-      srvx: 0.11.13
+      srvx: 0.11.15
       vite: 8.0.7(@types/node@25.5.2)(esbuild@0.27.4)
     transitivePeerDependencies:
       - react-server-dom-webpack
 
-  '@funstack/static@1.1.2(react-dom@19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402))(react@19.3.0-canary-1b45e243-20260402)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))':
+  '@funstack/static@1.2.0(react-dom@19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402))(react@19.3.0-canary-1b45e243-20260402)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))':
     dependencies:
       '@funstack/skill-installer': 1.0.0
-      '@vitejs/plugin-rsc': 0.5.21(react-dom@19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402))(react@19.3.0-canary-1b45e243-20260402)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
+      '@vitejs/plugin-rsc': 0.5.23(react-dom@19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402))(react@19.3.0-canary-1b45e243-20260402)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
       react: 19.3.0-canary-1b45e243-20260402
       react-dom: 19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402)
       react-error-boundary: 6.1.1(react@19.3.0-canary-1b45e243-20260402)
       rsc-html-stream: 0.0.7
-      srvx: 0.11.13
+      srvx: 0.11.15
       vite: 8.0.7(@types/node@25.5.2)(esbuild@0.27.4)
     transitivePeerDependencies:
       - react-server-dom-webpack
@@ -2795,8 +2783,6 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.0-rc.13': {}
 
-  '@rolldown/pluginutils@1.0.0-rc.5': {}
-
   '@rolldown/pluginutils@1.0.0-rc.7': {}
 
   '@shikijs/core@4.0.2':
@@ -2940,35 +2926,33 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.7
       vite: 8.0.7(@types/node@25.5.2)(esbuild@0.27.4)
 
-  '@vitejs/plugin-rsc@0.5.21(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))':
+  '@vitejs/plugin-rsc@0.5.23(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))':
     dependencies:
-      '@rolldown/pluginutils': 1.0.0-rc.5
+      '@rolldown/pluginutils': 1.0.0-rc.13
       es-module-lexer: 2.0.0
       estree-walker: 3.0.3
       magic-string: 0.30.21
-      periscopic: 4.0.2
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      srvx: 0.11.13
+      srvx: 0.11.15
       strip-literal: 3.1.0
       turbo-stream: 3.2.0
       vite: 8.0.7(@types/node@25.5.2)(esbuild@0.27.4)
-      vitefu: 1.1.2(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
+      vitefu: 1.1.3(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
 
-  '@vitejs/plugin-rsc@0.5.21(react-dom@19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402))(react@19.3.0-canary-1b45e243-20260402)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))':
+  '@vitejs/plugin-rsc@0.5.23(react-dom@19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402))(react@19.3.0-canary-1b45e243-20260402)(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))':
     dependencies:
-      '@rolldown/pluginutils': 1.0.0-rc.5
+      '@rolldown/pluginutils': 1.0.0-rc.13
       es-module-lexer: 2.0.0
       estree-walker: 3.0.3
       magic-string: 0.30.21
-      periscopic: 4.0.2
       react: 19.3.0-canary-1b45e243-20260402
       react-dom: 19.3.0-canary-1b45e243-20260402(react@19.3.0-canary-1b45e243-20260402)
-      srvx: 0.11.13
+      srvx: 0.11.15
       strip-literal: 3.1.0
       turbo-stream: 3.2.0
       vite: 8.0.7(@types/node@25.5.2)(esbuild@0.27.4)
-      vitefu: 1.1.2(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
+      vitefu: 1.1.3(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4))
 
   '@vitest/expect@4.1.3':
     dependencies:
@@ -3207,10 +3191,6 @@ snapshots:
 
   is-potential-custom-element-name@1.0.1: {}
 
-  is-reference@3.0.3:
-    dependencies:
-      '@types/estree': 1.0.8
-
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
@@ -3388,12 +3368,6 @@ snapshots:
   path-to-regexp@6.3.0: {}
 
   pathe@2.0.3: {}
-
-  periscopic@4.0.2:
-    dependencies:
-      '@types/estree': 1.0.8
-      is-reference: 3.0.3
-      zimmerframe: 1.1.4
 
   picocolors@1.1.1: {}
 
@@ -3585,7 +3559,7 @@ snapshots:
 
   space-separated-tokens@2.0.2: {}
 
-  srvx@0.11.13: {}
+  srvx@0.11.15: {}
 
   stackback@0.0.2: {}
 
@@ -3758,7 +3732,7 @@ snapshots:
       esbuild: 0.27.4
       fsevents: 2.3.3
 
-  vitefu@1.1.2(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4)):
+  vitefu@1.1.3(vite@8.0.7(@types/node@25.5.2)(esbuild@0.27.4)):
     optionalDependencies:
       vite: 8.0.7(@types/node@25.5.2)(esbuild@0.27.4)
 
@@ -3853,7 +3827,5 @@ snapshots:
       '@speed-highlight/core': 1.2.15
       cookie: 1.1.1
       youch-core: 0.3.3
-
-  zimmerframe@1.1.4: {}
 
   zwitch@2.0.4: {}

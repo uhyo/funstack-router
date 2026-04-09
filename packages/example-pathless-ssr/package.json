@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@funstack/router": "workspace:*",
-    "@funstack/static": "^1.1.2",
+    "@funstack/static": "^1.2.0",
     "react": "19.3.0-canary-1b45e243-20260402",
     "react-dom": "19.3.0-canary-1b45e243-20260402"
   },
