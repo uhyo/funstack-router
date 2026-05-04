@@ -24,11 +24,6 @@ export type RouterContextValue = {
   navigateAsync: (to: string, options?: NavigateOptions) => Promise<void>;
   /** Update current entry's state without navigation */
   updateCurrentEntryState: (state: unknown) => void;
-  /**
-   * Whether to use React's experimental `unstable_postpone` API for
-   * content that cannot be rendered during pathless SSR.
-   */
-  experimentalPostpone: boolean;
 };
 
 export const RouterContext = createContext<RouterContextValue | null>(null);
