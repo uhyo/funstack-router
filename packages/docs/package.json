@@ -13,7 +13,7 @@
     "@funstack/router": "workspace:*",
     "@funstack/static": "^1.2.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react-dom": "^19.2.6",
     "shiki": "^4.0.2"
   },
   "devDependencies": {
