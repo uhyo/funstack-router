@@ -40,30 +40,56 @@ export function resetNavigationState(): void {
 export class NavigationAPIAdapter implements RouterAdapter {
   // Cache the snapshot to ensure referential stability for useSyncExternalStore
   #cachedSnapshot: LocationEntry | null = null;
+  #cachedHref: string | null = null;
   #cachedEntryId: string | null = null;
+  // Destination URL captured from the most recent intercepted navigation,
+  // scoped to the entry.id observed at the time of intercept. Honored only
+  // when the current entry.id still matches, so it cannot leak across
+  // unrelated traversals or non-intercepted entry changes.
+  //
+  // WebKit Private Browsing workaround: after an intercepted navigation,
+  // `currentEntry.url` stays stale while `event.destination.url` reflects
+  // the real URL. Upstream bug: https://bugs.webkit.org/show_bug.cgi?id=314976
+  #committedDestination: { entryId: string; href: string } | null = null;
   // Ephemeral info from the current navigation event (not persisted in history)
   #currentNavigationInfo: unknown = undefined;
-  // Per-entry reload counters, used to generate unique cache keys
+  // Per-(entry, URL) reload counters, used to generate unique cache keys
   // so that loaders re-execute on reload instead of returning cached results.
-  // Keyed by NavigationHistoryEntry.id.
   #reloadCounts = new Map<string, number>();
 
   getSnapshot(): LocationEntry | null {
     const entry = navigation.currentEntry;
-    if (!entry?.url) {
+    if (!entry) {
       return null;
     }
 
-    // Return cached snapshot if entry hasn't changed
-    if (this.#cachedEntryId === entry.id && this.#cachedSnapshot) {
+    const stickyHref =
+      this.#committedDestination?.entryId === entry.id
+        ? this.#committedDestination.href
+        : null;
+    const actualHref = stickyHref ?? entry.url;
+    if (!actualHref) {
+      return null;
+    }
+
+    // Return cached snapshot if neither URL nor entry identity changed
+    if (
+      this.#cachedHref === actualHref &&
+      this.#cachedEntryId === entry.id &&
+      this.#cachedSnapshot
+    ) {
       return this.#cachedSnapshot;
     }
 
-    // Create new snapshot and cache it
+    // Composite key changes when either entry identity (replace) or URL
+    // (Private Browsing where entry.id is stale) changes, so loaders for
+    // a fresh navigation are not served from a stale slot.
+    this.#cachedHref = actualHref;
     this.#cachedEntryId = entry.id;
+    const composite = `${entry.id}|${actualHref}`;
     this.#cachedSnapshot = {
-      url: new URL(entry.url),
-      key: this.#effectiveKey(entry.id),
+      url: new URL(actualHref),
+      key: this.#effectiveKey(composite),
       entryId: entry.id,
       entryKey: entry.key,
       state: entry.getState(),
@@ -84,6 +110,19 @@ export class NavigationAPIAdapter implements RouterAdapter {
             ? "state"
             : "navigation";
         callback(changeType);
+      },
+      { signal: controller.signal },
+    );
+
+    // Fallback notifier for WebKit Private Browsing where currententrychange
+    // does not fire after an intercepted navigation.
+    navigation.addEventListener(
+      "navigatesuccess",
+      () => {
+        callback("navigation");
+        // currententrychange may have been skipped; ensure new entries
+        // still get dispose subscriptions.
+        this.#subscribeToDisposeEvents(controller.signal);
       },
       { signal: controller.signal },
     );
@@ -120,14 +159,18 @@ export class NavigationAPIAdapter implements RouterAdapter {
       this.#subscribedEntryIds.add(entry.id);
 
       const entryId = entry.id;
+      const entryUrl = entry.url;
       entry.addEventListener(
         "dispose",
         () => {
           // clearLoaderCacheForEntry uses prefix matching, so it also clears
-          // reload-keyed caches (e.g., entryId:r1:0, entryId:r2:0, etc.)
-          clearLoaderCacheForEntry(entryId);
+          // reload-keyed caches (e.g., composite:r1, composite:r2, etc.)
+          if (entryUrl) {
+            const composite = `${entryId}|${entryUrl}`;
+            clearLoaderCacheForEntry(composite);
+            this.#reloadCounts.delete(composite);
+          }
           this.#subscribedEntryIds.delete(entryId);
-          this.#reloadCounts.delete(entryId);
         },
         { signal },
       );
@@ -135,13 +178,12 @@ export class NavigationAPIAdapter implements RouterAdapter {
   }
 
   /**
-   * Compute the effective cache key for a given entry.
-   * Includes a reload suffix when the entry has been reloaded,
-   * so loaders get a fresh cache key and re-execute.
+   * Compute the effective cache key for a composite (`${entry.id}|${url}`),
+   * appending a reload suffix so loaders re-execute on reload.
    */
-  #effectiveKey(entryId: string): string {
-    const count = this.#reloadCounts.get(entryId) ?? 0;
-    return count > 0 ? `${entryId}:r${count}` : entryId;
+  #effectiveKey(composite: string): string {
+    const count = this.#reloadCounts.get(composite) ?? 0;
+    return count > 0 ? `${composite}:r${count}` : composite;
   }
 
   navigate(to: string, options?: NavigateOptions): void {
@@ -241,22 +283,20 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Route match, so intercept
 
-      // On reload, increment the per-entry reload count so loaders get a
-      // fresh cache key and re-execute.  The old cache (under the previous
-      // key) remains intact for the pending UI shown during the React
-      // transition.  Stale reload caches (2+ generations old) are pruned.
+      // On reload, increment the per-(entry, URL) reload count so loaders
+      // get a fresh cache key and re-execute.  The immediately previous
+      // generation is kept because it may be the committed state shown as
+      // pending UI during the React transition; older ones are pruned.
       if (event.navigationType === "reload") {
-        const entryId = navigation.currentEntry!.id;
-        const oldCount = this.#reloadCounts.get(entryId) ?? 0;
-        // Prune reload cache from 2 generations ago.  The immediately
-        // previous generation is kept because it may be the committed
-        // state shown as pending UI during the new transition.
+        const reloadKey = `${navigation.currentEntry!.id}|${event.destination.url}`;
+        const oldCount = this.#reloadCounts.get(reloadKey) ?? 0;
         if (oldCount >= 2) {
-          clearLoaderCacheForEntry(`${entryId}:r${oldCount - 1}`);
+          clearLoaderCacheForEntry(`${reloadKey}:r${oldCount - 1}`);
         }
-        this.#reloadCounts.set(entryId, oldCount + 1);
-        // Invalidate snapshot so getSnapshot() picks up the new reload key
+        this.#reloadCounts.set(reloadKey, oldCount + 1);
         this.#cachedSnapshot = null;
+        this.#cachedHref = null;
+        this.#cachedEntryId = null;
       }
 
       // Abort initial load's loaders if this is the first navigation
@@ -274,9 +314,17 @@ export class NavigationAPIAdapter implements RouterAdapter {
             );
           }
 
-          // Compute effective cache key inside the handler where
-          // currentEntry already points to the correct (possibly new) entry.
-          const effectiveKey = this.#effectiveKey(currentEntry.id);
+          // Don't invalidate the cache here: getSnapshot's cache check
+          // already returns the same reference when the resolved URL is
+          // unchanged (normal mode), avoiding an extra render when
+          // navigatesuccess fires after currententrychange.
+          this.#committedDestination = {
+            entryId: currentEntry.id,
+            href: event.destination.url,
+          };
+
+          const composite = `${currentEntry.id}|${event.destination.url}`;
+          const effectiveKey = this.#effectiveKey(composite);
 
           let actionResult: unknown = undefined;
 
@@ -292,7 +340,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
               });
             }
             // Revalidate loaders after action — clear cache so loaders re-execute
-            clearLoaderCacheForEntry(currentEntry.id);
+            clearLoaderCacheForEntry(composite);
           }
 
           const request = createLoaderRequest(url);
@@ -332,6 +380,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
   updateCurrentEntryState(state: unknown): void {
     // Invalidate cached snapshot BEFORE updating, so the subscriber gets fresh state
     this.#cachedSnapshot = null;
+    this.#cachedHref = null;
     navigation.updateCurrentEntry({ state });
     // Note: updateCurrentEntry fires currententrychange, so subscribers are notified automatically
   }

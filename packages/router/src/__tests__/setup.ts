@@ -256,6 +256,57 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       };
     },
 
+    // Test helper to run the full intercepted-navigation lifecycle:
+    // navigate event → commit → currententrychange → handler → navigatesuccess.
+    //
+    // When `privateBrowsing: true`, simulates the WebKit Private Browsing bug
+    // where currentEntry does NOT update and currententrychange does NOT fire
+    // after intercept — only the handler runs and navigatesuccess fires.
+    //
+    // Awaits the intercept handler before resolving.
+    async __simulateInterceptedNavigation(
+      url: string,
+      options?: { privateBrowsing?: boolean },
+    ): Promise<NavigateEvent & { defaultPrevented: boolean }> {
+      const newUrl = new URL(url, currentEntry.url).href;
+      const event = createMockNavigateEvent(newUrl);
+
+      dispatchEvent("navigate", event);
+
+      if (!event.defaultPrevented && !options?.privateBrowsing) {
+        const previousEntry = currentEntry;
+        const currentIndex = entries.indexOf(currentEntry);
+        while (entries.length > currentIndex + 1) {
+          const disposedEntry = entries.pop()!;
+          disposedEntry.__dispose();
+        }
+        const newEntry = new MockNavigationHistoryEntry(newUrl, entries.length);
+        entries.push(newEntry);
+        currentEntry = newEntry;
+        mockNavigation.currentEntry = currentEntry;
+        const changeEvent = Object.assign(new Event("currententrychange"), {
+          navigationType: "push" as const,
+          from: previousEntry,
+        });
+        dispatchEvent("currententrychange", changeEvent);
+      }
+
+      // Run the intercept handler the browser would have called.
+      const interceptMock = event.intercept as ReturnType<typeof vi.fn>;
+      const interceptArg = interceptMock.mock.calls[0]?.[0] as
+        | { handler?: () => Promise<void> }
+        | undefined;
+      if (interceptArg?.handler) {
+        await interceptArg.handler();
+      }
+
+      if (!event.defaultPrevented) {
+        dispatchEvent("navigatesuccess", new Event("navigatesuccess"));
+      }
+
+      return event;
+    },
+
     // Test helper to simulate reload navigation
     // Dispatches navigate event with navigationType: "reload", then
     // dispatches currententrychange without changing the entry.
