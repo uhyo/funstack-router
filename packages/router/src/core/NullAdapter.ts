@@ -1,7 +1,7 @@
 import type {
   RouterAdapter,
   LocationEntry,
-  EntryChangeType,
+  EntryChange,
 } from "./RouterAdapter.js";
 import type {
   InternalRouteDefinition,
@@ -20,7 +20,7 @@ export class NullAdapter implements RouterAdapter {
     return null;
   }
 
-  subscribe(_callback: (changeType: EntryChangeType) => void): () => void {
+  subscribe(_callback: (change: EntryChange) => void): () => void {
     return () => {};
   }
 

@@ -62,6 +62,52 @@ function UserDetail({ data }: { data: Promise<User> }) {
 
       <section>
         <h3>
+          Tagging Navigations with <code>experimentalTransitionTypes</code>
+        </h3>
+        <p>
+          React's{" "}
+          <a href="https://react.dev/reference/react/addTransitionType">
+            <code>addTransitionType</code>
+          </a>{" "}
+          API lets you attach semantic labels to a transition so other parts of
+          the app (e.g. View Transitions) can react to them. FUNSTACK Router
+          calls <code>addTransitionType</code> inside its{" "}
+          <code>startTransition</code> for every entry change, tagged{" "}
+          <code>"navigation"</code> by default.
+        </p>
+        <p>
+          You can replace the default by passing an{" "}
+          <code>experimentalTransitionTypes</code> function to{" "}
+          <code>{"<Router>"}</code>. The function receives the destination{" "}
+          <code>url</code> and the underlying <code>navigationType</code> (one
+          of <code>push</code>, <code>replace</code>, <code>reload</code>,{" "}
+          <code>traverse</code>) and returns an array of transition types:
+        </p>
+        <CodeBlock language="tsx">{`<Router
+  routes={routes}
+  experimentalTransitionTypes={({ navigationType, url }) => [
+    "navigation",
+    \`navigation-\${navigationType}\`,
+    url.pathname.startsWith("/admin") ? "admin" : "public",
+  ]}
+/>`}</CodeBlock>
+        <p>
+          The returned types <strong>replace</strong> the default — include{" "}
+          <code>"navigation"</code> yourself if you want it.
+        </p>
+        <div className="callout callout-warning">
+          <strong>React Canary required.</strong> At the time of writing,{" "}
+          <code>addTransitionType</code> is only available in React Canary
+          (exported as <code>unstable_addTransitionType</code>). On stable
+          React, the prop is still invoked but the returned types are silently
+          discarded. The prop is named with an <code>experimental</code> prefix
+          to reflect this; it will be renamed once{" "}
+          <code>addTransitionType</code> becomes stable in React.
+        </div>
+      </section>
+
+      <section>
+        <h3>
           Showing Pending UI with <code>useIsPending</code>
         </h3>
         <p>

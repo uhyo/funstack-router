@@ -5,6 +5,8 @@ import { Outlet } from "../Outlet.js";
 import { useLocation } from "../hooks/useLocation.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
 import { route, type RouteDefinition } from "../route.js";
+import * as addTransitionTypeModule from "../core/addTransitionType.js";
+import type { GetTransitionTypes, TransitionTypeContext } from "../types.js";
 
 describe("Router", () => {
   let mockNavigation: ReturnType<typeof setupNavigationMock>;
@@ -306,6 +308,118 @@ describe("Router", () => {
       render(<Router routes={routes} />);
       expect(screen.getByText("Static Header")).toBeInTheDocument();
       expect(screen.getByText("Child Page")).toBeInTheDocument();
+    });
+  });
+
+  describe("experimentalTransitionTypes", () => {
+    let addTransitionTypeSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      addTransitionTypeSpy = vi.spyOn(
+        addTransitionTypeModule,
+        "addTransitionType",
+      );
+    });
+
+    afterEach(() => {
+      addTransitionTypeSpy.mockRestore();
+    });
+
+    it("adds the 'navigation' transition type by default on navigation", () => {
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} />);
+
+      addTransitionTypeSpy.mockClear();
+
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/about");
+      });
+
+      expect(addTransitionTypeSpy).toHaveBeenCalledTimes(1);
+      expect(addTransitionTypeSpy).toHaveBeenCalledWith("navigation");
+    });
+
+    it("uses the returned types when experimentalTransitionTypes is provided", () => {
+      const getTypes: GetTransitionTypes = vi.fn(() => ["page", "fade"]);
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} experimentalTransitionTypes={getTypes} />);
+
+      addTransitionTypeSpy.mockClear();
+
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/about");
+      });
+
+      expect(addTransitionTypeSpy).toHaveBeenCalledTimes(2);
+      expect(addTransitionTypeSpy).toHaveBeenNthCalledWith(1, "page");
+      expect(addTransitionTypeSpy).toHaveBeenNthCalledWith(2, "fade");
+      expect(addTransitionTypeSpy).not.toHaveBeenCalledWith("navigation");
+    });
+
+    it("passes the new URL and navigationType to the callback", () => {
+      const calls: TransitionTypeContext[] = [];
+      const getTypes: GetTransitionTypes = (ctx) => {
+        calls.push(ctx);
+        return ["navigation"];
+      };
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} experimentalTransitionTypes={getTypes} />);
+
+      // Push
+      act(() => {
+        mockNavigation.navigate("http://localhost/about");
+      });
+      // Replace
+      act(() => {
+        mockNavigation.navigate("http://localhost/", { history: "replace" });
+      });
+      // Traverse (back to entry 0, which is still '/')
+      act(() => {
+        mockNavigation.__simulateTraversal(0);
+      });
+      // Reload
+      act(() => {
+        mockNavigation.__simulateReload();
+      });
+
+      const types = calls.map((c) => c.navigationType);
+      expect(types).toContain("push");
+      expect(types).toContain("replace");
+      expect(types).toContain("traverse");
+      expect(types).toContain("reload");
+
+      const pushCall = calls.find((c) => c.navigationType === "push");
+      expect(pushCall?.url.pathname).toBe("/about");
+    });
+
+    it("does not call addTransitionType for state-only updates", () => {
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+      ];
+
+      render(<Router routes={routes} />);
+
+      addTransitionTypeSpy.mockClear();
+
+      act(() => {
+        mockNavigation.updateCurrentEntry({ state: { foo: "bar" } });
+      });
+
+      expect(addTransitionTypeSpy).not.toHaveBeenCalled();
     });
   });
 });

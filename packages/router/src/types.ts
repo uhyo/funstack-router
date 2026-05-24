@@ -105,6 +105,33 @@ export type OnNavigateInfo = {
 };
 
 /**
+ * Navigation type for an entry-change, mirroring the Navigation API's
+ * `NavigationCurrentEntryChangeEvent.navigationType` (excluding `null`,
+ * which corresponds to a state-only update and never triggers a transition).
+ */
+export type NavigationType = "push" | "replace" | "reload" | "traverse";
+
+/**
+ * Context passed to an `experimentalTransitionTypes` callback.
+ */
+export type TransitionTypeContext = {
+  /** URL of the new navigation entry. */
+  url: URL;
+  /** How this entry change was triggered. */
+  navigationType: NavigationType;
+};
+
+/**
+ * Returns the React transition types to associate with a navigation entry
+ * change. Called inside `startTransition` for each navigation; the return
+ * value is passed to React's `addTransitionType`. Requires a React build
+ * that exports `addTransitionType` (currently React Canary).
+ */
+export type GetTransitionTypes = (
+  context: TransitionTypeContext,
+) => readonly string[];
+
+/**
  * Options for navigation.
  */
 export type NavigateOptions = {
