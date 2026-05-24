@@ -1,6 +1,7 @@
 import type {
   InternalRouteDefinition,
   NavigateOptions,
+  NavigationType,
   OnNavigateCallback,
 } from "../types.js";
 
@@ -10,6 +11,16 @@ import type {
  * - "state": A state-only update via updateCurrentEntry()
  */
 export type EntryChangeType = "navigation" | "state";
+
+/**
+ * Describes an entry-change observed by the adapter.
+ * - `kind: "navigation"` carries the underlying navigation type
+ *   (push, replace, reload, traverse).
+ * - `kind: "state"` is a state-only update via `updateCurrentEntry()`.
+ */
+export type EntryChange =
+  | { kind: "navigation"; navigationType: NavigationType }
+  | { kind: "state" };
 
 /**
  * Represents the current location state.
@@ -43,10 +54,10 @@ export interface RouterAdapter {
 
   /**
    * Subscribe to location changes.
-   * The callback receives the type of change that occurred.
+   * The callback receives an object describing the change.
    * Returns an unsubscribe function.
    */
-  subscribe(callback: (changeType: EntryChangeType) => void): () => void;
+  subscribe(callback: (change: EntryChange) => void): () => void;
 
   /**
    * Perform programmatic navigation.

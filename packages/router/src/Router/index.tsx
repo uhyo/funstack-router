@@ -19,11 +19,14 @@ import {
   createBlockerRegistry,
 } from "../context/BlockerContext.js";
 import {
+  type GetTransitionTypes,
   type NavigateOptions,
   type OnNavigateCallback,
   type FallbackMode,
+  type TransitionTypeContext,
   internalRoutes,
 } from "../types.js";
+import { addTransitionType } from "../core/addTransitionType.js";
 import { matchRoutes } from "../core/matchRoutes.js";
 import { createAdapter } from "../core/createAdapter.js";
 import { executeLoaders, createLoaderRequest } from "../core/loaderCache.js";
@@ -98,6 +101,22 @@ export type RouterProps = {
    * ```
    */
   ssr?: SSRConfig;
+  /**
+   * **Experimental.** Function returning the React transition types to attach
+   * to entry-change transitions via `addTransitionType`. Called inside
+   * `startTransition` for each navigation; the returned types replace the
+   * default `["navigation"]`.
+   *
+   * Requires a React build that exports `addTransitionType` (currently React
+   * Canary). On builds that don't expose the API, the function is still
+   * invoked but the types are silently discarded.
+   *
+   * The `experimental` prefix will be dropped once `addTransitionType`
+   * becomes stable in React.
+   *
+   * @default () => ["navigation"]
+   */
+  experimentalTransitionTypes?: GetTransitionTypes;
 };
 
 export function Router({
@@ -105,6 +124,7 @@ export function Router({
   onNavigate,
   fallback = "none",
   ssr,
+  experimentalTransitionTypes,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
@@ -152,12 +172,32 @@ export function Router({
     setLocationEntry(initialEntry);
   }
 
+  // Resolve transition types for the current navigation. Wrapped in
+  // useEffectEvent so the subscription effect doesn't re-run when the
+  // `experimentalTransitionTypes` prop identity changes.
+  const getTransitionTypes = useEffectEvent(
+    (context: TransitionTypeContext): readonly string[] =>
+      experimentalTransitionTypes
+        ? experimentalTransitionTypes(context)
+        : ["navigation"],
+  );
+
   // Subscribe to navigation changes (conditionally wrapped in transition)
   useEffect(() => {
-    return adapter.subscribe((changeType) => {
-      if (changeType === "navigation") {
+    return adapter.subscribe((change) => {
+      if (change.kind === "navigation") {
+        const newSnapshot = adapter.getSnapshot();
         startTransition(() => {
-          setLocationEntry(adapter.getSnapshot());
+          if (newSnapshot) {
+            const types = getTransitionTypes({
+              url: newSnapshot.url,
+              navigationType: change.navigationType,
+            });
+            for (const type of types) {
+              addTransitionType(type);
+            }
+          }
+          setLocationEntry(newSnapshot);
         });
       } else {
         // State-only update: apply synchronously, no transition

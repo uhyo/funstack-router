@@ -30,6 +30,9 @@ export type {
   OnNavigateCallback,
   OnNavigateInfo,
   FallbackMode,
+  NavigationType,
+  TransitionTypeContext,
+  GetTransitionTypes,
 } from "./types.js";
 
 export type {

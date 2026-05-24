@@ -1,12 +1,13 @@
 import type {
   RouterAdapter,
   LocationEntry,
-  EntryChangeType,
+  EntryChange,
 } from "./RouterAdapter.js";
 import type {
   InternalRouteDefinition,
   MatchedRoute,
   NavigateOptions,
+  NavigationType,
   OnNavigateCallback,
 } from "../types.js";
 import { matchRoutes } from "./matchRoutes.js";
@@ -56,6 +57,11 @@ export class NavigationAPIAdapter implements RouterAdapter {
   // Per-(entry, URL) reload counters, used to generate unique cache keys
   // so that loaders re-execute on reload instead of returning cached results.
   #reloadCounts = new Map<string, number>();
+  // The navigationType of the most recently intercepted navigate event.
+  // Used by the `navigatesuccess` fallback (WebKit Private Browsing) where
+  // the `currententrychange` event — and thus its navigationType — may be
+  // missing. Falls back to "push" if no intercept has been observed yet.
+  #lastInterceptedNavigationType: NavigationType = "push";
 
   getSnapshot(): LocationEntry | null {
     const entry = navigation.currentEntry;
@@ -98,18 +104,20 @@ export class NavigationAPIAdapter implements RouterAdapter {
     return this.#cachedSnapshot;
   }
 
-  subscribe(callback: (changeType: EntryChangeType) => void): () => void {
+  subscribe(callback: (change: EntryChange) => void): () => void {
     const controller = new AbortController();
     navigation.addEventListener(
       "currententrychange",
       (event) => {
         // NavigationCurrentEntryChangeEvent.navigationType is null
         // when the change was caused by updateCurrentEntry()
-        const changeType: EntryChangeType =
-          (event as NavigationCurrentEntryChangeEvent).navigationType === null
-            ? "state"
-            : "navigation";
-        callback(changeType);
+        const navigationType = (event as NavigationCurrentEntryChangeEvent)
+          .navigationType;
+        if (navigationType === null) {
+          callback({ kind: "state" });
+        } else {
+          callback({ kind: "navigation", navigationType });
+        }
       },
       { signal: controller.signal },
     );
@@ -119,7 +127,10 @@ export class NavigationAPIAdapter implements RouterAdapter {
     navigation.addEventListener(
       "navigatesuccess",
       () => {
-        callback("navigation");
+        callback({
+          kind: "navigation",
+          navigationType: this.#lastInterceptedNavigationType,
+        });
         // currententrychange may have been skipped; ensure new entries
         // still get dispose subscriptions.
         this.#subscribeToDisposeEvents(controller.signal);
@@ -222,6 +233,9 @@ export class NavigationAPIAdapter implements RouterAdapter {
       // Capture ephemeral info from the navigate event
       // This info is only available during this navigation and resets on the next one
       this.#currentNavigationInfo = event.info;
+      // Remember the navigationType so the navigatesuccess fallback (used in
+      // WebKit Private Browsing) can report it to subscribers.
+      this.#lastInterceptedNavigationType = event.navigationType;
       // Invalidate cached snapshot to pick up new info
       this.#cachedSnapshot = null;
 
