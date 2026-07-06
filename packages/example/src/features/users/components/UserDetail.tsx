@@ -13,9 +13,7 @@ export function UserDetail({ data }: Props) {
       <div>
         <h1>User Not Found</h1>
         <p>The requested user does not exist.</p>
-        <button onClick={() => navigation.navigate("/users")}>
-          Back to Users
-        </button>
+        <button onClick={() => navigation.navigate("/users")}>Back to Users</button>
       </div>
     );
   }
@@ -48,10 +46,7 @@ export function UserDetail({ data }: Props) {
           <span style={{ color: "#999" }}>Next User →</span>
         )}
       </div>
-      <button
-        onClick={() => navigation.navigate("/users")}
-        style={{ marginTop: "1rem" }}
-      >
+      <button onClick={() => navigation.navigate("/users")} style={{ marginTop: "1rem" }}>
         Back to Users
       </button>
     </div>

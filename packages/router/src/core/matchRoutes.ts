@@ -101,11 +101,7 @@ function matchRoute(
 
   const isExact = route.exact ?? !hasChildren;
 
-  const { matched, params, consumedPathname } = matchPath(
-    route.path,
-    pathname,
-    isExact,
-  );
+  const { matched, params, consumedPathname } = matchPath(route.path, pathname, isExact);
 
   if (!matched) {
     return null;
@@ -221,8 +217,7 @@ function matchPath(
     // For prefix matches, calculate based on pattern segments
     const patternSegments = normalizedPattern.split("/").filter(Boolean);
     const pathnameSegments = pathname.split("/").filter(Boolean);
-    consumedPathname =
-      "/" + pathnameSegments.slice(0, patternSegments.length).join("/");
+    consumedPathname = "/" + pathnameSegments.slice(0, patternSegments.length).join("/");
   }
 
   return { matched: true, params, consumedPathname };

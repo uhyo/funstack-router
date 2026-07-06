@@ -23,19 +23,16 @@ describe("Form Submission / Action", () => {
   describe("NavigationAPIAdapter form submission interception", () => {
     it("does not intercept POST form submission when route has no action", () => {
       const adapter = new NavigationAPIAdapter();
-      const routes = internalRoutes([
-        { path: "/submit", component: () => null },
-      ]);
+      const routes = internalRoutes([{ path: "/submit", component: () => null }]);
 
       adapter.setupInterception(() => routes);
 
       const formData = new FormData();
       formData.set("name", "Alice");
 
-      const { event } = mockNavigation.__simulateNavigationWithEvent(
-        "http://localhost/submit",
-        { formData },
-      );
+      const { event } = mockNavigation.__simulateNavigationWithEvent("http://localhost/submit", {
+        formData,
+      });
 
       // Should NOT intercept — no action defined on the route
       expect(event.intercept).not.toHaveBeenCalled();
@@ -57,10 +54,9 @@ describe("Form Submission / Action", () => {
       const formData = new FormData();
       formData.set("name", "Alice");
 
-      const { event } = mockNavigation.__simulateNavigationWithEvent(
-        "http://localhost/submit",
-        { formData },
-      );
+      const { event } = mockNavigation.__simulateNavigationWithEvent("http://localhost/submit", {
+        formData,
+      });
 
       // Should intercept — route has an action
       expect(event.intercept).toHaveBeenCalledTimes(1);
@@ -114,9 +110,7 @@ describe("Form Submission / Action", () => {
     it("calls onNavigate with intercepting: false when POST route has no action", () => {
       const adapter = new NavigationAPIAdapter();
       const onNavigate = vi.fn();
-      const routes = internalRoutes([
-        { path: "/submit", component: () => null },
-      ]);
+      const routes = internalRoutes([{ path: "/submit", component: () => null }]);
 
       adapter.setupInterception(() => routes, onNavigate);
 
@@ -166,8 +160,7 @@ describe("Form Submission / Action", () => {
       expect(event.intercept).toHaveBeenCalledTimes(1);
 
       // Execute the intercept handler
-      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock.calls[0][0];
       const handler = interceptCall.handler as () => Promise<void>;
 
       // Simulate proceeding (creates the new entry so navigation.currentEntry is set)
@@ -210,13 +203,11 @@ describe("Form Submission / Action", () => {
 
       const formData = new FormData();
 
-      const { event } = mockNavigation.__simulateNavigationWithEvent(
-        "http://localhost/submit",
-        { formData },
-      );
+      const { event } = mockNavigation.__simulateNavigationWithEvent("http://localhost/submit", {
+        formData,
+      });
 
-      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock.calls[0][0];
       const handler = interceptCall.handler as () => Promise<void>;
 
       // Simulate proceeding
@@ -286,13 +277,11 @@ describe("Form Submission / Action", () => {
       formData.set("name", "Alice");
       formData.set("email", "alice@example.com");
 
-      const { event } = mockNavigation.__simulateNavigationWithEvent(
-        "http://localhost/submit",
-        { formData },
-      );
+      const { event } = mockNavigation.__simulateNavigationWithEvent("http://localhost/submit", {
+        formData,
+      });
 
-      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock.calls[0][0];
       const handler = interceptCall.handler as () => Promise<void>;
 
       mockNavigation.__simulateNavigation("http://localhost/submit");
@@ -329,13 +318,11 @@ describe("Form Submission / Action", () => {
 
       const formData = new FormData();
 
-      const { event } = mockNavigation.__simulateNavigationWithEvent(
-        "http://localhost/submit",
-        { formData },
-      );
+      const { event } = mockNavigation.__simulateNavigationWithEvent("http://localhost/submit", {
+        formData,
+      });
 
-      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock.calls[0][0];
       const handler = interceptCall.handler as () => Promise<void>;
 
       mockNavigation.__simulateNavigation("http://localhost/submit");
@@ -374,13 +361,11 @@ describe("Form Submission / Action", () => {
 
       // Now simulate a form submission to the same route
       const formData = new FormData();
-      const { event } = mockNavigation.__simulateNavigationWithEvent(
-        "http://localhost/page",
-        { formData },
-      );
+      const { event } = mockNavigation.__simulateNavigationWithEvent("http://localhost/page", {
+        formData,
+      });
 
-      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock.calls[0][0];
       const handler = interceptCall.handler as () => Promise<void>;
 
       return handler().then(() => {
@@ -409,15 +394,13 @@ describe("Form Submission / Action", () => {
 
       const formData = new FormData();
 
-      const { event } = mockNavigation.__simulateNavigationWithEvent(
-        "http://localhost/delete",
-        { formData },
-      );
+      const { event } = mockNavigation.__simulateNavigationWithEvent("http://localhost/delete", {
+        formData,
+      });
 
       expect(event.intercept).toHaveBeenCalledTimes(1);
 
-      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock.calls[0][0];
       const handler = interceptCall.handler as () => Promise<void>;
 
       mockNavigation.__simulateNavigation("http://localhost/delete");
@@ -447,13 +430,11 @@ describe("Form Submission / Action", () => {
 
       const formData = new FormData();
 
-      const { event } = mockNavigation.__simulateNavigationWithEvent(
-        "http://localhost/submit",
-        { formData },
-      );
+      const { event } = mockNavigation.__simulateNavigationWithEvent("http://localhost/submit", {
+        formData,
+      });
 
-      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock
-        .calls[0][0];
+      const interceptCall = (event.intercept as ReturnType<typeof vi.fn>).mock.calls[0][0];
       const handler = interceptCall.handler as () => Promise<void>;
 
       mockNavigation.__simulateNavigation("http://localhost/submit");

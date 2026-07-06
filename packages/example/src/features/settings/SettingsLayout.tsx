@@ -20,8 +20,7 @@ export function SettingsLayout() {
     <div>
       <h1>Settings (Nested Routing Demo)</h1>
       <p style={{ color: "#666" }}>
-        This demonstrates deep nesting: App Layout &gt; Settings Layout &gt; Tab
-        Content
+        This demonstrates deep nesting: App Layout &gt; Settings Layout &gt; Tab Content
       </p>
 
       <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>

@@ -15,13 +15,7 @@ type CounterState = {
 
 type Props = RouteComponentProps<Record<string, never>, CounterState>;
 
-export function CounterPage({
-  state,
-  setState,
-  setStateSync,
-  resetState,
-  resetStateSync,
-}: Props) {
+export function CounterPage({ state, setState, setStateSync, resetState, resetStateSync }: Props) {
   const count = state?.count ?? 0;
   const lastUpdated = state?.lastUpdated ?? "Never";
 
@@ -53,9 +47,8 @@ export function CounterPage({
     <div>
       <h1>Counter (Route State Demo)</h1>
       <p style={{ color: "#666" }}>
-        This counter&apos;s value is stored in the navigation history. Try
-        changing the value, then navigate away and use the browser&apos;s back
-        button.
+        This counter&apos;s value is stored in the navigation history. Try changing the value, then
+        navigate away and use the browser&apos;s back button.
       </p>
 
       <div
@@ -69,9 +62,7 @@ export function CounterPage({
         }}
       >
         <strong>Count: {count}</strong>
-        <div style={{ fontSize: "0.8rem", color: "#666" }}>
-          Last updated: {lastUpdated}
-        </div>
+        <div style={{ fontSize: "0.8rem", color: "#666" }}>Last updated: {lastUpdated}</div>
       </div>
 
       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -102,8 +93,7 @@ export function CounterPage({
             <code>resetState</code> - Async, clears state via replace navigation
           </li>
           <li>
-            <code>resetStateSync</code> - Sync, clears state via
-            updateCurrentEntry
+            <code>resetStateSync</code> - Sync, clears state via updateCurrentEntry
           </li>
         </ul>
         <h4>Route definition with typed state:</h4>

@@ -8,13 +8,7 @@ export function NewTaskForm() {
       <form method="POST" className="task-form">
         <div className="form-field">
           <label htmlFor="title">Title</label>
-          <input
-            id="title"
-            name="title"
-            type="text"
-            required
-            placeholder="Enter task title"
-          />
+          <input id="title" name="title" type="text" required placeholder="Enter task title" />
         </div>
         <div className="form-field">
           <label htmlFor="description">Description</label>

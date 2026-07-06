@@ -9,12 +9,12 @@
     "test:run": "turbo run test:run",
     "typecheck": "turbo run typecheck",
     "lint": "oxlint",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
   },
   "devDependencies": {
+    "oxfmt": "^0.57.0",
     "oxlint": "^1.70.0",
-    "prettier": "^3.8.4",
     "turbo": "^2.9.18"
   },
   "packageManager": "pnpm@10.25.0"

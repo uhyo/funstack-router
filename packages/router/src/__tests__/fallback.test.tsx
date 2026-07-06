@@ -47,9 +47,7 @@ describe("Fallback Mode", () => {
     it("renders nothing when Navigation API is unavailable", () => {
       setupStaticLocation("http://localhost/");
 
-      const routes: RouteDefinition[] = [
-        { path: "/", component: () => <div>Home Page</div> },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home Page</div> }];
 
       const { container } = render(<Router routes={routes} />);
       expect(container.textContent).toBe("");
@@ -58,9 +56,7 @@ describe("Fallback Mode", () => {
     it("renders nothing with explicit fallback='none'", () => {
       setupStaticLocation("http://localhost/");
 
-      const routes: RouteDefinition[] = [
-        { path: "/", component: () => <div>Home Page</div> },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home Page</div> }];
 
       const { container } = render(<Router routes={routes} fallback="none" />);
       expect(container.textContent).toBe("");
@@ -71,9 +67,7 @@ describe("Fallback Mode", () => {
     it("renders matched route component when Navigation API is unavailable", () => {
       setupStaticLocation("http://localhost/");
 
-      const routes: RouteDefinition[] = [
-        { path: "/", component: () => <div>Home Page</div> },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home Page</div> }];
 
       render(<Router routes={routes} fallback="static" />);
       expect(screen.getByText("Home Page")).toBeInTheDocument();
@@ -166,13 +160,9 @@ describe("Fallback Mode", () => {
     it("renders nothing when no route matches", () => {
       setupStaticLocation("http://localhost/unknown");
 
-      const routes: RouteDefinition[] = [
-        { path: "/", component: () => <div>Home Page</div> },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home Page</div> }];
 
-      const { container } = render(
-        <Router routes={routes} fallback="static" />,
-      );
+      const { container } = render(<Router routes={routes} fallback="static" />);
       expect(container.textContent).toBe("");
     });
 
@@ -180,13 +170,9 @@ describe("Fallback Mode", () => {
       setupStaticLocation("http://localhost/");
       const onNavigate = vi.fn();
 
-      const routes: RouteDefinition[] = [
-        { path: "/", component: () => <div>Home</div> },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home</div> }];
 
-      render(
-        <Router routes={routes} fallback="static" onNavigate={onNavigate} />,
-      );
+      render(<Router routes={routes} fallback="static" onNavigate={onNavigate} />);
 
       // onNavigate should never be called in static mode
       expect(onNavigate).not.toHaveBeenCalled();
@@ -273,13 +259,9 @@ describe("ssr", () => {
   });
 
   it("renders nothing when ssr.path does not match any route", () => {
-    const routes: RouteDefinition[] = [
-      { path: "/", component: () => <div>Home Page</div> },
-    ];
+    const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home Page</div> }];
 
-    const { container } = render(
-      <Router routes={routes} ssr={{ path: "/nonexistent" }} />,
-    );
+    const { container } = render(<Router routes={routes} ssr={{ path: "/nonexistent" }} />);
     expect(container.textContent).toBe("");
   });
 
@@ -336,9 +318,7 @@ describe("ssr", () => {
       }),
     ];
 
-    const { container } = render(
-      <Router routes={routes} ssr={{ path: "/about" }} />,
-    );
+    const { container } = render(<Router routes={routes} ssr={{ path: "/about" }} />);
     expect(loader).not.toHaveBeenCalled();
     expect(container.textContent).toBe("");
   });
@@ -358,9 +338,7 @@ describe("ssr", () => {
       }),
     ];
 
-    render(
-      <Router routes={routes} ssr={{ path: "/about", runLoaders: true }} />,
-    );
+    render(<Router routes={routes} ssr={{ path: "/about", runLoaders: true }} />);
     // Loader is called during SSR with a synthetic request
     expect(loader).toHaveBeenCalledTimes(1);
     expect(loader).toHaveBeenCalledWith(
@@ -387,9 +365,7 @@ describe("ssr", () => {
     // Manually add loader to first route to test skipping
     (routes[0] as Record<string, unknown>).loader = () => "data";
 
-    const { container } = render(
-      <Router routes={routes} ssr={{ path: "/about" }} />,
-    );
+    const { container } = render(<Router routes={routes} ssr={{ path: "/about" }} />);
     // Skipped route blocks the catch-all, so nothing renders
     expect(container.textContent).toBe("");
   });
@@ -423,9 +399,7 @@ describe("ssr", () => {
   });
 
   it("falls back to pathless-only matching when ssr is not provided", () => {
-    const routes: RouteDefinition[] = [
-      { path: "/about", component: () => <div>About Page</div> },
-    ];
+    const routes: RouteDefinition[] = [{ path: "/about", component: () => <div>About Page</div> }];
 
     const { container } = render(<Router routes={routes} />);
     expect(container.textContent).toBe("");

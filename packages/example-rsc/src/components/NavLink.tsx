@@ -18,15 +18,10 @@ export function NavLink({
 }) {
   const location = useLocation();
   const pathname = location?.pathname ?? "/";
-  const isActive = exact
-    ? pathname === href
-    : pathname === href || pathname.startsWith(href);
+  const isActive = exact ? pathname === href : pathname === href || pathname.startsWith(href);
 
   return (
-    <a
-      href={href}
-      className={className + (isActive ? " " + activeClassName : "")}
-    >
+    <a href={href} className={className + (isActive ? " " + activeClassName : "")}>
       {children}
     </a>
   );

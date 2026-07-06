@@ -37,9 +37,7 @@ describe("matchRoutes", () => {
 
   describe("path parameters", () => {
     it("extracts single parameter", () => {
-      const routes = internalRoutes([
-        { path: "/users/:id", component: () => null },
-      ]);
+      const routes = internalRoutes([{ path: "/users/:id", component: () => null }]);
 
       const result = matchRoutes(routes, "/users/123");
       expect(result).toHaveLength(1);
@@ -144,9 +142,7 @@ describe("matchRoutes", () => {
 
   describe("exact option", () => {
     it("leaf route with exact: false matches as prefix", () => {
-      const routes = internalRoutes([
-        { path: "/files", component: () => null, exact: false },
-      ]);
+      const routes = internalRoutes([{ path: "/files", component: () => null, exact: false }]);
 
       // Should match /files/foo/bar as a prefix
       const result = matchRoutes(routes, "/files/foo/bar");
@@ -212,9 +208,7 @@ describe("matchRoutes", () => {
     });
 
     it("exact: false enables catch-all behavior", () => {
-      const routes = internalRoutes([
-        { path: "/api", component: () => null, exact: false },
-      ]);
+      const routes = internalRoutes([{ path: "/api", component: () => null, exact: false }]);
 
       expect(matchRoutes(routes, "/api")).toHaveLength(1);
       expect(matchRoutes(routes, "/api/users")).toHaveLength(1);
@@ -222,9 +216,7 @@ describe("matchRoutes", () => {
     });
 
     it("works with path parameters", () => {
-      const routes = internalRoutes([
-        { path: "/users/:id", component: () => null, exact: false },
-      ]);
+      const routes = internalRoutes([{ path: "/users/:id", component: () => null, exact: false }]);
 
       const result = matchRoutes(routes, "/users/123/posts/456");
       expect(result).toHaveLength(1);
@@ -596,9 +588,7 @@ describe("matchRoutes", () => {
     });
 
     it("matches path-based route without loader when skipLoaders is true", () => {
-      const routes = internalRoutes([
-        { path: "/about", component: () => null },
-      ]);
+      const routes = internalRoutes([{ path: "/about", component: () => null }]);
 
       const result = matchRoutes(routes, "/about", { skipLoaders: true });
       expect(result).toHaveLength(1);
@@ -689,9 +679,7 @@ describe("matchRoutes", () => {
     });
 
     it("extracts params from path-based routes without loaders", () => {
-      const routes = internalRoutes([
-        { path: "/users/:id", component: () => null },
-      ]);
+      const routes = internalRoutes([{ path: "/users/:id", component: () => null }]);
 
       const result = matchRoutes(routes, "/users/42", { skipLoaders: true });
       expect(result).toHaveLength(1);

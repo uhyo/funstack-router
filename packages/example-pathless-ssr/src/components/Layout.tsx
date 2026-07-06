@@ -10,8 +10,8 @@ export function Layout() {
       </main>
       <footer className="footer">
         <p>
-          FUNSTACK Router &mdash; Pathless SSR Example (shell rendered without{" "}
-          <code>ssr</code> prop)
+          FUNSTACK Router &mdash; Pathless SSR Example (shell rendered without <code>ssr</code>{" "}
+          prop)
         </p>
       </footer>
     </div>

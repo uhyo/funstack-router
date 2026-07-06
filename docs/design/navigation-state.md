@@ -72,11 +72,7 @@ type RouteComponentProps<TParams extends Record<string, string>, TState> = {
 };
 
 // With loader
-type RouteComponentPropsWithData<
-  TParams extends Record<string, string>,
-  TState,
-  TData,
-> = {
+type RouteComponentPropsWithData<TParams extends Record<string, string>, TState, TData> = {
   params: TParams;
   state: TState | undefined;
   setState: (state: TState | ((prev: TState | undefined) => TState)) => void;
@@ -249,11 +245,7 @@ Extend the route helper to support state typing:
 
 // Curried function for explicit state type
 export function route<TState = undefined>() {
-  return function <
-    TPath extends string,
-    TParams extends ExtractParams<TPath>,
-    TData = undefined,
-  >(
+  return function <TPath extends string, TParams extends ExtractParams<TPath>, TData = undefined>(
     definition: RouteDefinition<TPath, TParams, TState, TData>,
   ): TypedRoute<TPath, TParams, TState, TData> {
     // ... implementation
@@ -351,10 +343,7 @@ type InternalState = {
 The `RouteRenderer` receives its match index and uses it to read/write the correct state slice:
 
 ```typescript
-function RouteRenderer({
-  matchedRoutes,
-  index,
-}: RouteRendererProps): ReactNode {
+function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): ReactNode {
   const { locationEntry, updateCurrentEntryState } = useContext(RouterContext);
 
   // Extract this route's state from the internal structure
@@ -364,9 +353,7 @@ function RouteRenderer({
   const setState = useCallback(
     (stateOrUpdater: unknown | ((prev: unknown) => unknown)) => {
       const newState =
-        typeof stateOrUpdater === "function"
-          ? stateOrUpdater(routeState)
-          : stateOrUpdater;
+        typeof stateOrUpdater === "function" ? stateOrUpdater(routeState) : stateOrUpdater;
 
       // Update only this route's slice
       const currentStates = internalState?.__routeStates ?? [];
@@ -435,9 +422,7 @@ These adapters don't support state updates:
 class StaticAdapter implements RouterAdapter {
   updateCurrentEntryState(_state: unknown): void {
     if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "Navigation state updates are not available in static mode.",
-      );
+      console.warn("Navigation state updates are not available in static mode.");
     }
   }
 }

@@ -28,12 +28,7 @@ describe("route() type inference", () => {
   it("returns TypefulOpaqueRouteDefinition when id is provided", () => {
     const r = route({ id: "home", path: "/", component: () => null });
     expectTypeOf(r).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "home",
-        Record<string, never>,
-        undefined,
-        undefined
-      >
+      TypefulOpaqueRouteDefinition<"home", Record<string, never>, undefined, undefined>
     >();
   });
 
@@ -44,12 +39,7 @@ describe("route() type inference", () => {
       component: () => null,
     });
     expectTypeOf(r).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "user",
-        { userId: string },
-        undefined,
-        undefined
-      >
+      TypefulOpaqueRouteDefinition<"user", { userId: string }, undefined, undefined>
     >();
   });
 
@@ -61,12 +51,7 @@ describe("route() type inference", () => {
       component: () => null,
     });
     expectTypeOf(r).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "user",
-        { userId: string },
-        undefined,
-        { name: string }
-      >
+      TypefulOpaqueRouteDefinition<"user", { userId: string }, undefined, { name: string }>
     >();
   });
 });
@@ -80,12 +65,7 @@ describe("routeState() type inference", () => {
       component: () => null,
     });
     expectTypeOf(r).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "counter",
-        Record<string, never>,
-        MyState,
-        undefined
-      >
+      TypefulOpaqueRouteDefinition<"counter", Record<string, never>, MyState, undefined>
     >();
   });
 
@@ -107,12 +87,7 @@ describe("routeState() type inference", () => {
       component: () => null,
     });
     expectTypeOf(r).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "products",
-        { category: string },
-        MyState,
-        { items: string[] }
-      >
+      TypefulOpaqueRouteDefinition<"products", { category: string }, MyState, { items: string[] }>
     >();
   });
 });
@@ -234,12 +209,7 @@ describe("pathless route type inference", () => {
     });
 
     expectTypeOf(layoutRoute).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "layout",
-        Record<string, never>,
-        undefined,
-        undefined
-      >
+      TypefulOpaqueRouteDefinition<"layout", Record<string, never>, undefined, undefined>
     >();
   });
 
@@ -251,12 +221,7 @@ describe("pathless route type inference", () => {
     });
 
     expectTypeOf(layoutRoute).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "layout",
-        Record<string, never>,
-        undefined,
-        { theme: string }
-      >
+      TypefulOpaqueRouteDefinition<"layout", Record<string, never>, undefined, { theme: string }>
     >();
   });
 
@@ -276,12 +241,7 @@ describe("pathless route type inference", () => {
     });
 
     expectTypeOf(layoutRoute).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "layout",
-        Record<string, never>,
-        MyState,
-        undefined
-      >
+      TypefulOpaqueRouteDefinition<"layout", Record<string, never>, MyState, undefined>
     >();
   });
 
@@ -305,9 +265,7 @@ describe("RouteComponentPropsOf utility type", () => {
     });
 
     type Props = RouteComponentPropsOf<typeof userRoute>;
-    expectTypeOf<Props>().toEqualTypeOf<
-      RouteComponentProps<{ userId: string }, undefined>
-    >();
+    expectTypeOf<Props>().toEqualTypeOf<RouteComponentProps<{ userId: string }, undefined>>();
   });
 
   it("extracts RouteComponentPropsWithData for route with loader", () => {
@@ -320,11 +278,7 @@ describe("RouteComponentPropsOf utility type", () => {
 
     type Props = RouteComponentPropsOf<typeof userRoute>;
     expectTypeOf<Props>().toEqualTypeOf<
-      RouteComponentPropsWithData<
-        { userId: string },
-        { name: string; age: number },
-        undefined
-      >
+      RouteComponentPropsWithData<{ userId: string }, { name: string; age: number }, undefined>
     >();
   });
 
@@ -337,9 +291,7 @@ describe("RouteComponentPropsOf utility type", () => {
     });
 
     type Props = RouteComponentPropsOf<typeof scrollRoute>;
-    expectTypeOf<Props>().toEqualTypeOf<
-      RouteComponentProps<Record<string, never>, MyState>
-    >();
+    expectTypeOf<Props>().toEqualTypeOf<RouteComponentProps<Record<string, never>, MyState>>();
   });
 
   it("extracts props with both state and loader", () => {
@@ -353,11 +305,7 @@ describe("RouteComponentPropsOf utility type", () => {
 
     type Props = RouteComponentPropsOf<typeof productsRoute>;
     expectTypeOf<Props>().toEqualTypeOf<
-      RouteComponentPropsWithData<
-        { category: string },
-        { items: string[] },
-        FilterState
-      >
+      RouteComponentPropsWithData<{ category: string }, { items: string[] }, FilterState>
     >();
   });
 
@@ -368,9 +316,7 @@ describe("RouteComponentPropsOf utility type", () => {
     });
 
     type Props = RouteComponentPropsOf<typeof layoutRoute>;
-    expectTypeOf<Props>().toEqualTypeOf<
-      RouteComponentProps<Record<string, never>, undefined>
-    >();
+    expectTypeOf<Props>().toEqualTypeOf<RouteComponentProps<Record<string, never>, undefined>>();
   });
 
   it("extracts props for pathless route with loader", () => {
@@ -382,11 +328,7 @@ describe("RouteComponentPropsOf utility type", () => {
 
     type Props = RouteComponentPropsOf<typeof layoutRoute>;
     expectTypeOf<Props>().toEqualTypeOf<
-      RouteComponentPropsWithData<
-        Record<string, never>,
-        { theme: string },
-        undefined
-      >
+      RouteComponentPropsWithData<Record<string, never>, { theme: string }, undefined>
     >();
   });
 
@@ -441,12 +383,7 @@ describe("route() with action type inference", () => {
     });
 
     expectTypeOf(r).toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<
-        "deleteUser",
-        { userId: string },
-        undefined,
-        undefined
-      >
+      TypefulOpaqueRouteDefinition<"deleteUser", { userId: string }, undefined, undefined>
     >();
   });
 
@@ -476,9 +413,7 @@ describe("route() with action type inference", () => {
       id: "test",
       path: "/users/:userId/posts/:postId",
       action: (args) => {
-        expectTypeOf(args).toEqualTypeOf<
-          ActionArgs<{ userId: string; postId: string }>
-        >();
+        expectTypeOf(args).toEqualTypeOf<ActionArgs<{ userId: string; postId: string }>>();
         return null;
       },
       component: () => null,
@@ -496,9 +431,7 @@ describe("route() with action type inference", () => {
         id: 42,
       }),
       loader: (args) => {
-        expectTypeOf(args.actionResult).toEqualTypeOf<
-          ActionResult | undefined
-        >();
+        expectTypeOf(args.actionResult).toEqualTypeOf<ActionResult | undefined>();
         return { data: args.actionResult };
       },
       component: () => null,
@@ -536,9 +469,7 @@ describe("route() with action type inference", () => {
     });
 
     type Props = RouteComponentPropsOf<typeof r>;
-    expectTypeOf<Props>().toEqualTypeOf<
-      RouteComponentProps<{ id: string }, undefined>
-    >();
+    expectTypeOf<Props>().toEqualTypeOf<RouteComponentProps<{ id: string }, undefined>>();
   });
 });
 
@@ -589,9 +520,7 @@ describe("LoaderArgs actionResult backwards compatibility", () => {
 
   it("LoaderArgs with ActionResult type param has typed actionResult", () => {
     type Args = LoaderArgs<{ id: string }, { success: boolean }>;
-    expectTypeOf<Args["actionResult"]>().toEqualTypeOf<
-      { success: boolean } | undefined
-    >();
+    expectTypeOf<Args["actionResult"]>().toEqualTypeOf<{ success: boolean } | undefined>();
   });
 });
 
@@ -611,12 +540,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
         loader: () => ({ name: "John" }),
       });
       expectTypeOf(r).toEqualTypeOf<
-        PartialRouteDefinition<
-          "user",
-          { userId: string },
-          undefined,
-          { name: string }
-        >
+        PartialRouteDefinition<"user", { userId: string }, undefined, { name: string }>
       >();
     });
 
@@ -657,24 +581,14 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
         loader: () => ({ theme: "dark" }),
       });
       expectTypeOf(r).toEqualTypeOf<
-        PartialRouteDefinition<
-          "layout",
-          Record<string, never>,
-          undefined,
-          { theme: string }
-        >
+        PartialRouteDefinition<"layout", Record<string, never>, undefined, { theme: string }>
       >();
     });
 
     it("returns PartialRouteDefinition for pathless route without loader", () => {
       const r = route({ id: "layout" });
       expectTypeOf(r).toEqualTypeOf<
-        PartialRouteDefinition<
-          "layout",
-          Record<string, never>,
-          undefined,
-          undefined
-        >
+        PartialRouteDefinition<"layout", Record<string, never>, undefined, undefined>
       >();
     });
 
@@ -692,12 +606,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
         path: "/settings",
       });
       expectTypeOf(r).toEqualTypeOf<
-        PartialRouteDefinition<
-          "settings",
-          Record<string, never>,
-          MyState,
-          undefined
-        >
+        PartialRouteDefinition<"settings", Record<string, never>, MyState, undefined>
       >();
     });
 
@@ -709,12 +618,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
         loader: () => ({ items: [] as string[] }),
       });
       expectTypeOf(r).toEqualTypeOf<
-        PartialRouteDefinition<
-          "products",
-          { category: string },
-          MyState,
-          { items: string[] }
-        >
+        PartialRouteDefinition<"products", { category: string }, MyState, { items: string[] }>
       >();
     });
 
@@ -722,12 +626,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
       type MyState = { expanded: boolean };
       const r = routeState<MyState>()({ id: "layout" });
       expectTypeOf(r).toEqualTypeOf<
-        PartialRouteDefinition<
-          "layout",
-          Record<string, never>,
-          MyState,
-          undefined
-        >
+        PartialRouteDefinition<"layout", Record<string, never>, MyState, undefined>
       >();
     });
   });
@@ -741,12 +640,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
       });
       const bound = bindRoute(partial, { component: () => null });
       expectTypeOf(bound).toEqualTypeOf<
-        TypefulOpaqueRouteDefinition<
-          "user",
-          { userId: string },
-          undefined,
-          { name: string }
-        >
+        TypefulOpaqueRouteDefinition<"user", { userId: string }, undefined, { name: string }>
       >();
     });
 
@@ -764,12 +658,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
       });
       const bound = bindRoute(partial, { component: () => null });
       expectTypeOf(bound).toEqualTypeOf<
-        TypefulOpaqueRouteDefinition<
-          "settings",
-          Record<string, never>,
-          MyState,
-          undefined
-        >
+        TypefulOpaqueRouteDefinition<"settings", Record<string, never>, MyState, undefined>
       >();
     });
   });
@@ -840,9 +729,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
     it("extracts RouteComponentProps for partial route without loader", () => {
       const r = route({ id: "user", path: "/users/:userId" });
       type Props = RouteComponentPropsOf<typeof r>;
-      expectTypeOf<Props>().toEqualTypeOf<
-        RouteComponentProps<{ userId: string }, undefined>
-      >();
+      expectTypeOf<Props>().toEqualTypeOf<RouteComponentProps<{ userId: string }, undefined>>();
     });
 
     it("extracts RouteComponentPropsWithData for partial route with loader", () => {
@@ -853,11 +740,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
       });
       type Props = RouteComponentPropsOf<typeof r>;
       expectTypeOf<Props>().toEqualTypeOf<
-        RouteComponentPropsWithData<
-          { userId: string },
-          { name: string; age: number },
-          undefined
-        >
+        RouteComponentPropsWithData<{ userId: string }, { name: string; age: number }, undefined>
       >();
     });
 
@@ -868,9 +751,7 @@ describe("PartialRouteDefinition (two-phase route definition)", () => {
         path: "/scroll",
       });
       type Props = RouteComponentPropsOf<typeof r>;
-      expectTypeOf<Props>().toEqualTypeOf<
-        RouteComponentProps<Record<string, never>, MyState>
-      >();
+      expectTypeOf<Props>().toEqualTypeOf<RouteComponentProps<Record<string, never>, MyState>>();
     });
   });
 });

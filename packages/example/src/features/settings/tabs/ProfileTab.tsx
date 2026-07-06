@@ -4,9 +4,7 @@ export function ProfileTab() {
       <h2>Profile Settings</h2>
       <form>
         <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.25rem" }}>
-            Display Name
-          </label>
+          <label style={{ display: "block", marginBottom: "0.25rem" }}>Display Name</label>
           <input
             type="text"
             defaultValue="John Doe"
@@ -14,9 +12,7 @@ export function ProfileTab() {
           />
         </div>
         <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", marginBottom: "0.25rem" }}>
-            Bio
-          </label>
+          <label style={{ display: "block", marginBottom: "0.25rem" }}>Bio</label>
           <textarea
             defaultValue="Hello, I'm using FUNSTACK Router!"
             style={{

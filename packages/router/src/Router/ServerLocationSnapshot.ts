@@ -10,9 +10,7 @@ export class ServerLocationSnapshot {
   }
 }
 
-export function isServerSnapshot(
-  value: unknown,
-): value is ServerLocationSnapshot {
+export function isServerSnapshot(value: unknown): value is ServerLocationSnapshot {
   return value instanceof ServerLocationSnapshot;
 }
 

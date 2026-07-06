@@ -169,12 +169,7 @@ function extractMetadata(content: string) {
       foundTitle = true;
       continue;
     }
-    if (
-      foundTitle &&
-      line.trim() &&
-      !line.startsWith("#") &&
-      !line.startsWith("```")
-    ) {
+    if (foundTitle && line.trim() && !line.startsWith("#") && !line.startsWith("```")) {
       description = line.trim();
       break;
     }
@@ -191,15 +186,8 @@ async function copyFile(relativePath: string) {
 }
 
 // 4. Generate index.md as a table of contents
-function generateIndex(
-  docs: { outputPath: string; title: string; description: string }[],
-) {
-  const lines = [
-    "# My Package Documentation",
-    "",
-    "## Available Documentation",
-    "",
-  ];
+function generateIndex(docs: { outputPath: string; title: string; description: string }[]) {
+  const lines = ["# My Package Documentation", "", "## Available Documentation", ""];
 
   // Group files by their top-level directory
   const groups = new Map<string | null, typeof docs>();
@@ -220,9 +208,7 @@ function generateIndex(
     if (dir === null) continue;
     lines.push("", `### ${dir.toUpperCase()}`, "");
     for (const doc of dirDocs) {
-      lines.push(
-        `- [${doc.title}](./${doc.outputPath}.md) - ${doc.description}`,
-      );
+      lines.push(`- [${doc.title}](./${doc.outputPath}.md) - ${doc.description}`);
     }
   }
 
@@ -239,10 +225,7 @@ async function main() {
   // Extract metadata and generate index
   const docs = await Promise.all(
     mdxFiles.map(async (rel) => {
-      const content = await fs.readFile(
-        path.join(DOCS_PAGES_DIR, rel),
-        "utf-8",
-      );
+      const content = await fs.readFile(path.join(DOCS_PAGES_DIR, rel), "utf-8");
       const { title, description } = extractMetadata(content);
       return {
         outputPath: rel.replace(/\.mdx$/, ""),
@@ -252,11 +235,7 @@ async function main() {
     }),
   );
 
-  await fs.writeFile(
-    path.join(OUTPUT_DIR, "index.md"),
-    generateIndex(docs),
-    "utf-8",
-  );
+  await fs.writeFile(path.join(OUTPUT_DIR, "index.md"), generateIndex(docs), "utf-8");
 }
 
 main();

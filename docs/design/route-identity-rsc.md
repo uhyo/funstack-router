@@ -639,9 +639,7 @@ routes without a runtime identifier. Rejected.
 ### D. Explicit Type Declarations on Route Identity
 
 ```typescript
-const userRoute = routeId("user", "/users/:userId")
-  .withData<User>()
-  .withState<{ tab: string }>();
+const userRoute = routeId("user", "/users/:userId").withData<User>().withState<{ tab: string }>();
 ```
 
 **Verdict:** Unnecessary once we recognize that loaders are client-side. The

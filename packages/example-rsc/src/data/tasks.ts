@@ -53,10 +53,7 @@ export function createTask(title: string, description: string): Task {
   return task;
 }
 
-export function updateTaskStatus(
-  id: string,
-  status: Task["status"],
-): Task | undefined {
+export function updateTaskStatus(id: string, status: Task["status"]): Task | undefined {
   const task = tasks.find((t) => t.id === id);
   if (task) {
     task.status = status;

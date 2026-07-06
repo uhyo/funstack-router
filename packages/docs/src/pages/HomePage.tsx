@@ -8,11 +8,7 @@ export function HomePage() {
         <p className="tagline">
           A <em>truly</em> modern router for React SPA
         </p>
-        <img
-          src="/FUNSTACK_Router_Hero_small.png"
-          alt="FUNSTACK Router"
-          className="hero-image"
-        />
+        <img src="/FUNSTACK_Router_Hero_small.png" alt="FUNSTACK Router" className="hero-image" />
         <div className="hero-buttons">
           <a href="/getting-started" className="button primary">
             Get Started
@@ -35,13 +31,11 @@ export function HomePage() {
             >
               Navigation API
             </a>
-            , the modern replacement for the History API. There is no fallback
-            to the History API&mdash;FUNSTACK Router fully commits to the new
-            standard. This means cleaner navigation handling, built-in
-            interception of navigations, and a more predictable routing
-            experience. Native <code>&lt;a&gt;</code> elements just work for
-            client-side navigation&mdash;no special <code>Link</code> component
-            needed.
+            , the modern replacement for the History API. There is no fallback to the History
+            API&mdash;FUNSTACK Router fully commits to the new standard. This means cleaner
+            navigation handling, built-in interception of navigations, and a more predictable
+            routing experience. Native <code>&lt;a&gt;</code> elements just work for client-side
+            navigation&mdash;no special <code>Link</code> component needed.
           </p>
         </div>
         <div className="selling-point">
@@ -56,12 +50,11 @@ export function HomePage() {
             </a>
           </h2>
           <p>
-            In FUNSTACK Router, navigations are treated as{" "}
-            <strong>transitions</strong>. This integrates seamlessly with
-            React&apos;s concurrent features&mdash;Suspense boundaries are
-            respected during navigation, and the previous page remains visible
-            until the next one is ready. No need for manual loading
-            states&mdash;your router and React work together out of the box.
+            In FUNSTACK Router, navigations are treated as <strong>transitions</strong>. This
+            integrates seamlessly with React&apos;s concurrent features&mdash;Suspense boundaries
+            are respected during navigation, and the previous page remains visible until the next
+            one is ready. No need for manual loading states&mdash;your router and React work
+            together out of the box.
           </p>
         </div>
       </section>
@@ -72,43 +65,39 @@ export function HomePage() {
           <div className="feature-card">
             <h3>Navigation API</h3>
             <p>
-              Built on the modern Navigation API instead of the History API for
-              better navigation handling and state management.
+              Built on the modern Navigation API instead of the History API for better navigation
+              handling and state management.
             </p>
           </div>
           <div className="feature-card">
             <h3>URLPattern Matching</h3>
             <p>
-              Uses the URLPattern API for powerful and flexible path matching
-              with support for parameters and wildcards.
+              Uses the URLPattern API for powerful and flexible path matching with support for
+              parameters and wildcards.
             </p>
           </div>
           <div className="feature-card">
             <h3>Nested Routes</h3>
             <p>
-              First-class support for nested routing with the Outlet component
-              for building complex layouts.
+              First-class support for nested routing with the Outlet component for building complex
+              layouts.
             </p>
           </div>
           <div className="feature-card">
             <h3>Data Loading</h3>
-            <p>
-              Built-in async data loading with loaders that run before route
-              components render.
-            </p>
+            <p>Built-in async data loading with loaders that run before route components render.</p>
           </div>
           <div className="feature-card">
             <h3>Transitions</h3>
             <p>
-              Navigations are wrapped in React transitions, keeping the previous
-              page visible while the next one loads.
+              Navigations are wrapped in React transitions, keeping the previous page visible while
+              the next one loads.
             </p>
           </div>
           <div className="feature-card">
             <h3>RSC Compatible</h3>
             <p>
-              Designed to work with React Server Components.{" "}
-              <a href="/learn/rsc">Learn more</a>
+              Designed to work with React Server Components. <a href="/learn/rsc">Learn more</a>
             </p>
           </div>
         </div>

@@ -93,11 +93,10 @@ describe("bypass interception", () => {
 
       hardReload();
 
-      expect(
-        (mockNavigation as Record<string, unknown>).reload,
-      ).toHaveBeenCalledTimes(1);
-      const reloadMock = (mockNavigation as Record<string, unknown>)
-        .reload as ReturnType<typeof vi.fn>;
+      expect((mockNavigation as Record<string, unknown>).reload).toHaveBeenCalledTimes(1);
+      const reloadMock = (mockNavigation as Record<string, unknown>).reload as ReturnType<
+        typeof vi.fn
+      >;
       const [options] = reloadMock.mock.calls[0];
       expect(options.info).toBeDefined();
     });

@@ -1,9 +1,5 @@
 import type { LoaderArgs } from "../route.js";
-import type {
-  MatchedRoute,
-  MatchedRouteWithData,
-  InternalRouteDefinition,
-} from "../types.js";
+import type { MatchedRoute, MatchedRouteWithData, InternalRouteDefinition } from "../types.js";
 
 /**
  * Wrapper for synchronous errors thrown by loaders.

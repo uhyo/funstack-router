@@ -4,11 +4,7 @@ import { Layout } from "./components/Layout.js";
 
 // Phase 1 route imports (shared modules — loaders/actions are client references)
 import { homeRoute } from "./features/home/route.js";
-import {
-  recipeListRoute,
-  recipeDetailRoute,
-  newRecipeRoute,
-} from "./features/recipes/route.js";
+import { recipeListRoute, recipeDetailRoute, newRecipeRoute } from "./features/recipes/route.js";
 import { favoritesRoute } from "./features/favorites/route.js";
 
 // Server component imports

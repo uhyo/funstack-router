@@ -38,9 +38,7 @@ export function NavLink({ href, children, match = "exact" }: Props) {
   const location = useLocation();
 
   const isActive =
-    match === "exact"
-      ? location.pathname === href
-      : location.pathname.startsWith(href);
+    match === "exact" ? location.pathname === href : location.pathname.startsWith(href);
 
   return (
     <a href={href} style={isActive ? activeStyle : inactiveStyle}>

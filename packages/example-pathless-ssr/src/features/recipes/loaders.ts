@@ -8,9 +8,7 @@ export function loadRecipeList(): Recipe[] {
   return getRecipes();
 }
 
-export function loadRecipeDetail({
-  params,
-}: LoaderArgs<{ recipeId: string }>): Recipe | undefined {
+export function loadRecipeDetail({ params }: LoaderArgs<{ recipeId: string }>): Recipe | undefined {
   return getRecipe(params.recipeId);
 }
 
@@ -25,9 +23,7 @@ export async function createRecipeAction({
   return createRecipe(title, description, ingredients, instructions);
 }
 
-export function loadNewRecipeResult({
-  actionResult,
-}: LoaderArgs<Record<string, never>, Recipe>): {
+export function loadNewRecipeResult({ actionResult }: LoaderArgs<Record<string, never>, Recipe>): {
   createdRecipe: Recipe | null;
 } {
   return { createdRecipe: actionResult ?? null };

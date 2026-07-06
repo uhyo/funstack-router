@@ -145,13 +145,7 @@ function App() {
 }
 
 // Component receives Promise and params, uses `use()` to suspend
-function UserDetail({
-  data,
-  params,
-}: {
-  data: Promise<User>;
-  params: { userId: string };
-}) {
+function UserDetail({ data, params }: { data: Promise<User>; params: { userId: string } }) {
   const user = use(data);
   return (
     <div>
@@ -266,9 +260,7 @@ function executeLoaders(
 ): MatchedRouteWithData[] {
   return matchedRoutes.map((match) => {
     const { route, params } = match;
-    const data = route.loader
-      ? route.loader({ params, request, signal })
-      : undefined;
+    const data = route.loader ? route.loader({ params, request, signal }) : undefined;
 
     return { ...match, data };
   });

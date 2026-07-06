@@ -22,7 +22,7 @@ This is a pnpm monorepo with the following packages:
 - `pnpm test:run` - Run tests once
 - `pnpm typecheck` - Type check all packages
 - `pnpm lint` - Lint code with oxlint
-- `pnpm format` - Format code with Prettier
+- `pnpm format` - Format code with oxfmt
 - `pnpm format:check` - Check formatting
 
 ### Package-specific commands

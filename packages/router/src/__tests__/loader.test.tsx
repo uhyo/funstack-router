@@ -12,10 +12,7 @@ class ErrorBoundary extends Component<
   { children: ReactNode; fallback: (error: unknown) => ReactNode },
   { error: unknown; hasError: boolean }
 > {
-  constructor(props: {
-    children: ReactNode;
-    fallback: (error: unknown) => ReactNode;
-  }) {
+  constructor(props: { children: ReactNode; fallback: (error: unknown) => ReactNode }) {
     super(props);
     this.state = { error: undefined, hasError: false };
   }
@@ -207,11 +204,7 @@ describe("Data Loader", () => {
         receivedParams: args.params,
       }));
 
-      function UserPage({
-        data,
-      }: {
-        data: { receivedParams: Record<string, string> };
-      }) {
+      function UserPage({ data }: { data: { receivedParams: Record<string, string> } }) {
         return <div>User: {data.receivedParams.id}</div>;
       }
 
@@ -234,9 +227,7 @@ describe("Data Loader", () => {
     });
 
     it("receives Request object with correct URL", () => {
-      mockNavigation = setupNavigationMock(
-        "http://localhost/page?foo=bar#section",
-      );
+      mockNavigation = setupNavigationMock("http://localhost/page?foo=bar#section");
 
       const loaderSpy = vi.fn((args: LoaderArgs<Record<string, string>>) => ({
         url: args.request.url,
@@ -326,11 +317,9 @@ describe("Data Loader", () => {
     it("caches results per navigation entry id", () => {
       mockNavigation = setupNavigationMock("http://localhost/page1");
 
-      const loaderSpy = vi.fn(
-        ({ params }: LoaderArgs<Record<string, string>>) => ({
-          page: params.page,
-        }),
-      );
+      const loaderSpy = vi.fn(({ params }: LoaderArgs<Record<string, string>>) => ({
+        page: params.page,
+      }));
 
       function Page({ data }: { data: { page: string } }) {
         return <div>Page: {data.page}</div>;
@@ -370,11 +359,9 @@ describe("Data Loader", () => {
     it("calls loader again for new navigation to same URL", () => {
       mockNavigation = setupNavigationMock("http://localhost/page1");
 
-      const loaderSpy = vi.fn(
-        ({ params }: LoaderArgs<Record<string, string>>) => ({
-          page: params.page,
-        }),
-      );
+      const loaderSpy = vi.fn(({ params }: LoaderArgs<Record<string, string>>) => ({
+        page: params.page,
+      }));
 
       function Page({ data }: { data: { page: string } }) {
         return <div>Page: {data.page}</div>;
@@ -481,11 +468,9 @@ describe("Data Loader", () => {
       mockNavigation = setupNavigationMock("http://localhost/users/123");
 
       const parentLoaderSpy = vi.fn(() => ({ title: "Users" }));
-      const childLoaderSpy = vi.fn(
-        ({ params }: LoaderArgs<Record<string, string>>) => ({
-          id: params.id,
-        }),
-      );
+      const childLoaderSpy = vi.fn(({ params }: LoaderArgs<Record<string, string>>) => ({
+        id: params.id,
+      }));
 
       function Layout({ data }: { data: { title: string } }) {
         return (
@@ -532,12 +517,10 @@ describe("Data Loader", () => {
       mockNavigation = setupNavigationMock("http://localhost/page1");
 
       let callCount = 0;
-      const loaderSpy = vi.fn(
-        ({ params }: LoaderArgs<Record<string, string>>) => {
-          callCount++;
-          return { page: params.page, call: callCount };
-        },
-      );
+      const loaderSpy = vi.fn(({ params }: LoaderArgs<Record<string, string>>) => {
+        callCount++;
+        return { page: params.page, call: callCount };
+      });
 
       function Page({ data }: { data: { page: string; call: number } }) {
         return (
@@ -585,9 +568,7 @@ describe("Data Loader", () => {
 
   describe("loader errors", () => {
     it("sync loader error is caught by Error Boundary instead of crashing Router", () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const error = new Error("Sync loader failure");
 
@@ -607,23 +588,17 @@ describe("Data Loader", () => {
 
       // The error should be caught by the Error Boundary, not crash Router
       render(
-        <ErrorBoundary
-          fallback={(e) => <div>Caught: {(e as Error).message}</div>}
-        >
+        <ErrorBoundary fallback={(e) => <div>Caught: {(e as Error).message}</div>}>
           <Router routes={routes} />
         </ErrorBoundary>,
       );
-      expect(
-        screen.getByText("Caught: Sync loader failure"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Caught: Sync loader failure")).toBeInTheDocument();
 
       consoleErrorSpy.mockRestore();
     });
 
     it("sync loader error preserves the original error object", () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const error = new Error("Original error");
       let caughtError: unknown;
@@ -659,9 +634,7 @@ describe("Data Loader", () => {
     });
 
     it("sync loader error in nested route is caught by Error Boundary around Outlet", () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       mockNavigation = setupNavigationMock("http://localhost/child");
 
@@ -669,9 +642,7 @@ describe("Data Loader", () => {
         return (
           <div>
             <h1>Layout</h1>
-            <ErrorBoundary
-              fallback={(e) => <div>Caught: {(e as Error).message}</div>}
-            >
+            <ErrorBoundary fallback={(e) => <div>Caught: {(e as Error).message}</div>}>
               <Outlet />
             </ErrorBoundary>
           </div>
@@ -703,9 +674,7 @@ describe("Data Loader", () => {
       // Layout should still render
       expect(screen.getByText("Layout")).toBeInTheDocument();
       // Child error should be caught by the Error Boundary in the layout
-      expect(
-        screen.getByText("Caught: Child loader failed"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Caught: Child loader failed")).toBeInTheDocument();
 
       consoleErrorSpy.mockRestore();
     });
@@ -749,11 +718,9 @@ describe("Data Loader", () => {
     it("clears loader cache when entry is disposed by navigating from back state", () => {
       mockNavigation = setupNavigationMock("http://localhost/page1");
 
-      const loaderSpy = vi.fn(
-        ({ params }: LoaderArgs<Record<string, string>>) => ({
-          page: params.page,
-        }),
-      );
+      const loaderSpy = vi.fn(({ params }: LoaderArgs<Record<string, string>>) => ({
+        page: params.page,
+      }));
 
       function Page({ data }: { data: { page: string } }) {
         return <div>Page: {data.page}</div>;
@@ -808,11 +775,9 @@ describe("Data Loader", () => {
     it("does not affect cache of other entries when one is disposed", () => {
       mockNavigation = setupNavigationMock("http://localhost/page1");
 
-      const loaderSpy = vi.fn(
-        ({ params }: LoaderArgs<Record<string, string>>) => ({
-          page: params.page,
-        }),
-      );
+      const loaderSpy = vi.fn(({ params }: LoaderArgs<Record<string, string>>) => ({
+        page: params.page,
+      }));
 
       function Page({ data }: { data: { page: string } }) {
         return <div>Page: {data.page}</div>;

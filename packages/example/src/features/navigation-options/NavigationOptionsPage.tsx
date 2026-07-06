@@ -49,8 +49,8 @@ export function NavigationOptionsPage({ state, info }: Props) {
     <div>
       <h1>Navigation Options Demo</h1>
       <p style={{ color: "#666" }}>
-        Explore different navigation options: <code>replace</code>,{" "}
-        <code>state</code>, and <code>info</code>.
+        Explore different navigation options: <code>replace</code>, <code>state</code>, and{" "}
+        <code>info</code>.
       </p>
 
       <div
@@ -69,13 +69,9 @@ export function NavigationOptionsPage({ state, info }: Props) {
         >
           <h3>Current State (persistent)</h3>
           {state ? (
-            <pre style={{ margin: 0, overflow: "auto" }}>
-              {JSON.stringify(state, null, 2)}
-            </pre>
+            <pre style={{ margin: 0, overflow: "auto" }}>{JSON.stringify(state, null, 2)}</pre>
           ) : (
-            <p style={{ color: "#666", margin: 0 }}>
-              No state yet. Click a button below!
-            </p>
+            <p style={{ color: "#666", margin: 0 }}>No state yet. Click a button below!</p>
           )}
         </div>
 
@@ -88,9 +84,7 @@ export function NavigationOptionsPage({ state, info }: Props) {
         >
           <h3>Current Info (ephemeral)</h3>
           {info ? (
-            <pre style={{ margin: 0, overflow: "auto" }}>
-              {JSON.stringify(info, null, 2)}
-            </pre>
+            <pre style={{ margin: 0, overflow: "auto" }}>{JSON.stringify(info, null, 2)}</pre>
           ) : (
             <p style={{ color: "#666", margin: 0 }}>
               No info. Info is only available immediately after navigation.
@@ -102,15 +96,9 @@ export function NavigationOptionsPage({ state, info }: Props) {
       </div>
 
       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-        <button onClick={handlePushNavigation}>
-          Push Navigation (adds history)
-        </button>
-        <button onClick={handleReplaceNavigation}>
-          Replace Navigation (no new history)
-        </button>
-        <button onClick={handleExternalWithState}>
-          Go to About with State
-        </button>
+        <button onClick={handlePushNavigation}>Push Navigation (adds history)</button>
+        <button onClick={handleReplaceNavigation}>Replace Navigation (no new history)</button>
+        <button onClick={handleExternalWithState}>Go to About with State</button>
       </div>
 
       <div
@@ -124,16 +112,13 @@ export function NavigationOptionsPage({ state, info }: Props) {
         <h3>Navigation Options:</h3>
         <ul style={{ lineHeight: "1.8" }}>
           <li>
-            <code>replace: true</code> - Replaces current history entry (no back
-            button)
+            <code>replace: true</code> - Replaces current history entry (no back button)
           </li>
           <li>
-            <code>state</code> - Persistent state tied to history entry
-            (survives refresh)
+            <code>state</code> - Persistent state tied to history entry (survives refresh)
           </li>
           <li>
-            <code>info</code> - Ephemeral info for this navigation only (lost on
-            refresh)
+            <code>info</code> - Ephemeral info for this navigation only (lost on refresh)
           </li>
         </ul>
         <h4>Example usage:</h4>

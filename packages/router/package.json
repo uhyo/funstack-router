@@ -2,11 +2,25 @@
   "name": "@funstack/router",
   "version": "1.1.1",
   "description": "A modern React router based on the Navigation API",
+  "keywords": [
+    "navigation-api",
+    "react",
+    "router"
+  ],
+  "license": "MIT",
+  "author": "uhyo <uhyo@uhy.ooo>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/uhyo/funstack-router.git",
     "directory": "packages/router"
   },
+  "bin": {
+    "funstack-router-skill-installer": "./dist/bin/skill-installer.mjs"
+  },
+  "files": [
+    "dist",
+    "skills"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -18,13 +32,6 @@
       "import": "./dist/server.mjs"
     }
   },
-  "files": [
-    "dist",
-    "skills"
-  ],
-  "bin": {
-    "funstack-router-skill-installer": "./dist/bin/skill-installer.mjs"
-  },
   "scripts": {
     "build": "tsdown",
     "build:docs": "node --experimental-strip-types scripts/generate-ai-docs.ts",
@@ -32,16 +39,6 @@
     "test": "vitest",
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit"
-  },
-  "keywords": [
-    "react",
-    "router",
-    "navigation-api"
-  ],
-  "author": "uhyo <uhyo@uhy.ooo>",
-  "license": "MIT",
-  "peerDependencies": {
-    "react": "^19.2.0"
   },
   "dependencies": {
     "@funstack/skill-installer": "^1.1.0"
@@ -58,5 +55,8 @@
     "typescript": "^6.0.3",
     "urlpattern-polyfill": "^10.1.0",
     "vitest": "^4.1.9"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
   }
 }

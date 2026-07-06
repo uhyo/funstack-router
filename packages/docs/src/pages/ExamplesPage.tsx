@@ -48,10 +48,7 @@ function App() {
 
       <section>
         <h2>Dynamic Routes with Params</h2>
-        <p>
-          Handle dynamic URL segments with parameters. Components receive params
-          via props:
-        </p>
+        <p>Handle dynamic URL segments with parameters. Components receive params via props:</p>
         <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
 function UserProfile({ params }: { params: { userId: string } }) {
@@ -127,10 +124,9 @@ const dashboardRoutes = route({
       <section>
         <h2>Data Loading</h2>
         <p>
-          Load data with loaders. When a loader returns a Promise, the component
-          receives that Promise and uses React's <code>use</code> hook to unwrap
-          it. Use <code>&lt;Suspense&gt;</code> within your pages or layouts to
-          handle loading states.
+          Load data with loaders. When a loader returns a Promise, the component receives that
+          Promise and uses React's <code>use</code> hook to unwrap it. Use{" "}
+          <code>&lt;Suspense&gt;</code> within your pages or layouts to handle loading states.
         </p>
         <CodeBlock language="tsx">{`import { use, Suspense } from "react";
 import { route } from "@funstack/router";
@@ -191,10 +187,9 @@ const userPostsRoute = route({
       <section>
         <h2>Form Submissions</h2>
         <p>
-          Handle form POST submissions with route actions. The action receives
-          the form data, and its return value flows to the loader via{" "}
-          <code>actionResult</code>. Native <code>&lt;form&gt;</code> elements
-          work out of the box — no wrapper component needed.
+          Handle form POST submissions with route actions. The action receives the form data, and
+          its return value flows to the loader via <code>actionResult</code>. Native{" "}
+          <code>&lt;form&gt;</code> elements work out of the box — no wrapper component needed.
         </p>
         <CodeBlock language="tsx">{`import { route, type RouteComponentPropsOf } from "@funstack/router";
 
@@ -255,20 +250,14 @@ const deleteRoute = route({
 });`}</CodeBlock>
         <p>Key behaviors:</p>
         <ul>
-          <li>
-            Actions handle POST form submissions; loaders handle GET navigations
-          </li>
+          <li>Actions handle POST form submissions; loaders handle GET navigations</li>
           <li>Action results are never cached — each submission runs fresh</li>
+          <li>After an action completes, all matched loaders are revalidated</li>
           <li>
-            After an action completes, all matched loaders are revalidated
+            POST submissions to routes without an action are not intercepted (browser handles
+            normally)
           </li>
-          <li>
-            POST submissions to routes without an action are not intercepted
-            (browser handles normally)
-          </li>
-          <li>
-            The deepest matched route with an action handles the submission
-          </li>
+          <li>The deepest matched route with an action handles the submission</li>
         </ul>
       </section>
 
@@ -319,9 +308,9 @@ function ProductList() {
       <section>
         <h2>Pathless Routes</h2>
         <p>
-          Routes without a <code>path</code> are called "pathless routes". They
-          always match and don't consume any pathname, making them ideal for
-          layout wrappers that don't affect the URL structure.
+          Routes without a <code>path</code> are called "pathless routes". They always match and
+          don't consume any pathname, making them ideal for layout wrappers that don't affect the
+          URL structure.
         </p>
         <CodeBlock language="tsx">{`import { route, Outlet } from "@funstack/router";
 
@@ -374,26 +363,21 @@ const routes = [
         <p>Key behaviors of pathless routes:</p>
         <ul>
           <li>
-            <strong>Always match</strong> - They don't participate in path
-            matching
+            <strong>Always match</strong> - They don't participate in path matching
           </li>
           <li>
-            <strong>Consume no pathname</strong> - Children receive the full
-            remaining pathname
+            <strong>Consume no pathname</strong> - Children receive the full remaining pathname
           </li>
           <li>
-            <strong>No params</strong> - The <code>params</code> prop is always
-            an empty object
+            <strong>No params</strong> - The <code>params</code> prop is always an empty object
           </li>
           <li>
-            <strong>Can have loaders</strong> - Pathless routes can still load
-            data
+            <strong>Can have loaders</strong> - Pathless routes can still load data
           </li>
         </ul>
         <h3>Catch-All Routes</h3>
         <p>
-          Use <code>path: "/*"</code> at the end of a route list to catch any
-          unmatched paths:
+          Use <code>path: "/*"</code> at the end of a route list to catch any unmatched paths:
         </p>
         <CodeBlock language="tsx">{`const routes = [
   route({ path: "/", component: HomePage }),
@@ -406,10 +390,9 @@ const routes = [
       <section>
         <h2>Navigation Callback</h2>
         <p>
-          React to navigation events. The callback receives the{" "}
-          <code>NavigateEvent</code> from the Navigation API and an info object
-          containing matched routes and whether the navigation will be
-          intercepted:
+          React to navigation events. The callback receives the <code>NavigateEvent</code> from the
+          Navigation API and an info object containing matched routes and whether the navigation
+          will be intercepted:
         </p>
         <CodeBlock language="tsx">{`import { Router, route, type OnNavigateCallback } from "@funstack/router";
 

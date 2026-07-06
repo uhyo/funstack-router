@@ -92,10 +92,7 @@ This follows the same convention as `createLoaderRequest`, but with `method: "PO
 Add an optional `actionResult` field to `LoaderArgs`:
 
 ```typescript
-export type LoaderArgs<
-  Params extends Record<string, string>,
-  ActionResult = undefined,
-> = {
+export type LoaderArgs<Params extends Record<string, string>, ActionResult = undefined> = {
   /** Extracted path parameters */
   params: Params;
   /** Request object with URL and headers */
@@ -138,8 +135,7 @@ const handleNavigate = (event: NavigateEvent) => {
   const isFormSubmission = event.formData !== null;
 
   // Compute whether we will intercept
-  const willIntercept =
-    matched !== null && !event.hashChange && event.downloadRequest === null;
+  const willIntercept = matched !== null && !event.hashChange && event.downloadRequest === null;
 
   // ... existing onNavigate callback ...
 
@@ -172,13 +168,7 @@ const handleNavigate = (event: NavigateEvent) => {
       // Execute loaders (either fresh run or from cache)
       // actionResult is passed through so loaders can incorporate it
       const request = createLoaderRequest(url);
-      const results = executeLoaders(
-        matched,
-        currentEntry.id,
-        request,
-        event.signal,
-        actionResult,
-      );
+      const results = executeLoaders(matched, currentEntry.id, request, event.signal, actionResult);
       await Promise.all(results.map((r) => r.data));
     },
   });
@@ -241,13 +231,9 @@ type RouteWithActionAndLoader<
   id?: TId;
   path: TPath;
   action: (args: ActionArgs<PathParams<TPath>>) => TActionResult;
-  loader: (
-    args: LoaderArgs<PathParams<TPath>, Awaited<TActionResult>>,
-  ) => TData;
+  loader: (args: LoaderArgs<PathParams<TPath>, Awaited<TActionResult>>) => TData;
   component:
-    | ComponentType<
-        RouteComponentPropsWithData<PathParams<TPath>, TData, TState>
-      >
+    | ComponentType<RouteComponentPropsWithData<PathParams<TPath>, TData, TState>>
     | ReactNode;
   children?: RouteDefinition[];
   exact?: boolean;
@@ -262,9 +248,7 @@ type RouteWithActionOnly<
   id?: TId;
   path: TPath;
   action: (args: ActionArgs<PathParams<TPath>>) => unknown;
-  component?:
-    | ComponentType<RouteComponentProps<PathParams<TPath>, TState>>
-    | ReactNode;
+  component?: ComponentType<RouteComponentProps<PathParams<TPath>, TState>> | ReactNode;
   children?: RouteDefinition[];
   exact?: boolean;
   requireChildren?: boolean;

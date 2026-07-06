@@ -34,23 +34,14 @@ export function NavLink(props: NavLinkProps) {
   );
 }
 
-function ActiveNavLink({
-  href,
-  className,
-  activeClassName,
-  exact,
-  children,
-}: NavLinkProps) {
+function ActiveNavLink({ href, className, activeClassName, exact, children }: NavLinkProps) {
   const location = useLocation();
   const isActive = exact
     ? location.pathname === href
     : location.pathname === href || location.pathname.startsWith(href);
 
   return (
-    <a
-      href={href}
-      className={className + (isActive ? " " + activeClassName : "")}
-    >
+    <a href={href} className={className + (isActive ? " " + activeClassName : "")}>
       {children}
     </a>
   );

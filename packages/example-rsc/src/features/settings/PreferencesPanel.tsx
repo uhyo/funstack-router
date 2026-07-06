@@ -18,8 +18,8 @@ export function PreferencesPanel({ state, setStateSync }: Props) {
     <div className="preferences-panel">
       <h3>Preferences</h3>
       <p className="preferences-description">
-        These preferences are stored in the navigation state. They persist
-        across back/forward navigation but reset on page reload.
+        These preferences are stored in the navigation state. They persist across back/forward
+        navigation but reset on page reload.
       </p>
 
       <div className="preference-item">

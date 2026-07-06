@@ -4,9 +4,7 @@ export function ApiComponentsPage() {
   return (
     <div className="page docs-page api-page">
       <h1>Components</h1>
-      <p className="page-intro">
-        Core components for building routing in your React application.
-      </p>
+      <p className="page-intro">Core components for building routing in your React application.</p>
 
       <article className="api-item">
         <h3>
@@ -50,9 +48,9 @@ export function ApiComponentsPage() {
                 <code>OnNavigateCallback</code>
               </td>
               <td>
-                Callback fired before navigation is intercepted. Receives the
-                NavigateEvent and an info object with matched routes and whether
-                the router will intercept the navigation.
+                Callback fired before navigation is intercepted. Receives the NavigateEvent and an
+                info object with matched routes and whether the router will intercept the
+                navigation.
               </td>
             </tr>
             <tr>
@@ -63,11 +61,9 @@ export function ApiComponentsPage() {
                 <code>{'"none" | "static"'}</code>
               </td>
               <td>
-                Fallback mode when Navigation API is unavailable.{" "}
-                <code>"none"</code> (default) renders nothing;{" "}
-                <code>"static"</code> renders matched routes using{" "}
-                <code>window.location</code> without navigation interception
-                (MPA behavior).
+                Fallback mode when Navigation API is unavailable. <code>"none"</code> (default)
+                renders nothing; <code>"static"</code> renders matched routes using{" "}
+                <code>window.location</code> without navigation interception (MPA behavior).
               </td>
             </tr>
             <tr>
@@ -78,14 +74,12 @@ export function ApiComponentsPage() {
                 <code>SSRConfig</code>
               </td>
               <td>
-                SSR configuration for route matching during server-side
-                rendering. Accepts an object with <code>path</code> (the
-                pathname to match against) and an optional{" "}
+                SSR configuration for route matching during server-side rendering. Accepts an object
+                with <code>path</code> (the pathname to match against) and an optional{" "}
                 <code>runLoaders</code> boolean (defaults to <code>false</code>
-                ). When <code>runLoaders</code> is <code>false</code>, routes
-                with loaders are skipped during SSR. Once the client hydrates,
-                the real URL from the Navigation API takes over. See the{" "}
-                <a href="/learn/ssr">SSR guide</a> for details.
+                ). When <code>runLoaders</code> is <code>false</code>, routes with loaders are
+                skipped during SSR. Once the client hydrates, the real URL from the Navigation API
+                takes over. See the <a href="/learn/ssr">SSR guide</a> for details.
               </td>
             </tr>
           </tbody>
@@ -96,10 +90,7 @@ export function ApiComponentsPage() {
         <h3>
           <code>{"<Outlet>"}</code>
         </h3>
-        <p>
-          Renders the child route's component. Used in parent routes for nested
-          layouts.
-        </p>
+        <p>Renders the child route's component. Used in parent routes for nested layouts.</p>
         <CodeBlock language="tsx">{`import { Outlet } from "@funstack/router";
 
 function Layout() {

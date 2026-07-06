@@ -197,9 +197,7 @@ precommitHandler: async (controller) => {
     }
   }
 
-  throw new Error(
-    "Precommit redirect loop exceeded the maximum redirect limit",
-  );
+  throw new Error("Precommit redirect loop exceeded the maximum redirect limit");
 };
 ```
 

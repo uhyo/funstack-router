@@ -72,9 +72,7 @@ describe("Navigation Info", () => {
         return (
           <div>
             <span data-testid="page">Page: {params.page ?? "home"}</span>
-            <span data-testid="source">
-              Source: {infoData?.source ?? "none"}
-            </span>
+            <span data-testid="source">Source: {infoData?.source ?? "none"}</span>
           </div>
         );
       }
@@ -119,9 +117,7 @@ describe("Navigation Info", () => {
         return (
           <div>
             <span data-testid="page">Page: {params.page ?? "home"}</span>
-            <span data-testid="source">
-              Source: {infoData?.source ?? "none"}
-            </span>
+            <span data-testid="source">Source: {infoData?.source ?? "none"}</span>
           </div>
         );
       }
@@ -213,9 +209,7 @@ describe("Navigation Info", () => {
         return (
           <div>
             <span data-testid="data">{data.message}</span>
-            <span data-testid="referrer">
-              Referrer: {infoData?.referrer ?? "none"}
-            </span>
+            <span data-testid="referrer">Referrer: {infoData?.referrer ?? "none"}</span>
           </div>
         );
       }
@@ -238,9 +232,7 @@ describe("Navigation Info", () => {
 
       render(<Router routes={routes} />);
       expect(screen.getByTestId("data")).toHaveTextContent("Hello");
-      expect(screen.getByTestId("referrer")).toHaveTextContent(
-        "Referrer: none",
-      );
+      expect(screen.getByTestId("referrer")).toHaveTextContent("Referrer: none");
 
       // Navigate with info
       act(() => {
@@ -251,9 +243,7 @@ describe("Navigation Info", () => {
       });
 
       expect(screen.getByTestId("data")).toHaveTextContent("Other");
-      expect(screen.getByTestId("referrer")).toHaveTextContent(
-        "Referrer: home-page",
-      );
+      expect(screen.getByTestId("referrer")).toHaveTextContent("Referrer: home-page");
     });
   });
 });

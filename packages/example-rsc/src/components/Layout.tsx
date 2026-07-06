@@ -9,9 +9,7 @@ export function Layout() {
         <Outlet />
       </main>
       <footer className="footer">
-        <p>
-          FUNSTACK Router &mdash; RSC Example with Two-Phase Route Definitions
-        </p>
+        <p>FUNSTACK Router &mdash; RSC Example with Two-Phase Route Definitions</p>
       </footer>
     </div>
   );

@@ -1,8 +1,4 @@
-import type {
-  RouterAdapter,
-  LocationEntry,
-  EntryChange,
-} from "./RouterAdapter.js";
+import type { RouterAdapter, LocationEntry, EntryChange } from "./RouterAdapter.js";
 import type {
   InternalRouteDefinition,
   MatchedRoute,
@@ -70,9 +66,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
     }
 
     const stickyHref =
-      this.#committedDestination?.entryId === entry.id
-        ? this.#committedDestination.href
-        : null;
+      this.#committedDestination?.entryId === entry.id ? this.#committedDestination.href : null;
     const actualHref = stickyHref ?? entry.url;
     if (!actualHref) {
       return null;
@@ -111,8 +105,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
       (event) => {
         // NavigationCurrentEntryChangeEvent.navigationType is null
         // when the change was caused by updateCurrentEntry()
-        const navigationType = (event as NavigationCurrentEntryChangeEvent)
-          .navigationType;
+        const navigationType = (event as NavigationCurrentEntryChangeEvent).navigationType;
         if (navigationType === null) {
           callback({ kind: "state" });
         } else {
@@ -276,8 +269,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
       }
 
       // Compute whether we will intercept this navigation (before user's preventDefault)
-      const willIntercept =
-        matched !== null && !event.hashChange && event.downloadRequest === null;
+      const willIntercept = matched !== null && !event.hashChange && event.downloadRequest === null;
 
       // Call onNavigate callback if provided (regardless of route match)
       if (onNavigate) {
@@ -323,9 +315,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
         handler: async () => {
           const currentEntry = navigation.currentEntry;
           if (!currentEntry) {
-            throw new Error(
-              "Navigation currentEntry is null during navigation interception",
-            );
+            throw new Error("Navigation currentEntry is null during navigation interception");
           }
 
           // Don't invalidate the cache here: getSnapshot's cache check
