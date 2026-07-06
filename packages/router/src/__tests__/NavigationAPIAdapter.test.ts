@@ -186,11 +186,7 @@ function createNavigateEvent(
     downloadRequest?: string | null;
   } = {},
 ): NavigateEvent {
-  const {
-    canIntercept = true,
-    hashChange = false,
-    downloadRequest = null,
-  } = options;
+  const { canIntercept = true, hashChange = false, downloadRequest = null } = options;
 
   let defaultPrevented = false;
 

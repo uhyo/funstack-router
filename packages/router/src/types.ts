@@ -48,9 +48,7 @@ export type InternalRouteDefinition = {
         data?: unknown;
         params?: Record<string, string>;
         state?: unknown;
-        setState?: (
-          state: unknown | ((prev: unknown) => unknown),
-        ) => Promise<void>;
+        setState?: (state: unknown | ((prev: unknown) => unknown)) => Promise<void>;
         setStateSync?: (state: unknown | ((prev: unknown) => unknown)) => void;
         resetState?: () => Promise<void>;
         resetStateSync?: () => void;
@@ -66,9 +64,7 @@ export type InternalRouteDefinition = {
  * Actually, this function just performs a type assertion since
  * both RouteDefinition and InternalRouteDefinition have the same runtime shape.
  */
-export function internalRoutes(
-  routes: RouteDefinition[],
-): InternalRouteDefinition[] {
+export function internalRoutes(routes: RouteDefinition[]): InternalRouteDefinition[] {
   return routes as InternalRouteDefinition[];
 }
 
@@ -127,9 +123,7 @@ export type TransitionTypeContext = {
  * value is passed to React's `addTransitionType`. Requires a React build
  * that exports `addTransitionType` (currently React Canary).
  */
-export type GetTransitionTypes = (
-  context: TransitionTypeContext,
-) => readonly string[];
+export type GetTransitionTypes = (context: TransitionTypeContext) => readonly string[];
 
 /**
  * Options for navigation.
@@ -179,10 +173,7 @@ export type Location = {
  * @param event - The NavigateEvent from the Navigation API
  * @param info - Information about the navigation including matched routes and whether it will be intercepted
  */
-export type OnNavigateCallback = (
-  event: NavigateEvent,
-  info: OnNavigateInfo,
-) => void;
+export type OnNavigateCallback = (event: NavigateEvent, info: OnNavigateInfo) => void;
 
 /**
  * Fallback mode when Navigation API is unavailable.

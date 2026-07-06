@@ -2,8 +2,8 @@ export function ApiReferenceIndexPage() {
   return (
     <div className="api-overview">
       <p>
-        Complete API documentation for <code>@funstack/router</code>. Select a
-        category above or browse below.
+        Complete API documentation for <code>@funstack/router</code>. Select a category above or
+        browse below.
       </p>
 
       <section className="api-category">
@@ -13,12 +13,10 @@ export function ApiReferenceIndexPage() {
         <p>Core components for building routing in your React application.</p>
         <ul>
           <li>
-            <code>{"<Router>"}</code> — The main router component that provides
-            routing context
+            <code>{"<Router>"}</code> — The main router component that provides routing context
           </li>
           <li>
-            <code>{"<Outlet>"}</code> — Renders child route components for
-            nested layouts
+            <code>{"<Outlet>"}</code> — Renders child route components for nested layouts
           </li>
         </ul>
       </section>
@@ -36,8 +34,7 @@ export function ApiReferenceIndexPage() {
             <code>useSearchParams()</code> — Search query management
           </li>
           <li>
-            <code>useBlocker()</code> — Prevent navigation away from current
-            route
+            <code>useBlocker()</code> — Prevent navigation away from current route
           </li>
           <li>
             <code>useRouteParams()</code> — Type-safe route parameters
@@ -70,8 +67,7 @@ export function ApiReferenceIndexPage() {
             <code>hardReload()</code> — Full page reload bypassing the router
           </li>
           <li>
-            <code>hardNavigate()</code> — Full page navigation bypassing the
-            router
+            <code>hardNavigate()</code> — Full page navigation bypassing the router
           </li>
         </ul>
       </section>
@@ -86,25 +82,22 @@ export function ApiReferenceIndexPage() {
             <code>RouteComponentProps</code> — Props type for route components
           </li>
           <li>
-            <code>RouteComponentPropsWithData</code> — Props type with loader
-            data
+            <code>RouteComponentPropsWithData</code> — Props type with loader data
           </li>
           <li>
             <code>PathParams</code> — Extract parameters from path patterns
           </li>
           <li>
-            <code>TypefulOpaqueRouteDefinition</code> — Type-safe route
-            definition
+            <code>TypefulOpaqueRouteDefinition</code> — Type-safe route definition
           </li>
           <li>
             <code>ExtractRouteId</code>, <code>ExtractRouteParams</code>,{" "}
-            <code>ExtractRouteState</code>, <code>ExtractRouteData</code> — Type
-            extraction utilities
+            <code>ExtractRouteState</code>, <code>ExtractRouteData</code> — Type extraction
+            utilities
           </li>
           <li>
-            <code>RouteDefinition</code>, <code>ActionArgs</code>,{" "}
-            <code>LoaderArgs</code>, <code>Location</code>,{" "}
-            <code>NavigateOptions</code>
+            <code>RouteDefinition</code>, <code>ActionArgs</code>, <code>LoaderArgs</code>,{" "}
+            <code>Location</code>, <code>NavigateOptions</code>
           </li>
         </ul>
       </section>

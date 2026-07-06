@@ -4,22 +4,19 @@ export function ApiUtilitiesPage() {
   return (
     <div className="page docs-page api-page">
       <h1>Utilities</h1>
-      <p className="page-intro">
-        Helper functions for defining routes and managing state.
-      </p>
+      <p className="page-intro">Helper functions for defining routes and managing state.</p>
 
       <article className="api-item">
         <h3>
           <code>route()</code>
         </h3>
         <p>
-          Helper function to define routes with proper typing. The component
-          always receives a <code>params</code> prop with types inferred from
-          the path pattern. When a <code>loader</code> is defined, the component
-          also receives a <code>data</code> prop. Components also receive{" "}
-          <code>state</code>, <code>setState</code>, <code>setStateSync</code>,{" "}
-          <code>resetState</code>, and <code>resetStateSync</code> props for
-          navigation state management.
+          Helper function to define routes with proper typing. The component always receives a{" "}
+          <code>params</code> prop with types inferred from the path pattern. When a{" "}
+          <code>loader</code> is defined, the component also receives a <code>data</code> prop.
+          Components also receive <code>state</code>, <code>setState</code>,{" "}
+          <code>setStateSync</code>, <code>resetState</code>, and <code>resetStateSync</code> props
+          for navigation state management.
         </p>
         <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
@@ -68,9 +65,9 @@ const myRoute = route({
                 <code>string</code> (optional)
               </td>
               <td>
-                URL path pattern (supports <code>:param</code> syntax). If
-                omitted, creates a pathless route that always matches and
-                consumes no pathname. Useful for layout wrappers.
+                URL path pattern (supports <code>:param</code> syntax). If omitted, creates a
+                pathless route that always matches and consumes no pathname. Useful for layout
+                wrappers.
               </td>
             </tr>
             <tr>
@@ -81,8 +78,8 @@ const myRoute = route({
                 <code>ComponentType</code>
               </td>
               <td>
-                React component to render. Receives <code>params</code> prop
-                (and <code>data</code> prop if loader is defined)
+                React component to render. Receives <code>params</code> prop (and <code>data</code>{" "}
+                prop if loader is defined)
               </td>
             </tr>
             <tr>
@@ -93,10 +90,9 @@ const myRoute = route({
                 <code>(args: ActionArgs) =&gt; T</code>
               </td>
               <td>
-                Function to handle form submissions (POST navigations). Receives
-                a <code>Request</code> with <code>FormData</code> body. The
-                return value is passed to the loader as{" "}
-                <code>actionResult</code>.
+                Function to handle form submissions (POST navigations). Receives a{" "}
+                <code>Request</code> with <code>FormData</code> body. The return value is passed to
+                the loader as <code>actionResult</code>.
               </td>
             </tr>
             <tr>
@@ -125,9 +121,9 @@ const myRoute = route({
                 <code>boolean</code>
               </td>
               <td>
-                Override default matching. <code>true</code> = exact match only,{" "}
-                <code>false</code> = prefix match. Defaults to <code>true</code>{" "}
-                for leaf routes, <code>false</code> for parent routes.
+                Override default matching. <code>true</code> = exact match only, <code>false</code>{" "}
+                = prefix match. Defaults to <code>true</code> for leaf routes, <code>false</code>{" "}
+                for parent routes.
               </td>
             </tr>
             <tr>
@@ -138,11 +134,10 @@ const myRoute = route({
                 <code>boolean</code>
               </td>
               <td>
-                Whether a parent route requires a child to match.{" "}
-                <code>true</code> (default) = parent only matches if a child
-                matches, <code>false</code> = parent can match alone with{" "}
-                <code>outlet</code> as <code>null</code>. Enables catch-all
-                routes to work intuitively.
+                Whether a parent route requires a child to match. <code>true</code> (default) =
+                parent only matches if a child matches, <code>false</code> = parent can match alone
+                with <code>outlet</code> as <code>null</code>. Enables catch-all routes to work
+                intuitively.
               </td>
             </tr>
           </tbody>
@@ -154,9 +149,9 @@ const myRoute = route({
           <code>routeState&lt;TState&gt;()</code>
         </h3>
         <p>
-          Curried helper function for defining routes with typed navigation
-          state. Use this when your route component needs to manage state that
-          persists across browser back/forward navigation.
+          Curried helper function for defining routes with typed navigation state. Use this when
+          your route component needs to manage state that persists across browser back/forward
+          navigation.
         </p>
         <CodeBlock language="tsx">{`import { routeState, type RouteComponentProps } from "@funstack/router";
 
@@ -217,32 +212,28 @@ const productRoute = routeState<{ filter: string }>()({
         </p>
         <ul>
           <li>
-            <code>setState</code> - Async method that uses replace navigation.
-            Returns a Promise that resolves when the navigation completes.
-            Because it performs a navigation, the update is wrapped in a React
-            transition (may set <code>isPending</code> to <code>true</code>).
+            <code>setState</code> - Async method that uses replace navigation. Returns a Promise
+            that resolves when the navigation completes. Because it performs a navigation, the
+            update is wrapped in a React transition (may set <code>isPending</code> to{" "}
+            <code>true</code>).
           </li>
           <li>
             <code>setStateSync</code> - Sync method that uses{" "}
-            <code>navigation.updateCurrentEntry()</code>. Updates state
-            immediately without waiting. This is not a navigation, so it
-            bypasses React transitions entirely (<code>isPending</code> stays{" "}
-            <code>false</code>).
+            <code>navigation.updateCurrentEntry()</code>. Updates state immediately without waiting.
+            This is not a navigation, so it bypasses React transitions entirely (
+            <code>isPending</code> stays <code>false</code>).
           </li>
         </ul>
         <p>Navigation state characteristics:</p>
         <ul>
           <li>State persists when navigating back/forward in history</li>
           <li>Each history entry has its own independent state</li>
-          <li>
-            State must be serializable (no functions, Symbols, or DOM nodes)
-          </li>
+          <li>State must be serializable (no functions, Symbols, or DOM nodes)</li>
         </ul>
         <h4>Internal Storage</h4>
         <p>
-          The router stores state internally using a <code>__routeStates</code>{" "}
-          array indexed by route match position. This enables each nested route
-          to maintain independent state:
+          The router stores state internally using a <code>__routeStates</code> array indexed by
+          route match position. This enables each nested route to maintain independent state:
         </p>
         <CodeBlock language="typescript">{`// Internal structure stored in NavigationHistoryEntry
 {
@@ -259,9 +250,8 @@ const productRoute = routeState<{ filter: string }>()({
           <code>hardReload()</code>
         </h3>
         <p>
-          Performs a full page reload, bypassing the router's navigation
-          interception entirely. This is useful when you need a true browser
-          reload that the router should not intercept.
+          Performs a full page reload, bypassing the router's navigation interception entirely. This
+          is useful when you need a true browser reload that the router should not intercept.
         </p>
         <CodeBlock language="tsx">{`import { hardReload } from "@funstack/router";
 
@@ -274,10 +264,9 @@ hardReload();`}</CodeBlock>
           <code>hardNavigate(url)</code>
         </h3>
         <p>
-          Performs a full page navigation to the given URL, bypassing the
-          router's navigation interception entirely. This triggers a real
-          browser navigation instead of a client-side route change, and skips
-          all blockers.
+          Performs a full page navigation to the given URL, bypassing the router's navigation
+          interception entirely. This triggers a real browser navigation instead of a client-side
+          route change, and skips all blockers.
         </p>
         <CodeBlock language="tsx">{`import { hardNavigate } from "@funstack/router";
 
@@ -309,9 +298,9 @@ hardNavigate("/other-page");`}</CodeBlock>
       <article className="api-item">
         <h3>Server Entry Point</h3>
         <p>
-          The <code>route()</code> and <code>routeState()</code> helpers are
-          also available from a server-compatible entry point. Use this when
-          defining routes in React Server Components or other server-side code.
+          The <code>route()</code> and <code>routeState()</code> helpers are also available from a
+          server-compatible entry point. Use this when defining routes in React Server Components or
+          other server-side code.
         </p>
         <CodeBlock language="tsx">{`// In Server Components or server-side route definitions
 import { route, routeState } from "@funstack/router/server";
@@ -347,27 +336,24 @@ const routes = [
             <code>routeState</code> - Route definition helper with typed state
           </li>
           <li>
-            <code>bindRoute</code> - Binds a component to a partial route
-            definition (see{" "}
+            <code>bindRoute</code> - Binds a component to a partial route definition (see{" "}
             <a href="/learn/rsc/route-features">Two-Phase Route Definitions</a>)
           </li>
           <li>
-            Types: <code>ActionArgs</code>, <code>LoaderArgs</code>,{" "}
-            <code>RouteDefinition</code>, <code>PathParams</code>,{" "}
-            <code>RouteComponentProps</code>,{" "}
+            Types: <code>ActionArgs</code>, <code>LoaderArgs</code>, <code>RouteDefinition</code>,{" "}
+            <code>PathParams</code>, <code>RouteComponentProps</code>,{" "}
             <code>RouteComponentPropsWithData</code>
           </li>
         </ul>
         <p>
-          For client-side features like <code>Router</code>, <code>Outlet</code>
-          , and hooks, use the main <code>@funstack/router</code> entry point.
+          For client-side features like <code>Router</code>, <code>Outlet</code>, and hooks, use the
+          main <code>@funstack/router</code> entry point.
         </p>
         <p>
-          See the <a href="/learn/rsc">React Server Components</a> guide for a
-          full walkthrough of using the server entry point, and the{" "}
-          <a href="/learn/rsc/route-features">Two-Phase Route Definitions</a>{" "}
-          guide for using <code>bindRoute()</code> to split route definitions
-          across the RSC boundary.
+          See the <a href="/learn/rsc">React Server Components</a> guide for a full walkthrough of
+          using the server entry point, and the{" "}
+          <a href="/learn/rsc/route-features">Two-Phase Route Definitions</a> guide for using{" "}
+          <code>bindRoute()</code> to split route definitions across the RSC boundary.
         </p>
       </article>
     </div>

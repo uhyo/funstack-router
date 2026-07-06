@@ -10,14 +10,8 @@ import {
   useTransition,
 } from "react";
 import type { LocationEntry } from "../core/RouterAdapter.js";
-import {
-  RouterContext,
-  type RouterContextValue,
-} from "../context/RouterContext.js";
-import {
-  BlockerContext,
-  createBlockerRegistry,
-} from "../context/BlockerContext.js";
+import { RouterContext, type RouterContextValue } from "../context/RouterContext.js";
+import { BlockerContext, createBlockerRegistry } from "../context/BlockerContext.js";
 import {
   type GetTransitionTypes,
   type NavigateOptions,
@@ -141,26 +135,21 @@ export function Router({
     // During SSR/hydration, return special server snapshot object
     // that captures the real snapshot at the time of first render.
     // This allows us to detect hydration and sync to real snapshot on client.
-    return (serverSnapshotCacheRef.current ??= new ServerLocationSnapshot(
-      adapter,
-    ));
+    return (serverSnapshotCacheRef.current ??= new ServerLocationSnapshot(adapter));
   }, [adapter]);
-  const initialEntry = useSyncExternalStore<
-    LocationEntry | null | ServerLocationSnapshot
-  >(noopSubscribe, getSnapshot, getServerSnapshot);
+  const initialEntry = useSyncExternalStore<LocationEntry | null | ServerLocationSnapshot>(
+    noopSubscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 
   const [isPending, startTransition] = useTransition();
   const [locationEntryInternal, setLocationEntry] = useState<
     LocationEntry | null | ServerLocationSnapshot
   >(initialEntry);
-  const locationEntry = isServerSnapshot(locationEntryInternal)
-    ? null
-    : locationEntryInternal;
+  const locationEntry = isServerSnapshot(locationEntryInternal) ? null : locationEntryInternal;
 
-  if (
-    isServerSnapshot(locationEntryInternal) &&
-    !isServerSnapshot(initialEntry)
-  ) {
+  if (isServerSnapshot(locationEntryInternal) && !isServerSnapshot(initialEntry)) {
     // On second hydrated render on client, sync state with real snapshot
     // Rendering flow on hydration:
     // 1. Hydrated Render 1: initialEntry = serverSnapshotSymbol, locationEntryInternal = serverSnapshotSymbol
@@ -175,11 +164,8 @@ export function Router({
   // Resolve transition types for the current navigation. Wrapped in
   // useEffectEvent so the subscription effect doesn't re-run when the
   // `experimentalTransitionTypes` prop identity changes.
-  const getTransitionTypes = useEffectEvent(
-    (context: TransitionTypeContext): readonly string[] =>
-      experimentalTransitionTypes
-        ? experimentalTransitionTypes(context)
-        : ["navigation"],
+  const getTransitionTypes = useEffectEvent((context: TransitionTypeContext): readonly string[] =>
+    experimentalTransitionTypes ? experimentalTransitionTypes(context) : ["navigation"],
   );
 
   // Subscribe to navigation changes (conditionally wrapped in transition)
@@ -208,17 +194,11 @@ export function Router({
 
   // Wrap in useEffectEvent so interception doesn't re-setup when routes or onNavigate change
   const getRoutes = useEffectEvent(() => routes);
-  const handleNavigate = useEffectEvent<OnNavigateCallback>((...args) =>
-    onNavigate?.(...args),
-  );
+  const handleNavigate = useEffectEvent<OnNavigateCallback>((...args) => onNavigate?.(...args));
 
   // Set up navigation interception via adapter
   useEffect(() => {
-    return adapter.setupInterception(
-      getRoutes,
-      handleNavigate,
-      blockerRegistry.checkAll,
-    );
+    return adapter.setupInterception(getRoutes, handleNavigate, blockerRegistry.checkAll);
   }, [adapter, blockerRegistry]);
 
   // Navigate function that returns a Promise
@@ -242,10 +222,7 @@ export function Router({
       return locationEntry.url.toString();
     }
     if (ssr) {
-      const origin =
-        typeof window !== "undefined"
-          ? window.location.origin
-          : "http://localhost";
+      const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
       return new URL(ssr.path, origin).toString();
     }
     return null;
@@ -261,8 +238,7 @@ export function Router({
    * 1. Loaders are always run for rendering with URL available (client-side)
    * 2. During SSR, loaders are only run if ssr.runLoaders is true and URL is available (ssr.path provided).
    */
-  const runLoaders =
-    locationEntry !== null || (!!ssr?.runLoaders && urlObject !== null);
+  const runLoaders = locationEntry !== null || (!!ssr?.runLoaders && urlObject !== null);
 
   /**
    * Key of location. This is used as the cache key for loader data saved in navigation entry.

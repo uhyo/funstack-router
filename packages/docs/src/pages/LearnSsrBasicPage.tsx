@@ -6,30 +6,27 @@ export function LearnSsrBasicPage() {
       <h2>How SSR Works</h2>
 
       <p className="page-intro">
-        FUNSTACK Router supports server-side rendering with a two-stage model.
-        During SSR, pathless (layout) routes without loaders render to produce
-        an app shell, while path-based routes and loaders activate only after
-        client hydration.
+        FUNSTACK Router supports server-side rendering with a two-stage model. During SSR, pathless
+        (layout) routes without loaders render to produce an app shell, while path-based routes and
+        loaders activate only after client hydration.
       </p>
 
       <section>
         <h3>Two-Stage Rendering</h3>
         <p>
-          FUNSTACK Router uses a two-stage rendering model that separates what
-          renders on the server from what renders on the client:
+          FUNSTACK Router uses a two-stage rendering model that separates what renders on the server
+          from what renders on the client:
         </p>
         <p>
-          <strong>Stage 1 &mdash; Server:</strong> No URL is available on the
-          server. The router matches only pathless routes (routes without a{" "}
-          <code>path</code> property) that do not have a loader. This produces
-          the app shell &mdash; layouts, headers, navigation chrome, and other
-          structural markup.
+          <strong>Stage 1 &mdash; Server:</strong> No URL is available on the server. The router
+          matches only pathless routes (routes without a <code>path</code> property) that do not
+          have a loader. This produces the app shell &mdash; layouts, headers, navigation chrome,
+          and other structural markup.
         </p>
         <p>
-          <strong>Stage 2 &mdash; Client hydration:</strong> Once the browser
-          hydrates the page, the actual URL becomes available via the Navigation
-          API. Path-based routes now match, loaders execute, and page-specific
-          content renders.
+          <strong>Stage 2 &mdash; Client hydration:</strong> Once the browser hydrates the page, the
+          actual URL becomes available via the Navigation API. Path-based routes now match, loaders
+          execute, and page-specific content renders.
         </p>
         <CodeBlock language="tsx">{`// What renders at each stage:
 
@@ -44,15 +41,13 @@ export function LearnSsrBasicPage() {
       <section>
         <h3>Pathless Routes as the App Shell</h3>
         <p>
-          Pathless routes (routes without a <code>path</code> property) always
-          match regardless of the current URL. This makes them ideal for
-          defining the SSR app shell &mdash; the parts of your UI that should be
-          visible immediately while the rest of the page loads.
+          Pathless routes (routes without a <code>path</code> property) always match regardless of
+          the current URL. This makes them ideal for defining the SSR app shell &mdash; the parts of
+          your UI that should be visible immediately while the rest of the page loads.
         </p>
         <p>
-          Consider the following route tree. During SSR, only the pathless{" "}
-          <code>AppShell</code> route renders. The page routes require a URL to
-          match, so they are skipped:
+          Consider the following route tree. During SSR, only the pathless <code>AppShell</code>{" "}
+          route renders. The page routes require a URL to match, so they are skipped:
         </p>
         <CodeBlock language="tsx">{`const routes = [
   route({
@@ -64,20 +59,18 @@ export function LearnSsrBasicPage() {
   }),
 ];`}</CodeBlock>
         <p>
-          In this example, <code>AppShell</code> might render a header, sidebar,
-          and footer &mdash; the structural parts of your application. After
-          hydration, the router matches the actual URL and renders{" "}
-          <code>HomePage</code> or <code>AboutPage</code> inside the shell.
+          In this example, <code>AppShell</code> might render a header, sidebar, and footer &mdash;
+          the structural parts of your application. After hydration, the router matches the actual
+          URL and renders <code>HomePage</code> or <code>AboutPage</code> inside the shell.
         </p>
       </section>
 
       <section>
         <h3>Hooks and SSR</h3>
         <p>
-          Because no URL is available during SSR, hooks that depend on the
-          current URL will throw errors if called during server rendering. The
-          affected hooks are <code>useLocation</code> and{" "}
-          <code>useSearchParams</code>.
+          Because no URL is available during SSR, hooks that depend on the current URL will throw
+          errors if called during server rendering. The affected hooks are <code>useLocation</code>{" "}
+          and <code>useSearchParams</code>.
         </p>
         <CodeBlock language="tsx">{`// These hooks throw during SSR:
 useLocation();
@@ -86,11 +79,10 @@ useLocation();
 useSearchParams();
 // Error: "useSearchParams: URL is not available during SSR."`}</CodeBlock>
         <p>
-          To avoid these errors, either use URL-dependent hooks only in
-          components rendered by path-based routes, or read the current path
-          inside a client-side effect (e.g., <code>useLayoutEffect</code> +{" "}
-          <code>navigation.currentEntry</code>) so the value is only accessed
-          after hydration:
+          To avoid these errors, either use URL-dependent hooks only in components rendered by
+          path-based routes, or read the current path inside a client-side effect (e.g.,{" "}
+          <code>useLayoutEffect</code> + <code>navigation.currentEntry</code>) so the value is only
+          accessed after hydration:
         </p>
         <CodeBlock language="tsx">{`// ✗ Bad: AppShell renders during SSR, useLocation will throw
 function AppShell() {
@@ -127,17 +119,15 @@ function HomePage() {
           The <code>fallback="static"</code> Mode
         </h3>
         <p>
-          When the Navigation API is unavailable (e.g., in older browsers), the
-          router's <code>fallback</code> prop controls what happens. With{" "}
-          <code>fallback="static"</code>, the router reads the current URL from{" "}
-          <code>window.location</code> and renders matched routes without
-          navigation interception. Links cause full page reloads (MPA behavior).
+          When the Navigation API is unavailable (e.g., in older browsers), the router's{" "}
+          <code>fallback</code> prop controls what happens. With <code>fallback="static"</code>, the
+          router reads the current URL from <code>window.location</code> and renders matched routes
+          without navigation interception. Links cause full page reloads (MPA behavior).
         </p>
         <p>
-          This is different from SSR: in static fallback mode, a URL <em>is</em>{" "}
-          available (from <code>window.location</code>), so path-based routes
-          match and loaders execute normally. During SSR, no URL is available at
-          all.
+          This is different from SSR: in static fallback mode, a URL <em>is</em> available (from{" "}
+          <code>window.location</code>), so path-based routes match and loaders execute normally.
+          During SSR, no URL is available at all.
         </p>
         <CodeBlock language="tsx">{`import { Router } from "@funstack/router";
 
@@ -149,28 +139,23 @@ function HomePage() {
       <section>
         <h3>Going Beyond the App Shell</h3>
         <p>
-          The default SSR behavior produces only the app shell. This is perfect
-          for ordinary SPAs where only one HTML page is served and the client
-          takes over all routing. SSR can still be useful in this scenario,
-          normally with a static site generator, to improve perceived
-          performance by showing the shell immediately while the rest of the
-          page loads.
+          The default SSR behavior produces only the app shell. This is perfect for ordinary SPAs
+          where only one HTML page is served and the client takes over all routing. SSR can still be
+          useful in this scenario, normally with a static site generator, to improve perceived
+          performance by showing the shell immediately while the rest of the page loads.
         </p>
         <p>
-          If your server or build tool knows the URL being rendered, you can use
-          the <code>ssr</code> prop to match path-based routes during SSR for
-          richer output:
+          If your server or build tool knows the URL being rendered, you can use the{" "}
+          <code>ssr</code> prop to match path-based routes during SSR for richer output:
         </p>
         <ul>
           <li>
-            <a href="/learn/ssr/static-site-generation">
-              Static Site Generation
-            </a>{" "}
-            &mdash; pre-render pages at known paths without running loaders
+            <a href="/learn/ssr/static-site-generation">Static Site Generation</a> &mdash;
+            pre-render pages at known paths without running loaders
           </li>
           <li>
-            <a href="/learn/ssr/with-loaders">SSR with Loaders</a> &mdash;
-            render pages with loader data on the server for fully dynamic SSR
+            <a href="/learn/ssr/with-loaders">SSR with Loaders</a> &mdash; render pages with loader
+            data on the server for fully dynamic SSR
           </li>
         </ul>
       </section>
@@ -179,23 +164,18 @@ function HomePage() {
         <h3>Key Takeaways</h3>
         <ul>
           <li>
-            Only pathless routes without loaders render during SSR (no URL is
-            available on the server)
+            Only pathless routes without loaders render during SSR (no URL is available on the
+            server)
           </li>
           <li>
-            Pathless routes are ideal for app shell markup (headers, footers,
-            layout structure)
+            Pathless routes are ideal for app shell markup (headers, footers, layout structure)
           </li>
           <li>
-            Avoid <code>useLocation</code> and <code>useSearchParams</code> in
-            components that render during SSR; use a client-side effect (e.g.,{" "}
-            <code>useLayoutEffect</code>) to read location information in the
-            app shell
+            Avoid <code>useLocation</code> and <code>useSearchParams</code> in components that
+            render during SSR; use a client-side effect (e.g., <code>useLayoutEffect</code>) to read
+            location information in the app shell
           </li>
-          <li>
-            Once the client hydrates, the real URL from the Navigation API takes
-            over
-          </li>
+          <li>Once the client hydrates, the real URL from the Navigation API takes over</li>
         </ul>
       </section>
     </div>

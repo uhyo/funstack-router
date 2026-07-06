@@ -1,10 +1,5 @@
 import { route } from "@funstack/router/server";
-import {
-  loadTaskList,
-  loadTaskDetail,
-  createTaskAction,
-  loadNewTaskResult,
-} from "./loaders.js";
+import { loadTaskList, loadTaskDetail, createTaskAction, loadNewTaskResult } from "./loaders.js";
 
 export const taskListRoute = route({
   id: "taskList",

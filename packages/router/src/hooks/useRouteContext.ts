@@ -16,10 +16,7 @@ import {
  * @throws If called outside a route component or if the route ID is not found
  * @internal
  */
-export function useRouteContext(
-  hookName: string,
-  routeId: string | undefined,
-): RouteContextValue {
+export function useRouteContext(hookName: string, routeId: string | undefined): RouteContextValue {
   const context = useContext(RouteContext);
   if (!context) {
     throw new Error(`${hookName} must be used within a route component`);

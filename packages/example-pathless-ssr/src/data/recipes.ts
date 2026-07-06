@@ -4,8 +4,7 @@ const recipes: Recipe[] = [
   {
     id: "1",
     title: "Classic Margherita Pizza",
-    description:
-      "A simple Italian pizza with fresh tomatoes, mozzarella, and basil.",
+    description: "A simple Italian pizza with fresh tomatoes, mozzarella, and basil.",
     ingredients: [
       "Pizza dough",
       "San Marzano tomatoes",
@@ -22,8 +21,7 @@ const recipes: Recipe[] = [
   {
     id: "2",
     title: "Chicken Stir-Fry",
-    description:
-      "A quick weeknight stir-fry with vegetables and a savory sauce.",
+    description: "A quick weeknight stir-fry with vegetables and a savory sauce.",
     ingredients: [
       "Chicken breast",
       "Bell peppers",
@@ -42,8 +40,7 @@ const recipes: Recipe[] = [
   {
     id: "3",
     title: "Banana Pancakes",
-    description:
-      "Fluffy pancakes made with ripe bananas for natural sweetness.",
+    description: "Fluffy pancakes made with ripe bananas for natural sweetness.",
     ingredients: [
       "Ripe bananas",
       "Eggs",
@@ -61,8 +58,7 @@ const recipes: Recipe[] = [
   {
     id: "4",
     title: "Caesar Salad",
-    description:
-      "Crisp romaine lettuce with homemade Caesar dressing and croutons.",
+    description: "Crisp romaine lettuce with homemade Caesar dressing and croutons.",
     ingredients: [
       "Romaine lettuce",
       "Parmesan cheese",

@@ -20,12 +20,8 @@ describe("Navigation State Management", () => {
     it("receives undefined state on first visit", () => {
       type PageState = { count: number };
 
-      function Page({
-        state,
-      }: RouteComponentProps<Record<string, never>, PageState>) {
-        return (
-          <div>State: {state === undefined ? "undefined" : state.count}</div>
-        );
+      function Page({ state }: RouteComponentProps<Record<string, never>, PageState>) {
+        return <div>State: {state === undefined ? "undefined" : state.count}</div>;
       }
 
       const routes = [
@@ -44,10 +40,7 @@ describe("Navigation State Management", () => {
     it("updates state with object value", async () => {
       type PageState = { count: number };
 
-      function Page({
-        state,
-        setState,
-      }: RouteComponentProps<Record<string, never>, PageState>) {
+      function Page({ state, setState }: RouteComponentProps<Record<string, never>, PageState>) {
         return (
           <div>
             <span>Count: {state?.count ?? 0}</span>
@@ -75,18 +68,11 @@ describe("Navigation State Management", () => {
     it("updates state with function updater", async () => {
       type PageState = { count: number };
 
-      function Page({
-        state,
-        setState,
-      }: RouteComponentProps<Record<string, never>, PageState>) {
+      function Page({ state, setState }: RouteComponentProps<Record<string, never>, PageState>) {
         return (
           <div>
             <span>Count: {state?.count ?? 0}</span>
-            <button
-              onClick={() =>
-                void setState((prev) => ({ count: (prev?.count ?? 0) + 1 }))
-              }
-            >
+            <button onClick={() => void setState((prev) => ({ count: (prev?.count ?? 0) + 1 }))}>
               Increment
             </button>
           </div>
@@ -117,10 +103,7 @@ describe("Navigation State Management", () => {
       type PageState = { count: number };
       let setStatePromise: Promise<void> | undefined;
 
-      function Page({
-        state,
-        setState,
-      }: RouteComponentProps<Record<string, never>, PageState>) {
+      function Page({ state, setState }: RouteComponentProps<Record<string, never>, PageState>) {
         return (
           <div>
             <span>Count: {state?.count ?? 0}</span>
@@ -197,11 +180,7 @@ describe("Navigation State Management", () => {
         return (
           <div>
             <span>Count: {state?.count ?? 0}</span>
-            <button
-              onClick={() =>
-                setStateSync((prev) => ({ count: (prev?.count ?? 0) + 1 }))
-              }
-            >
+            <button onClick={() => setStateSync((prev) => ({ count: (prev?.count ?? 0) + 1 }))}>
               Increment
             </button>
           </div>
@@ -365,9 +344,7 @@ describe("Navigation State Management", () => {
         return (
           <div>
             <span>Sidebar: {state?.sidebar ? "open" : "closed"}</span>
-            <button onClick={() => setStateSync({ sidebar: true })}>
-              Open Sidebar
-            </button>
+            <button onClick={() => setStateSync({ sidebar: true })}>Open Sidebar</button>
             <Outlet />
           </div>
         );
@@ -380,9 +357,7 @@ describe("Navigation State Management", () => {
         return (
           <div>
             <span>Tab: {state?.tab ?? "default"}</span>
-            <button onClick={() => setStateSync({ tab: "settings" })}>
-              Settings Tab
-            </button>
+            <button onClick={() => setStateSync({ tab: "settings" })}>Settings Tab</button>
           </div>
         );
       }
@@ -591,12 +566,7 @@ describe("Navigation State Management", () => {
     });
 
     it("routes with loader but no state type work", () => {
-      function Page({
-        data,
-      }: {
-        data: { name: string };
-        params: Record<string, never>;
-      }) {
+      function Page({ data }: { data: { name: string }; params: Record<string, never> }) {
         return <div>Hello, {data.name}</div>;
       }
 

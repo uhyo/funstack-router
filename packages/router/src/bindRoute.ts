@@ -49,9 +49,6 @@ export function bindRoute(
   partialRoute: OpaqueRouteDefinition,
   binding: BindRouteOptions,
 ): OpaqueRouteDefinition;
-export function bindRoute(
-  partialRoute: object,
-  binding: BindRouteOptions,
-): object {
+export function bindRoute(partialRoute: object, binding: BindRouteOptions): object {
   return { ...partialRoute, ...binding };
 }

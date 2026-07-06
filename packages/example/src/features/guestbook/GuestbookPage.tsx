@@ -12,10 +12,7 @@ import type { GuestbookEntry } from "./types";
  * - After the action, all loaders are revalidated (fresh data)
  */
 
-type ActionResult =
-  | { success: true }
-  | { success: false; error: string }
-  | null;
+type ActionResult = { success: true } | { success: false; error: string } | null;
 
 type Props = {
   data: Promise<{ entries: GuestbookEntry[]; actionResult: ActionResult }>;
@@ -27,9 +24,8 @@ export function GuestbookPage({ data, isPending }: Props) {
     <div>
       <h1>Guestbook (Form Action Demo)</h1>
       <p style={{ color: "#666" }}>
-        Submit a message using a native{" "}
-        <code>&lt;form method=&quot;post&quot;&gt;</code>. The router intercepts
-        the POST and runs the route&apos;s <code>action</code>.
+        Submit a message using a native <code>&lt;form method=&quot;post&quot;&gt;</code>. The
+        router intercepts the POST and runs the route&apos;s <code>action</code>.
       </p>
 
       <Suspense fallback={<LoadingSpinner />}>
@@ -65,17 +61,15 @@ export function GuestbookPage({ data, isPending }: Props) {
 });`}</pre>
         <ul style={{ lineHeight: "1.8" }}>
           <li>
-            <code>action</code> runs on{" "}
-            <code>&lt;form method=&quot;post&quot;&gt;</code> submissions
+            <code>action</code> runs on <code>&lt;form method=&quot;post&quot;&gt;</code>{" "}
+            submissions
           </li>
           <li>
-            <code>actionResult</code> in the loader contains the action&apos;s
-            return value
+            <code>actionResult</code> in the loader contains the action&apos;s return value
           </li>
           <li>Loaders revalidate after every action (fresh data)</li>
           <li>
-            No wrapper component needed — native <code>&lt;form&gt;</code>{" "}
-            elements work
+            No wrapper component needed — native <code>&lt;form&gt;</code> elements work
           </li>
         </ul>
       </div>

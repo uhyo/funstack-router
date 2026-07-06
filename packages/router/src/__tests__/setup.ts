@@ -119,18 +119,14 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     __lastNavigateInfo: undefined as unknown,
 
     navigate: vi.fn(
-      (
-        url: string,
-        options?: { state?: unknown; history?: string; info?: unknown },
-      ) => {
+      (url: string, options?: { state?: unknown; history?: string; info?: unknown }) => {
         const newUrl = new URL(url, currentEntry.url).href;
 
         // Store info for testing and dispatch navigate event with info
         mockNavigation.__lastNavigateInfo = options?.info;
 
         const previousEntry = currentEntry;
-        const navigationType =
-          options?.history === "replace" ? "replace" : "push";
+        const navigationType = options?.history === "replace" ? "replace" : "push";
 
         if (options?.history !== "replace") {
           // When pushing a new entry, dispose all entries after current position
@@ -141,21 +137,13 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
             disposedEntry.__dispose();
           }
 
-          const newEntry = new MockNavigationHistoryEntry(
-            newUrl,
-            entries.length,
-            options?.state,
-          );
+          const newEntry = new MockNavigationHistoryEntry(newUrl, entries.length, options?.state);
           entries.push(newEntry);
           currentEntry = newEntry;
         } else {
           // Replace: reuses the same slot (index), so key stays the same via getKeyForSlot
           const currentIndex = entries.indexOf(currentEntry);
-          const newEntry = new MockNavigationHistoryEntry(
-            newUrl,
-            currentIndex,
-            options?.state,
-          );
+          const newEntry = new MockNavigationHistoryEntry(newUrl, currentIndex, options?.state);
           entries[currentIndex] = newEntry;
           currentEntry = newEntry;
         }
@@ -186,20 +174,16 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       dispatchEvent("currententrychange", event);
     }),
 
-    addEventListener: vi.fn(
-      (type: string, listener: (event: Event) => void) => {
-        if (!listeners.has(type)) {
-          listeners.set(type, new Set());
-        }
-        listeners.get(type)!.add(listener);
-      },
-    ),
+    addEventListener: vi.fn((type: string, listener: (event: Event) => void) => {
+      if (!listeners.has(type)) {
+        listeners.set(type, new Set());
+      }
+      listeners.get(type)!.add(listener);
+    }),
 
-    removeEventListener: vi.fn(
-      (type: string, listener: (event: Event) => void) => {
-        listeners.get(type)?.delete(listener);
-      },
-    ),
+    removeEventListener: vi.fn((type: string, listener: (event: Event) => void) => {
+      listeners.get(type)?.delete(listener);
+    }),
 
     // Test helper to simulate navigation (bypasses navigate event)
     __simulateNavigation(url: string, state?: unknown) {
@@ -216,11 +200,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
       proceed: () => void;
     } {
       const newUrl = new URL(url, currentEntry.url).href;
-      const event = createMockNavigateEvent(
-        newUrl,
-        options?.info,
-        options?.formData,
-      );
+      const event = createMockNavigateEvent(newUrl, options?.info, options?.formData);
 
       // Dispatch navigate event first (allows onNavigate to be called)
       dispatchEvent("navigate", event);
@@ -239,10 +219,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
               disposedEntry.__dispose();
             }
 
-            const newEntry = new MockNavigationHistoryEntry(
-              newUrl,
-              entries.length,
-            );
+            const newEntry = new MockNavigationHistoryEntry(newUrl, entries.length);
             entries.push(newEntry);
             currentEntry = newEntry;
             mockNavigation.currentEntry = currentEntry;
@@ -312,12 +289,7 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     // dispatches currententrychange without changing the entry.
     __simulateReload() {
       const reloadUrl = currentEntry.url;
-      const event = createMockNavigateEvent(
-        reloadUrl,
-        undefined,
-        null,
-        "reload",
-      );
+      const event = createMockNavigateEvent(reloadUrl, undefined, null, "reload");
 
       // Override destination to point to the current entry (reload stays on same entry)
       (event as unknown as Record<string, unknown>).destination = {

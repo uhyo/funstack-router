@@ -5,20 +5,12 @@ interface CodeBlockProps {
   language?: "tsx" | "typescript" | "bash" | "json";
 }
 
-export async function CodeBlock({
-  children,
-  language = "tsx",
-}: CodeBlockProps) {
+export async function CodeBlock({ children, language = "tsx" }: CodeBlockProps) {
   const code = children.trim();
   const html = await codeToHtml(code, {
     lang: language,
     theme: "github-dark",
   });
 
-  return (
-    <div
-      className="code-block-wrapper"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  return <div className="code-block-wrapper" dangerouslySetInnerHTML={{ __html: html }} />;
 }

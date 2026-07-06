@@ -7,9 +7,7 @@ import { LearnPage } from "./pages/LearnPage.js";
 import { ClientApp } from "./ClientApp.js";
 import { Outlet } from "@funstack/router";
 
-const HomePage = lazy(() =>
-  import("./pages/HomePage.js").then((m) => ({ default: m.HomePage })),
-);
+const HomePage = lazy(() => import("./pages/HomePage.js").then((m) => ({ default: m.HomePage })));
 const GettingStartedPage = lazy(() =>
   import("./pages/GettingStartedPage.js").then((m) => ({
     default: m.GettingStartedPage,

@@ -8,13 +8,7 @@ export function NewRecipeForm() {
       <form method="POST" className="recipe-form">
         <div className="form-field">
           <label htmlFor="title">Title</label>
-          <input
-            id="title"
-            name="title"
-            type="text"
-            required
-            placeholder="Enter recipe title"
-          />
+          <input id="title" name="title" type="text" required placeholder="Enter recipe title" />
         </div>
         <div className="form-field">
           <label htmlFor="description">Description</label>

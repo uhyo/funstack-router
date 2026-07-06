@@ -45,8 +45,7 @@ export function FavoritesList({ state, setStateSync }: Props) {
 
       {sorted.length === 0 ? (
         <p className="empty-state">
-          No favorites yet. Browse <a href="/recipes">recipes</a> and mark some
-          as favorites!
+          No favorites yet. Browse <a href="/recipes">recipes</a> and mark some as favorites!
         </p>
       ) : (
         <ul className="recipe-list">
@@ -55,9 +54,7 @@ export function FavoritesList({ state, setStateSync }: Props) {
               <a href={`/recipes/${recipe.id}`} className="recipe-link">
                 <div className="recipe-info">
                   <span className="recipe-title">{recipe.title}</span>
-                  <span className="recipe-description">
-                    {recipe.description}
-                  </span>
+                  <span className="recipe-description">{recipe.description}</span>
                 </div>
               </a>
             </li>

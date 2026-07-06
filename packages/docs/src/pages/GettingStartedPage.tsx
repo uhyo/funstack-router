@@ -18,9 +18,9 @@ yarn add @funstack/router`}</CodeBlock>
       <section>
         <h2>AI Coding Agent Support</h2>
         <p>
-          <code>@funstack/router</code> ships with an Agent skill that gives
-          your coding assistant (Claude Code, Cursor, GitHub Copilot, etc.)
-          knowledge about the router's API and best practices. Run:
+          <code>@funstack/router</code> ships with an Agent skill that gives your coding assistant
+          (Claude Code, Cursor, GitHub Copilot, etc.) knowledge about the router's API and best
+          practices. Run:
         </p>
         <CodeBlock language="bash">{`npx -p @funstack/router funstack-router-skill-installer
 # or
@@ -28,8 +28,8 @@ pnpm dlx --package @funstack/router funstack-router-skill-installer
 # or
 yarn dlx -p @funstack/router funstack-router-skill-installer`}</CodeBlock>
         <p>
-          The installer will guide you through setting up the skill for your
-          preferred AI agent. Alternatively, if you prefer{" "}
+          The installer will guide you through setting up the skill for your preferred AI agent.
+          Alternatively, if you prefer{" "}
           <a href="https://skills.sh/" target="_blank">
             npx skills
           </a>
@@ -49,16 +49,15 @@ yarn dlx -p @funstack/router funstack-router-skill-installer`}</CodeBlock>
           >
             Navigation API
           </a>{" "}
-          which is supported in Chrome 102+, Edge 102+, Firefox 147+, Safari
-          26.2+.
+          which is supported in Chrome 102+, Edge 102+, Firefox 147+, Safari 26.2+.
         </p>
       </section>
 
       <section>
         <h2>Basic Setup</h2>
         <p>
-          Create your routes using the <code>route</code> helper function and
-          render them with the <code>Router</code> component:
+          Create your routes using the <code>route</code> helper function and render them with the{" "}
+          <code>Router</code> component:
         </p>
         <CodeBlock language="tsx">{`import { Router, route, Outlet } from "@funstack/router";
 
@@ -104,10 +103,9 @@ function App() {
       <section>
         <h2>Route Parameters</h2>
         <p>
-          Define dynamic segments in your paths using the <code>:param</code>{" "}
-          syntax. Route components receive parameters via the{" "}
-          <code>params</code> prop, which is fully typed based on the path
-          pattern:
+          Define dynamic segments in your paths using the <code>:param</code> syntax. Route
+          components receive parameters via the <code>params</code> prop, which is fully typed based
+          on the path pattern:
         </p>
         <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
@@ -126,9 +124,9 @@ const routes = [
       <section>
         <h2>Data Loading</h2>
         <p>
-          Use the <code>loader</code> option to fetch data before rendering a
-          route. The component receives both <code>data</code> (from the loader)
-          and <code>params</code> (from the URL) as props:
+          Use the <code>loader</code> option to fetch data before rendering a route. The component
+          receives both <code>data</code> (from the loader) and <code>params</code> (from the URL)
+          as props:
         </p>
         <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 

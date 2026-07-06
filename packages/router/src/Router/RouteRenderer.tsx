@@ -13,10 +13,7 @@ export type RouteRendererProps = {
 /**
  * Recursively render matched routes with proper context.
  */
-export function RouteRenderer({
-  matchedRoutes,
-  index,
-}: RouteRendererProps): ReactNode {
+export function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): ReactNode {
   // Get parent route context (null for root route)
   const parentRouteContext = useContext(RouteContext);
 
@@ -24,14 +21,8 @@ export function RouteRenderer({
   if (!routerContext) {
     throw new Error("RouteRenderer must be used within RouterContext");
   }
-  const {
-    locationState,
-    locationInfo,
-    url,
-    isPending,
-    navigateAsync,
-    updateCurrentEntryState,
-  } = routerContext;
+  const { locationState, locationInfo, url, isPending, navigateAsync, updateCurrentEntryState } =
+    routerContext;
 
   const match = matchedRoutes[index];
 
@@ -41,14 +32,13 @@ export function RouteRenderer({
   const internalState = locationState as InternalRouteState | undefined;
   const routeState = internalState?.__routeStates?.[index];
 
-  const { setState, setStateSync, resetState, resetStateSync } =
-    useRouteStateCallbacks(
-      index,
-      internalState,
-      url,
-      navigateAsync,
-      updateCurrentEntryState,
-    );
+  const { setState, setStateSync, resetState, resetStateSync } = useRouteStateCallbacks(
+    index,
+    internalState,
+    url,
+    navigateAsync,
+    updateCurrentEntryState,
+  );
 
   // Create outlet for child routes
   const outlet = useMemo(
@@ -145,18 +135,11 @@ export function RouteRenderer({
       isPending: boolean;
     }>;
     return (
-      <ComponentWithoutData
-        params={params}
-        {...stateProps}
-        info={info}
-        isPending={isPending}
-      />
+      <ComponentWithoutData params={params} {...stateProps} info={info} isPending={isPending} />
     );
   };
 
   return (
-    <RouteContext.Provider value={routeContextValue}>
-      {renderComponent()}
-    </RouteContext.Provider>
+    <RouteContext.Provider value={routeContextValue}>{renderComponent()}</RouteContext.Provider>
   );
 }

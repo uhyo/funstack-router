@@ -25,9 +25,7 @@ describe("useBlocker", () => {
       return null;
     }
 
-    expect(() => render(<TestComponent />)).toThrow(
-      "useBlocker must be used within a Router",
-    );
+    expect(() => render(<TestComponent />)).toThrow("useBlocker must be used within a Router");
   });
 
   it("does not block navigation when shouldBlock returns false", () => {
@@ -45,8 +43,7 @@ describe("useBlocker", () => {
     expect(screen.getByText("Home")).toBeInTheDocument();
 
     // Simulate navigation with event
-    const { event, proceed } =
-      mockNavigation.__simulateNavigationWithEvent("/about");
+    const { event, proceed } = mockNavigation.__simulateNavigationWithEvent("/about");
 
     // Navigation should not be prevented
     expect(event.defaultPrevented).toBe(false);
@@ -98,8 +95,7 @@ describe("useBlocker", () => {
     expect(screen.getByText("Home")).toBeInTheDocument();
 
     // Navigation should not be blocked when not dirty
-    const { event: event1 } =
-      mockNavigation.__simulateNavigationWithEvent("/about");
+    const { event: event1 } = mockNavigation.__simulateNavigationWithEvent("/about");
     expect(event1.defaultPrevented).toBe(false);
 
     // Make form dirty - wrap in act to ensure state update and re-render complete
@@ -108,8 +104,7 @@ describe("useBlocker", () => {
     });
 
     // Navigation should now be blocked
-    const { event: event2 } =
-      mockNavigation.__simulateNavigationWithEvent("/other");
+    const { event: event2 } = mockNavigation.__simulateNavigationWithEvent("/other");
     expect(event2.defaultPrevented).toBe(true);
   });
 
@@ -203,8 +198,7 @@ describe("useBlocker", () => {
     const { rerender } = render(<Router routes={routes} />);
 
     // Navigation should be blocked initially
-    const { event: event1 } =
-      mockNavigation.__simulateNavigationWithEvent("/about");
+    const { event: event1 } = mockNavigation.__simulateNavigationWithEvent("/about");
     expect(event1.defaultPrevented).toBe(true);
 
     // Rerender without blocker component
@@ -215,8 +209,7 @@ describe("useBlocker", () => {
     rerender(<Router routes={routesWithoutBlocker} />);
 
     // Navigation should now be allowed
-    const { event: event2 } =
-      mockNavigation.__simulateNavigationWithEvent("/other");
+    const { event: event2 } = mockNavigation.__simulateNavigationWithEvent("/other");
     expect(event2.defaultPrevented).toBe(false);
   });
 

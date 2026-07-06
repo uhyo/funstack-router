@@ -1,13 +1,5 @@
-import type {
-  RouterAdapter,
-  LocationEntry,
-  EntryChange,
-} from "./RouterAdapter.js";
-import type {
-  InternalRouteDefinition,
-  NavigateOptions,
-  OnNavigateCallback,
-} from "../types.js";
+import type { RouterAdapter, LocationEntry, EntryChange } from "./RouterAdapter.js";
+import type { InternalRouteDefinition, NavigateOptions, OnNavigateCallback } from "../types.js";
 
 /**
  * Null adapter for when Navigation API is unavailable and no fallback is configured.

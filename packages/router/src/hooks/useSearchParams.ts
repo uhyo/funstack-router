@@ -33,10 +33,7 @@ export function useSearchParams(): [URLSearchParams, SetSearchParams] {
       let newParams: URLSearchParams;
       if (typeof params === "function") {
         const result = params(new URLSearchParams(url.search));
-        newParams =
-          result instanceof URLSearchParams
-            ? result
-            : new URLSearchParams(result);
+        newParams = result instanceof URLSearchParams ? result : new URLSearchParams(result);
       } else if (params instanceof URLSearchParams) {
         newParams = params;
       } else {

@@ -6,38 +6,34 @@ export function LearnTypeSafetyPage() {
       <h2>Type Safety</h2>
 
       <p className="page-intro">
-        FUNSTACK Router provides first-class TypeScript support, allowing you to
-        access route params, navigation state, and loader data with full type
-        safety. This guide covers two approaches: receiving typed data through
-        component props (recommended) and accessing it through hooks.
+        FUNSTACK Router provides first-class TypeScript support, allowing you to access route
+        params, navigation state, and loader data with full type safety. This guide covers two
+        approaches: receiving typed data through component props (recommended) and accessing it
+        through hooks.
       </p>
 
       <section>
         <h3>Why Type Safety Matters</h3>
         <p>
-          Routing is one of the most common sources of runtime errors in web
-          applications. Typos in parameter names, incorrect assumptions about
-          data shapes, or forgetting to handle navigation state can lead to
-          subtle bugs that are hard to track down.
+          Routing is one of the most common sources of runtime errors in web applications. Typos in
+          parameter names, incorrect assumptions about data shapes, or forgetting to handle
+          navigation state can lead to subtle bugs that are hard to track down.
         </p>
         <p>
-          With FUNSTACK Router's type-safe approach, the TypeScript compiler
-          catches these errors at build time. You get autocomplete for parameter
-          names, type checking for loader data, and confidence that your route
-          components receive exactly the data they expect.
+          With FUNSTACK Router's type-safe approach, the TypeScript compiler catches these errors at
+          build time. You get autocomplete for parameter names, type checking for loader data, and
+          confidence that your route components receive exactly the data they expect.
         </p>
         <p>There are two ways to access typed route data:</p>
         <ul>
           <li>
-            <strong>Props (Recommended)</strong> &mdash; Route components
-            receive typed data directly as props. This is the simplest and most
-            type-safe approach.
+            <strong>Props (Recommended)</strong> &mdash; Route components receive typed data
+            directly as props. This is the simplest and most type-safe approach.
           </li>
           <li>
-            <strong>Hooks</strong> &mdash; Use hooks like{" "}
-            <code>useRouteParams</code> and <code>useRouteData</code> to access
-            data anywhere in the component tree. This requires routes to have an{" "}
-            <code>id</code> property.
+            <strong>Hooks</strong> &mdash; Use hooks like <code>useRouteParams</code> and{" "}
+            <code>useRouteData</code> to access data anywhere in the component tree. This requires
+            routes to have an <code>id</code> property.
           </li>
         </ul>
       </section>
@@ -47,9 +43,9 @@ export function LearnTypeSafetyPage() {
 
         <h4>Accessing Typed Params via Props</h4>
         <p>
-          When you define a route with URL parameters, FUNSTACK Router
-          automatically infers the parameter types from the path pattern. Your
-          component receives these params as a typed <code>params</code> prop.
+          When you define a route with URL parameters, FUNSTACK Router automatically infers the
+          parameter types from the path pattern. Your component receives these params as a typed{" "}
+          <code>params</code> prop.
         </p>
         <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
@@ -64,8 +60,8 @@ function UserPage({ params }: { params: { userId: string } }) {
   return <h1>User: {params.userId}</h1>;
 }`}</CodeBlock>
         <p>
-          For explicit type annotations, use the{" "}
-          <code>RouteComponentProps</code> type helper with your params type:
+          For explicit type annotations, use the <code>RouteComponentProps</code> type helper with
+          your params type:
         </p>
         <CodeBlock language="tsx">{`import { route, type RouteComponentProps } from "@funstack/router";
 
@@ -82,19 +78,17 @@ const userRoute = route({
   component: UserPage,
 });`}</CodeBlock>
         <p>
-          The <code>route()</code> function validates that your component's
-          props match the path pattern. If you annotate <code>params</code> with{" "}
-          <code>{`{ userId: string }`}</code> but the path is{" "}
-          <code>/users/:id</code>, TypeScript will report an error.
+          The <code>route()</code> function validates that your component's props match the path
+          pattern. If you annotate <code>params</code> with <code>{`{ userId: string }`}</code> but
+          the path is <code>/users/:id</code>, TypeScript will report an error.
         </p>
 
         <h4>Routes with Loaders</h4>
         <p>
-          When your route has a loader function, the component receives the
-          loader's return value as a <code>data</code> prop. The data can be
-          wrapped in a Promise, in which case you unwrap it using React's{" "}
-          <code>use()</code> hook. Use <code>RouteComponentPropsWithData</code>{" "}
-          for routes with loaders.
+          When your route has a loader function, the component receives the loader's return value as
+          a <code>data</code> prop. The data can be wrapped in a Promise, in which case you unwrap
+          it using React's <code>use()</code> hook. Use <code>RouteComponentPropsWithData</code> for
+          routes with loaders.
         </p>
         <CodeBlock language="tsx">{`import { use, Suspense } from "react";
 import { route, type RouteComponentPropsWithData } from "@funstack/router";
@@ -141,19 +135,17 @@ const userRoute = route({
   },
 });`}</CodeBlock>
         <p>
-          The <code>data</code> prop is typed as{" "}
-          <code>Promise&lt;User&gt;</code> based on the loader's return type.
-          TypeScript ensures you handle the data shape correctly.
+          The <code>data</code> prop is typed as <code>Promise&lt;User&gt;</code> based on the
+          loader's return type. TypeScript ensures you handle the data shape correctly.
         </p>
 
         <h4>Routes with Navigation State</h4>
         <p>
-          Navigation state lets you store data in a navigation entry that
-          doesn't appear in the URL. Navigation state data is persisted across
-          page reloads and history traversals (meaning it is available after
-          user goes to another page and then uses the back button to returns to
-          the current page). Use the <code>routeState</code> helper to define
-          typed state for your routes.
+          Navigation state lets you store data in a navigation entry that doesn't appear in the URL.
+          Navigation state data is persisted across page reloads and history traversals (meaning it
+          is available after user goes to another page and then uses the back button to returns to
+          the current page). Use the <code>routeState</code> helper to define typed state for your
+          routes.
         </p>
         <CodeBlock language="tsx">{`import { routeState, RouteComponentProps } from "@funstack/router";
 
@@ -218,36 +210,33 @@ const productListRoute = routeState<ProductListState>()({
         </p>
         <ul>
           <li>
-            <code>state</code> &mdash; The current navigation state (or{" "}
-            <code>undefined</code> if not set)
+            <code>state</code> &mdash; The current navigation state (or <code>undefined</code> if
+            not set)
           </li>
           <li>
-            <code>setState</code> &mdash; Navigate to the same URL with new
-            state (creates a new history entry). Goes through a React
-            transition, so it may set <code>isPending</code> to{" "}
+            <code>setState</code> &mdash; Navigate to the same URL with new state (creates a new
+            history entry). Goes through a React transition, so it may set <code>isPending</code> to{" "}
             <code>true</code>.
           </li>
           <li>
-            <code>setStateSync</code> &mdash; Update state synchronously without
-            creating a new history entry. Bypasses React transitions, so{" "}
-            <code>isPending</code> stays <code>false</code>.
+            <code>setStateSync</code> &mdash; Update state synchronously without creating a new
+            history entry. Bypasses React transitions, so <code>isPending</code> stays{" "}
+            <code>false</code>.
           </li>
           <li>
-            <code>resetState</code> &mdash; Clear the navigation state
-            asynchronously via replace navigation. Like <code>setState</code>,
-            goes through React transitions.
+            <code>resetState</code> &mdash; Clear the navigation state asynchronously via replace
+            navigation. Like <code>setState</code>, goes through React transitions.
           </li>
           <li>
-            <code>resetStateSync</code> &mdash; Clear the navigation state
-            synchronously. Like <code>setStateSync</code>, bypasses React
-            transitions.
+            <code>resetStateSync</code> &mdash; Clear the navigation state synchronously. Like{" "}
+            <code>setStateSync</code>, bypasses React transitions.
           </li>
         </ul>
 
         <h4>Combining Loader and State</h4>
         <p>
-          You can use both loaders and navigation state together. The{" "}
-          <code>routeState</code> helper works with routes that have loaders.
+          You can use both loaders and navigation state together. The <code>routeState</code> helper
+          works with routes that have loaders.
         </p>
         <CodeBlock language="tsx">{`import { use, Suspense } from "react";
 import { route, routeState, RouteComponentPropsWithData } from "@funstack/router";
@@ -324,34 +313,30 @@ const productListRoute = routeState<ProductListState>()({
         <h3 id="hooks">Approach 2: Hooks</h3>
 
         <h4>When to Use Hooks</h4>
-        <p>
-          While props are the recommended approach for most cases, hooks are
-          useful when:
-        </p>
+        <p>While props are the recommended approach for most cases, hooks are useful when:</p>
         <ul>
           <li>
-            <strong>Avoiding prop drilling</strong> &mdash; Deeply nested
-            components need route data without passing props through every level
+            <strong>Avoiding prop drilling</strong> &mdash; Deeply nested components need route data
+            without passing props through every level
           </li>
           <li>
-            <strong>Accessing parent route data</strong> &mdash; Child routes
-            need to read data loaded by ancestor routes
+            <strong>Accessing parent route data</strong> &mdash; Child routes need to read data
+            loaded by ancestor routes
           </li>
           <li>
-            <strong>Using React Server Components</strong> &mdash; Route
-            components cannot receive props directly
+            <strong>Using React Server Components</strong> &mdash; Route components cannot receive
+            props directly
           </li>
         </ul>
         <p>
-          <strong>Important:</strong> To use hooks with full type safety, routes
-          must have an <code>id</code> property.
+          <strong>Important:</strong> To use hooks with full type safety, routes must have an{" "}
+          <code>id</code> property.
         </p>
 
         <h4>Setting Up Routes with IDs</h4>
         <p>
-          Add an <code>id</code> property to routes you want to access via
-          hooks. The ID can be any string, but using a descriptive name helps
-          with debugging.
+          Add an <code>id</code> property to routes you want to access via hooks. The ID can be any
+          string, but using a descriptive name helps with debugging.
         </p>
         <CodeBlock language="tsx">{`import { route } from "@funstack/router";
 
@@ -387,8 +372,8 @@ const routes = [
 
         <h4>useRouteParams</h4>
         <p>
-          The <code>useRouteParams</code> hook returns typed params for a
-          specific route. It works with the current route or any ancestor route.
+          The <code>useRouteParams</code> hook returns typed params for a specific route. It works
+          with the current route or any ancestor route.
         </p>
         <CodeBlock language="tsx">{`import { useRouteParams } from "@funstack/router";
 
@@ -403,8 +388,8 @@ function UserAvatar() {
 
         <h4>useRouteState</h4>
         <p>
-          The <code>useRouteState</code> hook returns the typed navigation state
-          for a route. Returns <code>undefined</code> when no state is set.
+          The <code>useRouteState</code> hook returns the typed navigation state for a route.
+          Returns <code>undefined</code> when no state is set.
         </p>
         <CodeBlock language="tsx">{`import { useRouteState } from "@funstack/router";
 
@@ -426,9 +411,8 @@ function FilterIndicator() {
 
         <h4>useRouteData</h4>
         <p>
-          The <code>useRouteData</code> hook returns the typed loader data for a
-          route. This is particularly useful for accessing parent route data
-          from child routes.
+          The <code>useRouteData</code> hook returns the typed loader data for a route. This is
+          particularly useful for accessing parent route data from child routes.
         </p>
         <CodeBlock language="tsx">{`import { use } from "react";
 import { useRouteData } from "@funstack/router";
@@ -447,18 +431,16 @@ function UserPostsPage() {
   );
 }`}</CodeBlock>
         <p>
-          This pattern is especially powerful in nested routes where child
-          components need access to data loaded by parent routes without prop
-          drilling.
+          This pattern is especially powerful in nested routes where child components need access to
+          data loaded by parent routes without prop drilling.
         </p>
       </section>
 
       <section>
         <h3>Route Definition Best Practices</h3>
         <p>
-          To maximize developer experience and maintainability while also
-          ensuring type safety, follow the below best practices when defining
-          your routes:
+          To maximize developer experience and maintainability while also ensuring type safety,
+          follow the below best practices when defining your routes:
         </p>
         <CodeBlock language="tsx">{`interface User {
   name: string;
@@ -489,18 +471,16 @@ function UserPage({ params, data }: UserPageProps) {
         <p>Key techniques demonstrated here include:</p>
         <ul>
           <li>
-            Defining explicit <code>Params</code> and <code>Data</code> types
-            &mdash; requires minimal type checking effort while improving
-            clarity
+            Defining explicit <code>Params</code> and <code>Data</code> types &mdash; requires
+            minimal type checking effort while improving clarity
           </li>
           <li>
-            Using <code>RouteComponentPropsWithData</code> to define component
-            props
+            Using <code>RouteComponentPropsWithData</code> to define component props
           </li>
         </ul>
         <p>
-          TypeScript will validate that the route definition and component props
-          remain in sync as you make changes over time.
+          TypeScript will validate that the route definition and component props remain in sync as
+          you make changes over time.
         </p>
       </section>
 
@@ -509,16 +489,14 @@ function UserPage({ params, data }: UserPageProps) {
         <ul>
           <li>
             Use <code>RouteComponentProps&lt;Params, State&gt;</code> or{" "}
-            <code>RouteComponentPropsWithData&lt;Params, Data, State&gt;</code>{" "}
-            for constructing route component prop types
+            <code>RouteComponentPropsWithData&lt;Params, Data, State&gt;</code> for constructing
+            route component prop types
           </li>
           <li>
-            The <code>routeState</code> helper adds typed route state management
-            to any route
+            The <code>routeState</code> helper adds typed route state management to any route
           </li>
           <li>
-            Hooks require routes to have an <code>id</code> property for type
-            safety
+            Hooks require routes to have an <code>id</code> property for type safety
           </li>
           <li>Use hooks to avoid prop drilling or access parent route data</li>
         </ul>

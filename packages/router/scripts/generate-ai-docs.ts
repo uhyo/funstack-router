@@ -16,9 +16,7 @@ const EXCLUDED_PAGES = new Set([
 
 async function discoverContentPages(): Promise<string[]> {
   const files = await fs.readdir(DOCS_PAGES_DIR);
-  return files
-    .filter((f) => f.endsWith("Page.tsx") && !EXCLUDED_PAGES.has(f))
-    .sort();
+  return files.filter((f) => f.endsWith("Page.tsx") && !EXCLUDED_PAGES.has(f)).sort();
 }
 
 function extractMetadata(content: string) {
@@ -27,9 +25,7 @@ function extractMetadata(content: string) {
   const title = titleMatch ? titleMatch[1].trim() : "";
 
   // Extract description from <p className="page-intro">
-  const introMatch = content.match(
-    /<p className="page-intro">\s*([\s\S]*?)\s*<\/p>/,
-  );
+  const introMatch = content.match(/<p className="page-intro">\s*([\s\S]*?)\s*<\/p>/);
   let description = "";
   if (introMatch) {
     // Strip JSX tags and normalize whitespace
@@ -56,12 +52,7 @@ function generateIndex(
     description: string;
   }[],
 ) {
-  const lines = [
-    "# FUNSTACK Router Documentation",
-    "",
-    "## Available Documentation",
-    "",
-  ];
+  const lines = ["# FUNSTACK Router Documentation", "", "## Available Documentation", ""];
 
   const groups = new Map<string | null, typeof docs>();
   for (const doc of docs) {
@@ -110,10 +101,7 @@ async function main() {
   // Extract metadata and generate index
   const docs = await Promise.all(
     contentPages.map(async (fileName) => {
-      const content = await fs.readFile(
-        path.join(DOCS_PAGES_DIR, fileName),
-        "utf-8",
-      );
+      const content = await fs.readFile(path.join(DOCS_PAGES_DIR, fileName), "utf-8");
       const { title, description } = extractMetadata(content);
       return {
         fileName,
@@ -123,11 +111,7 @@ async function main() {
     }),
   );
 
-  await fs.writeFile(
-    path.join(OUTPUT_DIR, "index.md"),
-    generateIndex(docs),
-    "utf-8",
-  );
+  await fs.writeFile(path.join(OUTPUT_DIR, "index.md"), generateIndex(docs), "utf-8");
 
   console.log(`Generated ${docs.length} doc files + index.md in ${OUTPUT_DIR}`);
 }

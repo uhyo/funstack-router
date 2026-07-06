@@ -51,9 +51,7 @@ import { lazyRouteChildren, route } from "@funstack/router";
 route({
   path: "admin",
   component: AdminLayout,
-  children: lazyRouteChildren(() =>
-    import("./admin/routes").then((module) => module.adminRoutes),
-  ),
+  children: lazyRouteChildren(() => import("./admin/routes").then((module) => module.adminRoutes)),
 });
 ```
 
@@ -74,9 +72,7 @@ That is why this design should provide an official helper instead of only docume
 
 ```typescript
 // packages/router/src/lazyRouteChildren.ts (proposed)
-export function lazyRouteChildren<T>(
-  load: () => Promise<T>,
-): () => T | Promise<T> {
+export function lazyRouteChildren<T>(load: () => Promise<T>): () => T | Promise<T> {
   let value: T | undefined;
   let promise: Promise<T> | undefined;
 
@@ -161,9 +157,7 @@ route({
   // Pathless layout route — always matches, adds a shared layout
   component: AuthenticatedLayout,
   children: lazyRouteChildren(() =>
-    import("./authenticated/routes").then(
-      (module) => module.authenticatedRoutes,
-    ),
+    import("./authenticated/routes").then((module) => module.authenticatedRoutes),
   ),
 });
 ```
@@ -174,9 +168,7 @@ route({
 routeState<AdminState>()({
   path: "admin",
   component: AdminLayout,
-  children: lazyRouteChildren(() =>
-    import("./admin/routes").then((module) => module.adminRoutes),
-  ),
+  children: lazyRouteChildren(() => import("./admin/routes").then((module) => module.adminRoutes)),
 });
 ```
 
@@ -261,9 +253,7 @@ function matchRoute(route, pathname, options) {
     // If result is a Promise, resolvedChildren stays undefined
   }
 
-  const staticChildren = Array.isArray(route.children)
-    ? route.children
-    : undefined;
+  const staticChildren = Array.isArray(route.children) ? route.children : undefined;
   const children = resolvedChildren ?? staticChildren;
   const hasChildren =
     (children !== undefined && children.length > 0) ||
@@ -719,9 +709,7 @@ Lazy route definitions and `React.lazy` components are orthogonal and composable
 // admin/routes.ts
 const AdminSettings = React.lazy(() => import("./AdminSettings"));
 
-export const adminRoutes = [
-  route({ path: "settings", component: AdminSettings }),
-];
+export const adminRoutes = [route({ path: "settings", component: AdminSettings })];
 ```
 
 The route definition (path, structure) loads when the lazy children resolve. The component code loads when React renders it (handled by Suspense). Users get two levels of code splitting if desired.
@@ -751,9 +739,7 @@ import { lazyRouteChildren } from "@funstack/router";
 route({
   path: "admin",
   component: AdminLayout,
-  children: lazyRouteChildren(() =>
-    import("./admin/routes").then((module) => module.adminRoutes),
-  ),
+  children: lazyRouteChildren(() => import("./admin/routes").then((module) => module.adminRoutes)),
 });
 ```
 

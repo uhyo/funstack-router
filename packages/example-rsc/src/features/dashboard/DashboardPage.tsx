@@ -4,8 +4,8 @@ export function DashboardPage() {
       <h2>Dashboard</h2>
       <p>
         Welcome to the Task Manager! This app demonstrates{" "}
-        <strong>two-phase route definitions</strong> with FUNSTACK Router and
-        React Server Components.
+        <strong>two-phase route definitions</strong> with FUNSTACK Router and React Server
+        Components.
       </p>
 
       <div className="dashboard-cards">
@@ -19,10 +19,7 @@ export function DashboardPage() {
         </a>
         <a href="/settings/profile" className="dashboard-card">
           <h3>Settings</h3>
-          <p>
-            Configure your profile and preferences. Demonstrates nested routes
-            and route state.
-          </p>
+          <p>Configure your profile and preferences. Demonstrates nested routes and route state.</p>
         </a>
       </div>
 
@@ -30,24 +27,21 @@ export function DashboardPage() {
         <h3>Route Features Demonstrated</h3>
         <ul>
           <li>
-            <strong>Loaders</strong> &mdash; Task list and detail pages fetch
-            data via typed loaders
+            <strong>Loaders</strong> &mdash; Task list and detail pages fetch data via typed loaders
           </li>
           <li>
-            <strong>Params</strong> &mdash; Task detail page uses typed{" "}
-            <code>useRouteParams</code>
+            <strong>Params</strong> &mdash; Task detail page uses typed <code>useRouteParams</code>
           </li>
           <li>
-            <strong>Actions</strong> &mdash; New task form uses a route action
-            for form submission
+            <strong>Actions</strong> &mdash; New task form uses a route action for form submission
           </li>
           <li>
-            <strong>Route State</strong> &mdash; Preferences page uses{" "}
-            <code>routeState</code> for navigation-persisted state
+            <strong>Route State</strong> &mdash; Preferences page uses <code>routeState</code> for
+            navigation-persisted state
           </li>
           <li>
-            <strong>Nested Routes</strong> &mdash; Settings section uses nested
-            layouts with <code>bindRoute</code>
+            <strong>Nested Routes</strong> &mdash; Settings section uses nested layouts with{" "}
+            <code>bindRoute</code>
           </li>
         </ul>
       </section>

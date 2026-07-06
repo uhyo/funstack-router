@@ -8,9 +8,7 @@ export function loadTaskList(): Task[] {
   return getTasks();
 }
 
-export function loadTaskDetail({
-  params,
-}: LoaderArgs<{ taskId: string }>): Task | undefined {
+export function loadTaskDetail({ params }: LoaderArgs<{ taskId: string }>): Task | undefined {
   return getTask(params.taskId);
 }
 
@@ -23,9 +21,7 @@ export async function createTaskAction({
   return createTask(title, description);
 }
 
-export function loadNewTaskResult({
-  actionResult,
-}: LoaderArgs<Record<string, never>, Task>): {
+export function loadNewTaskResult({ actionResult }: LoaderArgs<Record<string, never>, Task>): {
   createdTask: Task | null;
 } {
   return { createdTask: actionResult ?? null };

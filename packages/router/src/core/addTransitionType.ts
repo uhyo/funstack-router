@@ -3,8 +3,7 @@ import * as React from "react";
 type AddTransitionType = (type: string) => void;
 
 const reactExports = React as unknown as Record<string, unknown>;
-const candidate =
-  reactExports.addTransitionType ?? reactExports.unstable_addTransitionType;
+const candidate = reactExports.addTransitionType ?? reactExports.unstable_addTransitionType;
 
 /**
  * Wrapper around React's `addTransitionType` that degrades to a no-op when

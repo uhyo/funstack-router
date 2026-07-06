@@ -20,9 +20,7 @@ describe("Router", () => {
   });
 
   it("renders matched route component", () => {
-    const routes: RouteDefinition[] = [
-      { path: "/", component: () => <div>Home Page</div> },
-    ];
+    const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home Page</div> }];
 
     render(<Router routes={routes} />);
     expect(screen.getByText("Home Page")).toBeInTheDocument();
@@ -31,9 +29,7 @@ describe("Router", () => {
   it("renders nothing when no route matches", () => {
     mockNavigation = setupNavigationMock("http://localhost/unknown");
 
-    const routes: RouteDefinition[] = [
-      { path: "/", component: () => <div>Home Page</div> },
-    ];
+    const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home Page</div> }];
 
     const { container } = render(<Router routes={routes} />);
     expect(container.textContent).toBe("");
@@ -82,9 +78,7 @@ describe("Router", () => {
   });
 
   it("provides location via useLocation", () => {
-    mockNavigation = setupNavigationMock(
-      "http://localhost/page?foo=bar#section",
-    );
+    mockNavigation = setupNavigationMock("http://localhost/page?foo=bar#section");
 
     function Page() {
       const location = useLocation();
@@ -148,9 +142,7 @@ describe("Router", () => {
       render(<Router routes={routes} onNavigate={onNavigate} />);
 
       act(() => {
-        const { proceed } = mockNavigation.__simulateNavigationWithEvent(
-          "http://localhost/about",
-        );
+        const { proceed } = mockNavigation.__simulateNavigationWithEvent("http://localhost/about");
         proceed();
       });
 
@@ -185,9 +177,7 @@ describe("Router", () => {
       render(<Router routes={routes} onNavigate={onNavigate} />);
 
       act(() => {
-        const { proceed } = mockNavigation.__simulateNavigationWithEvent(
-          "http://localhost/about",
-        );
+        const { proceed } = mockNavigation.__simulateNavigationWithEvent("http://localhost/about");
         proceed();
       });
 
@@ -207,9 +197,7 @@ describe("Router", () => {
       render(<Router routes={routes} onNavigate={onNavigate} />);
 
       act(() => {
-        const { proceed } = mockNavigation.__simulateNavigationWithEvent(
-          "http://localhost/about",
-        );
+        const { proceed } = mockNavigation.__simulateNavigationWithEvent("http://localhost/about");
         proceed();
       });
 
@@ -219,9 +207,7 @@ describe("Router", () => {
     it("calls onNavigate with null for unmatched routes", () => {
       const onNavigate = vi.fn();
 
-      const routes: RouteDefinition[] = [
-        { path: "/", component: () => <div>Home</div> },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home</div> }];
 
       render(<Router routes={routes} onNavigate={onNavigate} />);
 
@@ -250,9 +236,7 @@ describe("Router", () => {
 
   describe("JSX element component syntax", () => {
     it("renders JSX element without props injection", () => {
-      const routes: RouteDefinition[] = [
-        { path: "/", component: <div>JSX Element Home</div> },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: <div>JSX Element Home</div> }];
 
       render(<Router routes={routes} />);
       expect(screen.getByText("JSX Element Home")).toBeInTheDocument();
@@ -315,10 +299,7 @@ describe("Router", () => {
     let addTransitionTypeSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      addTransitionTypeSpy = vi.spyOn(
-        addTransitionTypeModule,
-        "addTransitionType",
-      );
+      addTransitionTypeSpy = vi.spyOn(addTransitionTypeModule, "addTransitionType");
     });
 
     afterEach(() => {
@@ -407,9 +388,7 @@ describe("Router", () => {
     });
 
     it("does not call addTransitionType for state-only updates", () => {
-      const routes: RouteDefinition[] = [
-        { path: "/", component: () => <div>Home</div> },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: () => <div>Home</div> }];
 
       render(<Router routes={routes} />);
 

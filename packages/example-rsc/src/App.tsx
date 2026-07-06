@@ -5,16 +5,8 @@ import { Layout } from "./components/Layout.js";
 
 // Phase 1 route imports (shared modules — loaders/actions are client references)
 import { dashboardRoute } from "./features/dashboard/route.js";
-import {
-  taskListRoute,
-  taskDetailRoute,
-  newTaskRoute,
-} from "./features/tasks/route.js";
-import {
-  settingsRoute,
-  profileRoute,
-  preferencesRoute,
-} from "./features/settings/route.js";
+import { taskListRoute, taskDetailRoute, newTaskRoute } from "./features/tasks/route.js";
+import { settingsRoute, profileRoute, preferencesRoute } from "./features/settings/route.js";
 
 // Server component imports
 import { DashboardPage } from "./features/dashboard/DashboardPage.js";

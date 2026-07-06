@@ -19,9 +19,7 @@ export function EditFormPage() {
   useBlocker({
     shouldBlock: () => {
       if (isDirty && !saved) {
-        return !confirm(
-          "You have unsaved changes. Are you sure you want to leave?",
-        );
+        return !confirm("You have unsaved changes. Are you sure you want to leave?");
       }
       return false;
     },
@@ -44,8 +42,7 @@ export function EditFormPage() {
     <div>
       <h1>Edit Form (useBlocker Demo)</h1>
       <p style={{ color: "#666" }}>
-        Try navigating away with unsaved changes - you&apos;ll see a
-        confirmation dialog.
+        Try navigating away with unsaved changes - you&apos;ll see a confirmation dialog.
       </p>
 
       <div style={{ marginBottom: "1rem" }}>

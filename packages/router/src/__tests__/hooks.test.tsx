@@ -21,9 +21,7 @@ describe("hooks", () => {
 
   describe("useLocation", () => {
     it("returns current location", () => {
-      mockNavigation = setupNavigationMock(
-        "http://localhost/page?foo=bar#section",
-      );
+      mockNavigation = setupNavigationMock("http://localhost/page?foo=bar#section");
 
       function TestComponent() {
         const location = useLocation();
@@ -36,9 +34,7 @@ describe("hooks", () => {
         );
       }
 
-      const routes: RouteDefinition[] = [
-        { path: "/page", component: TestComponent },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/page", component: TestComponent }];
 
       render(<Router routes={routes} />);
 
@@ -58,9 +54,7 @@ describe("hooks", () => {
         );
       }
 
-      const routes: RouteDefinition[] = [
-        { path: "/", component: TestComponent },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: TestComponent }];
 
       render(<Router routes={routes} />);
 
@@ -75,17 +69,13 @@ describe("hooks", () => {
         return null;
       }
 
-      expect(() => render(<TestComponent />)).toThrow(
-        "useLocation must be used within a Router",
-      );
+      expect(() => render(<TestComponent />)).toThrow("useLocation must be used within a Router");
     });
   });
 
   describe("useSearchParams", () => {
     it("returns current search params", () => {
-      mockNavigation = setupNavigationMock(
-        "http://localhost/page?foo=bar&baz=qux",
-      );
+      mockNavigation = setupNavigationMock("http://localhost/page?foo=bar&baz=qux");
 
       function TestComponent() {
         const [searchParams] = useSearchParams();
@@ -97,9 +87,7 @@ describe("hooks", () => {
         );
       }
 
-      const routes: RouteDefinition[] = [
-        { path: "/page", component: TestComponent },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/page", component: TestComponent }];
 
       render(<Router routes={routes} />);
 
@@ -112,24 +100,18 @@ describe("hooks", () => {
 
       function TestComponent() {
         const [, setSearchParams] = useSearchParams();
-        return (
-          <button onClick={() => setSearchParams({ newKey: "newValue" })}>
-            Update
-          </button>
-        );
+        return <button onClick={() => setSearchParams({ newKey: "newValue" })}>Update</button>;
       }
 
-      const routes: RouteDefinition[] = [
-        { path: "/page", component: TestComponent },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/page", component: TestComponent }];
 
       render(<Router routes={routes} />);
       screen.getByRole("button").click();
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        "/page?newKey=newValue",
-        { history: "replace", state: undefined },
-      );
+      expect(mockNavigation.navigate).toHaveBeenCalledWith("/page?newKey=newValue", {
+        history: "replace",
+        state: undefined,
+      });
     });
 
     it("updates search params with function", () => {
@@ -152,17 +134,15 @@ describe("hooks", () => {
         );
       }
 
-      const routes: RouteDefinition[] = [
-        { path: "/page", component: TestComponent },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/page", component: TestComponent }];
 
       render(<Router routes={routes} />);
       screen.getByRole("button").click();
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        "/page?foo=updated&new=param",
-        { history: "replace", state: undefined },
-      );
+      expect(mockNavigation.navigate).toHaveBeenCalledWith("/page?foo=updated&new=param", {
+        history: "replace",
+        state: undefined,
+      });
     });
 
     it("throws when used outside Router", () => {
@@ -186,9 +166,7 @@ describe("hooks", () => {
         return null;
       }
 
-      const routes: RouteDefinition[] = [
-        { path: "/", component: TestComponent },
-      ];
+      const routes: RouteDefinition[] = [{ path: "/", component: TestComponent }];
 
       render(<Router routes={routes} />);
       expect(pending).toBe(false);
@@ -207,9 +185,7 @@ describe("hooks", () => {
       function HomeComponent() {
         const isPending = useIsPending();
         capturedIsPending = isPending;
-        return (
-          <div data-testid="home">Home (isPending: {String(isPending)})</div>
-        );
+        return <div data-testid="home">Home (isPending: {String(isPending)})</div>;
       }
 
       const routes: RouteDefinition[] = [
@@ -225,9 +201,7 @@ describe("hooks", () => {
 
       // Initially, isPending should be false and home should be visible
       expect(capturedIsPending).toBe(false);
-      expect(screen.getByTestId("home").textContent).toBe(
-        "Home (isPending: false)",
-      );
+      expect(screen.getByTestId("home").textContent).toBe("Home (isPending: false)");
 
       // Navigate to /slow — the new route will suspend, so React keeps the old UI
       // and isPending becomes true via useTransition
@@ -238,9 +212,7 @@ describe("hooks", () => {
       // After the transition starts, the home component should still be visible
       // (because /slow suspends), and isPending should be true
       expect(capturedIsPending).toBe(true);
-      expect(screen.getByTestId("home").textContent).toBe(
-        "Home (isPending: true)",
-      );
+      expect(screen.getByTestId("home").textContent).toBe("Home (isPending: true)");
     });
 
     it("throws when used outside Router", () => {
@@ -249,9 +221,7 @@ describe("hooks", () => {
         return null;
       }
 
-      expect(() => render(<TestComponent />)).toThrow(
-        "useIsPending must be used within a Router",
-      );
+      expect(() => render(<TestComponent />)).toThrow("useIsPending must be used within a Router");
     });
   });
 });

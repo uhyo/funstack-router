@@ -2,12 +2,8 @@ import { useCallback } from "react";
 import type { InternalRouteState, NavigateOptions } from "../types.js";
 
 type RouteStateCallbacks = {
-  setState: (
-    stateOrUpdater: unknown | ((prev: unknown) => unknown),
-  ) => Promise<void>;
-  setStateSync: (
-    stateOrUpdater: unknown | ((prev: unknown) => unknown),
-  ) => void;
+  setState: (stateOrUpdater: unknown | ((prev: unknown) => unknown)) => Promise<void>;
+  setStateSync: (stateOrUpdater: unknown | ((prev: unknown) => unknown)) => void;
   resetState: () => Promise<void>;
   resetStateSync: () => void;
 };
@@ -39,9 +35,7 @@ export function useRouteStateCallbacks(
 
   // Create stable setState callback for this route's slice (async via replace navigation)
   const setState = useCallback(
-    async (
-      stateOrUpdater: unknown | ((prev: unknown) => unknown),
-    ): Promise<void> => {
+    async (stateOrUpdater: unknown | ((prev: unknown) => unknown)): Promise<void> => {
       if (url === null) return;
       const currentStates = internalState?.__routeStates ?? [];
       const currentRouteState = currentStates[index];
