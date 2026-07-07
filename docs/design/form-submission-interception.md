@@ -233,8 +233,7 @@ type RouteWithActionAndLoader<
   action: (args: ActionArgs<PathParams<TPath>>) => TActionResult;
   loader: (args: LoaderArgs<PathParams<TPath>, Awaited<TActionResult>>) => TData;
   component:
-    | ComponentType<RouteComponentPropsWithData<PathParams<TPath>, TData, TState>>
-    | ReactNode;
+    ComponentType<RouteComponentPropsWithData<PathParams<TPath>, TData, TState>> | ReactNode;
   children?: RouteDefinition[];
   exact?: boolean;
   requireChildren?: boolean;
