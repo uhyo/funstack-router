@@ -172,6 +172,32 @@ export function Router({
   useEffect(() => {
     return adapter.subscribe((change) => {
       if (change.kind === "navigation") {
+        if (change.wait) {
+          // Intercepted form submission: the entry has committed but the
+          // action hasn't run yet. Rendering now would execute loaders
+          // without the action result, so wait (inside an async transition,
+          // keeping the old UI and isPending up) until the adapter has
+          // dispatched loaders with the action result.
+          const { wait, navigationType } = change;
+          startTransition(async () => {
+            await wait;
+            const newSnapshot = adapter.getSnapshot();
+            if (newSnapshot) {
+              // Note: addTransitionType after an await requires async
+              // transition support; on builds without it this is already a
+              // silent no-op (see core/addTransitionType.ts).
+              const types = getTransitionTypes({
+                url: newSnapshot.url,
+                navigationType,
+              });
+              for (const type of types) {
+                addTransitionType(type);
+              }
+            }
+            setLocationEntry(newSnapshot);
+          });
+          return;
+        }
         const newSnapshot = adapter.getSnapshot();
         startTransition(() => {
           if (newSnapshot) {

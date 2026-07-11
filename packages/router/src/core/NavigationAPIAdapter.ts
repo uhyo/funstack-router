@@ -58,6 +58,16 @@ export class NavigationAPIAdapter implements RouterAdapter {
   // the `currententrychange` event — and thus its navigationType — may be
   // missing. Falls back to "push" if no intercept has been observed yet.
   #lastInterceptedNavigationType: NavigationType = "push";
+  // Deferred that is pending while an intercepted form submission's action
+  // is running. The commit (and thus currententrychange) happens before the
+  // action, so subscribers must wait for this before rendering — otherwise
+  // loaders would execute with `actionResult: undefined` and the render
+  // would capture pre-action data. Resolved (never rejected) once loaders
+  // have been dispatched with the action result.
+  #pendingFormNavigation: {
+    promise: Promise<void>;
+    resolve: () => void;
+  } | null = null;
 
   getSnapshot(): LocationEntry | null {
     const entry = navigation.currentEntry;
@@ -109,7 +119,11 @@ export class NavigationAPIAdapter implements RouterAdapter {
         if (navigationType === null) {
           callback({ kind: "state" });
         } else {
-          callback({ kind: "navigation", navigationType });
+          callback({
+            kind: "navigation",
+            navigationType,
+            wait: this.#pendingFormNavigation?.promise,
+          });
         }
       },
       { signal: controller.signal },
@@ -223,6 +237,12 @@ export class NavigationAPIAdapter implements RouterAdapter {
         return;
       }
 
+      // A new navigation supersedes any in-flight form submission. Release
+      // subscribers that may be awaiting the stale deferred so they never
+      // hang; the superseded handler's own finally is a no-op afterwards.
+      this.#pendingFormNavigation?.resolve();
+      this.#pendingFormNavigation = null;
+
       // Capture ephemeral info from the navigate event
       // This info is only available during this navigation and resets on the next one
       this.#currentNavigationInfo = event.info;
@@ -311,58 +331,87 @@ export class NavigationAPIAdapter implements RouterAdapter {
         idleController = null;
       }
 
+      // For form submissions, the entry commits (and currententrychange
+      // fires) before the action runs. Create a deferred that subscribers
+      // wait on before rendering, so loaders are not executed eagerly with
+      // `actionResult: undefined` and the render never captures pre-action
+      // data. Must be set before intercept() so it is in place when
+      // currententrychange fires.
+      if (isFormSubmission) {
+        let resolve!: () => void;
+        const promise = new Promise<void>((r) => {
+          resolve = r;
+        });
+        this.#pendingFormNavigation = { promise, resolve };
+      }
+      const pendingFormNavigation = this.#pendingFormNavigation;
+
       event.intercept({
         handler: async () => {
-          const currentEntry = navigation.currentEntry;
-          if (!currentEntry) {
-            throw new Error("Navigation currentEntry is null during navigation interception");
-          }
-
-          // Don't invalidate the cache here: getSnapshot's cache check
-          // already returns the same reference when the resolved URL is
-          // unchanged (normal mode), avoiding an extra render when
-          // navigatesuccess fires after currententrychange.
-          this.#committedDestination = {
-            entryId: currentEntry.id,
-            href: event.destination.url,
-          };
-
-          const composite = `${currentEntry.id}|${event.destination.url}`;
-          const effectiveKey = this.#effectiveKey(composite);
-
-          let actionResult: unknown = undefined;
-
-          if (isFormSubmission) {
-            // Find the deepest matched route with an action
-            const actionRoute = findActionRoute(matched);
-            if (actionRoute) {
-              const actionRequest = createActionRequest(url, event.formData!);
-              actionResult = await actionRoute.route.action!({
-                params: actionRoute.params,
-                request: actionRequest,
-                signal: event.signal,
-              });
+          try {
+            const currentEntry = navigation.currentEntry;
+            if (!currentEntry) {
+              throw new Error("Navigation currentEntry is null during navigation interception");
             }
-            // Revalidate loaders after action — clear cache so loaders re-execute
-            clearLoaderCacheForEntry(composite);
+
+            // Don't invalidate the cache here: getSnapshot's cache check
+            // already returns the same reference when the resolved URL is
+            // unchanged (normal mode), avoiding an extra render when
+            // navigatesuccess fires after currententrychange.
+            this.#committedDestination = {
+              entryId: currentEntry.id,
+              href: event.destination.url,
+            };
+
+            const composite = `${currentEntry.id}|${event.destination.url}`;
+            const effectiveKey = this.#effectiveKey(composite);
+
+            let actionResult: unknown = undefined;
+
+            if (isFormSubmission) {
+              // Find the deepest matched route with an action
+              const actionRoute = findActionRoute(matched);
+              if (actionRoute) {
+                const actionRequest = createActionRequest(url, event.formData!);
+                actionResult = await actionRoute.route.action!({
+                  params: actionRoute.params,
+                  request: actionRequest,
+                  signal: event.signal,
+                });
+              }
+              // Revalidate loaders after action — clear cache so loaders re-execute
+              clearLoaderCacheForEntry(composite);
+            }
+
+            const request = createLoaderRequest(url);
+
+            // Note: in response to `currententrychange` event, <Router> should already
+            // have dispatched data loaders and the results should be cached —
+            // except for form submissions, where subscribers wait on the pending
+            // deferred and the loaders execute here, with actionResult.
+            const results = executeLoaders(
+              matched,
+              effectiveKey,
+              request,
+              event.signal,
+              actionResult,
+            );
+
+            // Loaders are dispatched and cached; subscribers can render now.
+            // Async loader data settles under React's transition, so the old
+            // UI stays up until it is ready.
+            pendingFormNavigation?.resolve();
+
+            // Delay navigation until async loaders complete
+            await Promise.all(results.map((r) => r.data));
+          } finally {
+            // Also release subscribers when the action or a loader throws,
+            // so a waiting render never hangs.
+            pendingFormNavigation?.resolve();
+            if (this.#pendingFormNavigation === pendingFormNavigation) {
+              this.#pendingFormNavigation = null;
+            }
           }
-
-          const request = createLoaderRequest(url);
-
-          // Note: in response to `currententrychange` event, <Router> should already
-          // have dispatched data loaders and the results should be cached.
-          // Here we run executeLoader to retrieve cached results.
-          // For form submissions, cache was cleared above so loaders re-execute with actionResult.
-          const results = executeLoaders(
-            matched,
-            effectiveKey,
-            request,
-            event.signal,
-            actionResult,
-          );
-
-          // Delay navigation until async loaders complete
-          await Promise.all(results.map((r) => r.data));
         },
       });
     };

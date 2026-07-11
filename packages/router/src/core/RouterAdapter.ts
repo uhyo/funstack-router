@@ -17,9 +17,16 @@ export type EntryChangeType = "navigation" | "state";
  * - `kind: "navigation"` carries the underlying navigation type
  *   (push, replace, reload, traverse).
  * - `kind: "state"` is a state-only update via `updateCurrentEntry()`.
+ *
+ * When `wait` is present, the subscriber must wait for it to settle before
+ * reading the new snapshot and re-rendering. Used for intercepted form
+ * submissions: the entry commits before the action runs, so rendering
+ * eagerly would execute loaders without the action result. The promise
+ * settles (it never rejects) once loaders have been dispatched with the
+ * action result.
  */
 export type EntryChange =
-  | { kind: "navigation"; navigationType: NavigationType }
+  | { kind: "navigation"; navigationType: NavigationType; wait?: Promise<void> }
   | { kind: "state" };
 
 /**
