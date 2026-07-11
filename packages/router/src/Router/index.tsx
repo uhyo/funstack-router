@@ -172,6 +172,39 @@ export function Router({
   useEffect(() => {
     return adapter.subscribe((change) => {
       if (change.kind === "navigation") {
+        if (change.wait) {
+          // Intercepted form submission: the entry has committed but the
+          // action hasn't run yet. Rendering now would execute loaders
+          // without the action result, so wait (inside an async transition,
+          // keeping the old UI and isPending up) until the adapter has
+          // dispatched loaders with the action result.
+          const { wait, navigationType } = change;
+          // The entry is already committed, so the snapshot has the final
+          // URL. Read it now so transition types can be added synchronously
+          // inside the transition — addTransitionType is not supported
+          // after an await.
+          const committedSnapshot = adapter.getSnapshot();
+          startTransition(async () => {
+            if (committedSnapshot) {
+              const types = getTransitionTypes({
+                url: committedSnapshot.url,
+                navigationType,
+              });
+              for (const type of types) {
+                addTransitionType(type);
+              }
+            }
+            await wait;
+            // Updates after the first await are not part of the transition
+            // unless wrapped in a nested startTransition call.
+            startTransition(() => {
+              // Re-read the snapshot: a superseding navigation may have
+              // resolved the wait, in which case this renders the newest entry.
+              setLocationEntry(adapter.getSnapshot());
+            });
+          });
+          return;
+        }
         const newSnapshot = adapter.getSnapshot();
         startTransition(() => {
           if (newSnapshot) {
@@ -241,14 +274,27 @@ export function Router({
   const runLoaders = locationEntry !== null || (!!ssr?.runLoaders && urlObject !== null);
 
   /**
-   * Key of location. This is used as the cache key for loader data saved in navigation entry.
+   * Key of location provided by the adapter, or null when no location entry
+   * is available (SSR, or Navigation API unavailable with fallback="none").
    */
-  const locationKey =
+  const realLocationKey =
     locationEntry?.key ??
     (isServerSnapshot(locationEntryInternal)
       ? locationEntryInternal.actualLocationEntry?.key
       : null) ??
-    "ssr";
+    null;
+  /**
+   * Key of location. This is used as the cache key for loader data saved in navigation entry.
+   */
+  const locationKey = realLocationKey ?? "ssr";
+
+  // Loader cache for renders without a location entry. The module-level cache
+  // is keyed by navigation entry and cleaned up via dispose events; without an
+  // entry, every render in the same process would share the literal "ssr" slot,
+  // serving one request's loader data to all subsequent SSR/SSG renders. An
+  // instance-scoped cache keeps such results memoized for this Router's
+  // lifetime only, and is garbage-collected with it.
+  const [instanceLoaderCache] = useState(() => new Map<string, unknown>());
 
   // Match routes and execute loaders
   const matchedRoutesWithData = useMemo(() => {
@@ -274,8 +320,17 @@ export function Router({
     const entryKey = locationKey;
     const request = createLoaderRequest(urlObject);
     const signal = adapter.getIdleAbortSignal();
-    return executeLoaders(matched, entryKey, request, signal);
-  }, [routes, adapter, urlObject, runLoaders, locationKey]);
+    return executeLoaders(
+      matched,
+      entryKey,
+      request,
+      signal,
+      undefined,
+      // Without a real location entry, scope loader results to this Router
+      // instance instead of the shared module-level cache.
+      realLocationKey === null ? instanceLoaderCache : undefined,
+    );
+  }, [routes, adapter, urlObject, runLoaders, locationKey, realLocationKey, instanceLoaderCache]);
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;

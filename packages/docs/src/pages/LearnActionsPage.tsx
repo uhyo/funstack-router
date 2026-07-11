@@ -184,6 +184,12 @@ loader: async ({ params, actionResult, signal }) => {
           This lets your UI display feedback from the action (e.g. success messages or validation
           errors) alongside the refreshed data.
         </p>
+        <p>
+          While the action (and the subsequent loader re-execution) is in flight, the Router keeps
+          the current page rendered and reports the navigation as pending via <code>isPending</code>{" "}
+          / <code>useIsPending()</code>. The new page renders only with the post-action loader data,
+          so components never observe data loaded before the action ran.
+        </p>
       </section>
 
       <section>
