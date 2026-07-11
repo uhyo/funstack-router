@@ -241,14 +241,27 @@ export function Router({
   const runLoaders = locationEntry !== null || (!!ssr?.runLoaders && urlObject !== null);
 
   /**
-   * Key of location. This is used as the cache key for loader data saved in navigation entry.
+   * Key of location provided by the adapter, or null when no location entry
+   * is available (SSR, or Navigation API unavailable with fallback="none").
    */
-  const locationKey =
+  const realLocationKey =
     locationEntry?.key ??
     (isServerSnapshot(locationEntryInternal)
       ? locationEntryInternal.actualLocationEntry?.key
       : null) ??
-    "ssr";
+    null;
+  /**
+   * Key of location. This is used as the cache key for loader data saved in navigation entry.
+   */
+  const locationKey = realLocationKey ?? "ssr";
+
+  // Loader cache for renders without a location entry. The module-level cache
+  // is keyed by navigation entry and cleaned up via dispose events; without an
+  // entry, every render in the same process would share the literal "ssr" slot,
+  // serving one request's loader data to all subsequent SSR/SSG renders. An
+  // instance-scoped cache keeps such results memoized for this Router's
+  // lifetime only, and is garbage-collected with it.
+  const [instanceLoaderCache] = useState(() => new Map<string, unknown>());
 
   // Match routes and execute loaders
   const matchedRoutesWithData = useMemo(() => {
@@ -274,8 +287,17 @@ export function Router({
     const entryKey = locationKey;
     const request = createLoaderRequest(urlObject);
     const signal = adapter.getIdleAbortSignal();
-    return executeLoaders(matched, entryKey, request, signal);
-  }, [routes, adapter, urlObject, runLoaders, locationKey]);
+    return executeLoaders(
+      matched,
+      entryKey,
+      request,
+      signal,
+      undefined,
+      // Without a real location entry, scope loader results to this Router
+      // instance instead of the shared module-level cache.
+      realLocationKey === null ? instanceLoaderCache : undefined,
+    );
+  }, [routes, adapter, urlObject, runLoaders, locationKey, realLocationKey, instanceLoaderCache]);
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;

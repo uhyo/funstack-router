@@ -22,6 +22,7 @@ const loaderCache = new Map<string, unknown>();
  * If the result is not cached, executes the loader and caches the result.
  */
 function getOrCreateLoaderResult(
+  cache: Map<string, unknown>,
   entryId: string,
   matchIndex: number,
   route: InternalRouteDefinition,
@@ -33,18 +34,18 @@ function getOrCreateLoaderResult(
 
   const cacheKey = `${entryId}:${matchIndex}`;
 
-  if (!loaderCache.has(cacheKey)) {
+  if (!cache.has(cacheKey)) {
     try {
-      loaderCache.set(cacheKey, route.loader(args));
+      cache.set(cacheKey, route.loader(args));
     } catch (error) {
       // Wrap synchronous loader errors so they don't crash the Router
       // during useMemo. RouteRenderer will unwrap and re-throw during
       // rendering, where Error Boundaries can catch them.
-      loaderCache.set(cacheKey, new LoaderError(error));
+      cache.set(cacheKey, new LoaderError(error));
     }
   }
 
-  return loaderCache.get(cacheKey);
+  return cache.get(cacheKey);
 }
 
 /**
@@ -69,6 +70,11 @@ export function createActionRequest(url: URL, formData: FormData): Request {
 /**
  * Execute loaders for matched routes and return routes with data.
  * Results are cached by navigation entry id to prevent duplicate execution.
+ *
+ * By default, results are stored in the module-level cache, which is keyed
+ * by navigation entry and cleaned up via dispose events. Callers that have
+ * no navigation entry (SSR, Navigation API unavailable) must pass their own
+ * `cache` so results are scoped to that render instead of shared globally.
  */
 export function executeLoaders(
   matchedRoutes: MatchedRoute[],
@@ -76,6 +82,7 @@ export function executeLoaders(
   request: Request,
   signal: AbortSignal,
   actionResult?: unknown,
+  cache: Map<string, unknown> = loaderCache,
 ): MatchedRouteWithData[] {
   return matchedRoutes.map((match, index) => {
     const { route, params } = match;
@@ -85,7 +92,7 @@ export function executeLoaders(
       signal,
       actionResult,
     };
-    const data = getOrCreateLoaderResult(entryId, index, route, args);
+    const data = getOrCreateLoaderResult(cache, entryId, index, route, args);
 
     return { ...match, data };
   });
