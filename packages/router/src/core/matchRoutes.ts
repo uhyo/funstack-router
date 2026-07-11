@@ -50,8 +50,7 @@ function matchRoute(
         return SKIPPED; // pathless always matches
       }
       const isExact = route.exact ?? !hasChildren;
-      const { matched } = matchPath(route.path, pathname, isExact);
-      if (matched) return SKIPPED;
+      if (matchPath(route.path, pathname, isExact).length > 0) return SKIPPED;
     }
     return null;
   }
@@ -101,30 +100,27 @@ function matchRoute(
 
   const isExact = route.exact ?? !hasChildren;
 
-  const { matched, params, consumedPathname } = matchPath(route.path, pathname, isExact);
+  const candidates = matchPath(route.path, pathname, isExact);
 
-  if (!matched) {
+  if (candidates.length === 0) {
     return null;
   }
 
-  const result: MatchedRoute = {
-    route,
-    params,
-    pathname: consumedPathname,
-  };
+  if (!hasChildren) {
+    const { params, consumedPathname } = candidates[0]!;
+    return [{ route, params, pathname: consumedPathname }];
+  }
 
-  // If this route has children, try to match them
-  if (hasChildren) {
+  // Try each candidate consumed prefix (longest first), backtracking to a
+  // shorter prefix when no child matches the remaining pathname.
+  let anyChildSkipped = false;
+  for (const { params, consumedPathname } of candidates) {
     // Calculate remaining pathname, ensuring it starts with /
     let remainingPathname = pathname.slice(consumedPathname.length);
     if (!remainingPathname.startsWith("/")) {
       remainingPathname = "/" + remainingPathname;
     }
-    if (remainingPathname === "") {
-      remainingPathname = "/";
-    }
 
-    let anyChildSkipped = false;
     for (const child of route.children!) {
       const childMatch = matchRoute(child, remainingPathname, options);
       if (childMatch === SKIPPED) {
@@ -134,7 +130,7 @@ function matchRoute(
       if (childMatch) {
         // Merge params from parent into children
         return [
-          result,
+          { route, params, pathname: consumedPathname },
           ...childMatch.map((m) => ({
             ...m,
             params: { ...params, ...m.params },
@@ -143,82 +139,130 @@ function matchRoute(
       }
     }
 
-    if (anyChildSkipped) {
-      if (route.component) return [result]; // render as shell
-      return SKIPPED; // propagate
-    }
-
-    // If no children matched - only valid if requireChildren is false and route has a component
-    if (route.component && route.requireChildren === false) {
-      return [result];
-    }
-
-    // During SSR, path-based route with component matches alone (SSR shell)
-    if (skipLoaders && route.component) {
-      return [result];
-    }
-
-    return null;
+    // A skipped child would match on the client; stop here so a shorter
+    // prefix cannot produce a different tree during SSR.
+    if (anyChildSkipped) break;
   }
 
-  return [result];
+  const { params, consumedPathname } = candidates[0]!;
+  const result: MatchedRoute = {
+    route,
+    params,
+    pathname: consumedPathname,
+  };
+
+  if (anyChildSkipped) {
+    if (route.component) return [result]; // render as shell
+    return SKIPPED; // propagate
+  }
+
+  // If no children matched - only valid if requireChildren is false and route has a component
+  if (route.component && route.requireChildren === false) {
+    return [result];
+  }
+
+  // During SSR, path-based route with component matches alone (SSR shell)
+  if (skipLoaders && route.component) {
+    return [result];
+  }
+
+  return null;
+}
+
+type PathMatchCandidate = {
+  params: Record<string, string>;
+  consumedPathname: string;
+};
+
+/**
+ * Matches a pattern segment that always consumes exactly one pathname
+ * segment: either a literal without URLPattern syntax, or a plain `:param`.
+ */
+const SINGLE_SEGMENT_PATTERN = /^(?::[A-Za-z0-9_$]+|[^:*?+(){}\\]*)$/;
+
+function consumesOneSegmentEach(pattern: string): boolean {
+  return pattern.split("/").every((segment) => SINGLE_SEGMENT_PATTERN.test(segment));
 }
 
 /**
  * Match a path pattern against a pathname.
+ *
+ * For non-exact (prefix) matches, the pattern may consume a variable number
+ * of pathname segments (e.g. with `?`, `+`, `*` modifiers), so multiple
+ * candidates can be returned, ordered from longest to shortest consumed
+ * prefix. Returns an empty array if the pattern doesn't match at all.
  */
-function matchPath(
-  pattern: string,
-  pathname: string,
-  exact: boolean,
-): {
-  matched: boolean;
-  params: Record<string, string>;
-  consumedPathname: string;
-} {
+function matchPath(pattern: string, pathname: string, exact: boolean): PathMatchCandidate[] {
   // Normalize pattern
   const normalizedPattern = pattern.startsWith("/") ? pattern : `/${pattern}`;
 
-  // Build URLPattern
-  let urlPatternPath: string;
   if (exact) {
-    urlPatternPath = normalizedPattern;
-  } else if (normalizedPattern === "/") {
-    // Special case: root path as prefix matches anything
-    urlPatternPath = "/*";
-  } else {
-    // For other prefix matches, add optional wildcard suffix
-    urlPatternPath = `${normalizedPattern}{/*}?`;
+    const match = new URLPattern({ pathname: normalizedPattern }).exec({
+      pathname,
+    });
+    if (!match) {
+      return [];
+    }
+    return [{ params: extractParams(match), consumedPathname: pathname }];
   }
 
-  const urlPattern = new URLPattern({ pathname: urlPatternPath });
-
-  const match = urlPattern.exec({ pathname });
-  if (!match) {
-    return { matched: false, params: {}, consumedPathname: "" };
+  if (normalizedPattern === "/") {
+    // Special case: root path as prefix matches anything, consuming just "/"
+    if (!new URLPattern({ pathname: "/*" }).test({ pathname })) {
+      return [];
+    }
+    return [{ params: {}, consumedPathname: "/" }];
   }
 
-  // Extract params (excluding the wildcard group "0")
+  // For prefix matches, add optional wildcard suffix
+  const prefixMatch = new URLPattern({
+    pathname: `${normalizedPattern}{/*}?`,
+  }).exec({ pathname });
+  if (!prefixMatch) {
+    return [];
+  }
+
+  if (consumesOneSegmentEach(normalizedPattern)) {
+    // Fast path: one pathname segment consumed per pattern segment
+    const patternSegments = normalizedPattern.split("/").filter(Boolean);
+    const pathnameSegments = pathname.split("/").filter(Boolean);
+    return [
+      {
+        params: extractParams(prefixMatch),
+        consumedPathname: "/" + pathnameSegments.slice(0, patternSegments.length).join("/"),
+      },
+    ];
+  }
+
+  // URLPattern syntax like `?`, `+`, `*` and regex groups can consume a
+  // variable number of segments, so the consumed prefix cannot be derived
+  // from segment counts. Instead, match the bare pattern against every
+  // pathname prefix, longest first.
+  const basePattern = new URLPattern({ pathname: normalizedPattern });
+  const segments = pathname.split("/").filter(Boolean);
+  const candidates: PathMatchCandidate[] = [];
+  for (let count = segments.length; count >= 0; count--) {
+    const prefix = count === 0 ? "/" : "/" + segments.slice(0, count).join("/");
+    const match = basePattern.exec({ pathname: prefix });
+    if (match) {
+      candidates.push({
+        params: extractParams(match),
+        consumedPathname: prefix,
+      });
+    }
+  }
+  return candidates;
+}
+
+/**
+ * Extract params from a URLPattern match (excluding the wildcard group "0").
+ */
+function extractParams(match: URLPatternResult): Record<string, string> {
   const params: Record<string, string> = {};
   for (const [key, value] of Object.entries(match.pathname.groups)) {
     if (value !== undefined && key !== "0") {
       params[key] = value;
     }
   }
-
-  // Calculate consumed pathname
-  let consumedPathname: string;
-  if (exact) {
-    consumedPathname = pathname;
-  } else if (normalizedPattern === "/") {
-    // Root pattern consumes just "/"
-    consumedPathname = "/";
-  } else {
-    // For prefix matches, calculate based on pattern segments
-    const patternSegments = normalizedPattern.split("/").filter(Boolean);
-    const pathnameSegments = pathname.split("/").filter(Boolean);
-    consumedPathname = "/" + pathnameSegments.slice(0, patternSegments.length).join("/");
-  }
-
-  return { matched: true, params, consumedPathname };
+  return params;
 }

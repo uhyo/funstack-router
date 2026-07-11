@@ -118,11 +118,16 @@ Full documentation is available at [router.funstack.work](https://router.funstac
 
 FUNSTACK Router uses the [URLPattern API](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) for path matching.
 
-| Pattern      | Example        | Matches         |
-| ------------ | -------------- | --------------- |
-| `/users`     | `/users`       | Exact match     |
-| `/users/:id` | `/users/123`   | Named parameter |
-| `/files/*`   | `/files/a/b/c` | Wildcard        |
+| Pattern           | Example                | Matches                        |
+| ----------------- | ---------------------- | ------------------------------ |
+| `/users`          | `/users`               | Exact match                    |
+| `/users/:id`      | `/users/123`           | Named parameter                |
+| `/docs/:section?` | `/docs`, `/docs/intro` | Optional parameter             |
+| `/files/:path+`   | `/files/a/b`           | Repeated parameter (1 or more) |
+| `/users/:id(\d+)` | `/users/123`           | Parameter with regex           |
+| `/files/*`        | `/files/a/b/c`         | Wildcard                       |
+
+These patterns also work on parent routes: the matched portion is consumed as a prefix and the rest of the pathname is matched against child routes.
 
 ## License
 

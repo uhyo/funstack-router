@@ -225,6 +225,182 @@ describe("matchRoutes", () => {
     });
   });
 
+  describe("URLPattern modifiers in non-exact routes", () => {
+    it("matches child under parent with optional param (:section?) present", () => {
+      const routes = internalRoutes([
+        {
+          path: "/docs/:section?",
+          component: () => null,
+          children: [{ path: "/page/:id", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/docs/intro/page/5");
+      expect(result).toHaveLength(2);
+      expect(result![0].pathname).toBe("/docs/intro");
+      expect(result![0].params).toEqual({ section: "intro" });
+      expect(result![1].params).toEqual({ section: "intro", id: "5" });
+    });
+
+    it("matches child under parent with optional param (:section?) absent", () => {
+      const routes = internalRoutes([
+        {
+          path: "/docs/:section?",
+          component: () => null,
+          children: [{ path: "/page/:id", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/docs/page/5");
+      expect(result).toHaveLength(2);
+      expect(result![0].pathname).toBe("/docs");
+      expect(result![0].params).toEqual({});
+      expect(result![1].params).toEqual({ id: "5" });
+    });
+
+    it("prefers the longest consumed prefix when ambiguous", () => {
+      const routes = internalRoutes([
+        {
+          path: "/docs/:section?",
+          component: () => null,
+          children: [{ path: "/page/:id", component: () => null }],
+        },
+      ]);
+
+      // Both section="page" and section absent could lead to a child match;
+      // the longer consumed prefix (greedy) wins.
+      const result = matchRoutes(routes, "/docs/page/page/5");
+      expect(result).toHaveLength(2);
+      expect(result![1].params).toEqual({ section: "page", id: "5" });
+    });
+
+    it("matches child under parent with repeated param (:path+)", () => {
+      const routes = internalRoutes([
+        {
+          path: "/files/:path+",
+          component: () => null,
+          children: [{ path: "/meta", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/files/a/b/meta");
+      expect(result).toHaveLength(2);
+      expect(result![0].pathname).toBe("/files/a/b");
+      expect(result![0].params).toEqual({ path: "a/b" });
+    });
+
+    it(":path+ parent requires at least one segment before children", () => {
+      const routes = internalRoutes([
+        {
+          path: "/files/:path+",
+          component: () => null,
+          children: [{ path: "/meta", component: () => null }],
+        },
+      ]);
+
+      // Consuming just "/files" would leave "/meta" for the child, but
+      // :path+ requires at least one segment, so nothing matches.
+      expect(matchRoutes(routes, "/files/meta")).toBeNull();
+      expect(matchRoutes(routes, "/files")).toBeNull();
+    });
+
+    it("matches child under parent with zero-or-more param (:path*)", () => {
+      const routes = internalRoutes([
+        {
+          path: "/files/:path*",
+          component: () => null,
+          children: [{ path: "/meta", component: () => null }],
+        },
+      ]);
+
+      const withSegments = matchRoutes(routes, "/files/a/b/meta");
+      expect(withSegments).toHaveLength(2);
+      expect(withSegments![0].params).toEqual({ path: "a/b" });
+
+      const withoutSegments = matchRoutes(routes, "/files/meta");
+      expect(withoutSegments).toHaveLength(2);
+      expect(withoutSegments![0].pathname).toBe("/files");
+      expect(withoutSegments![0].params).toEqual({});
+    });
+
+    it("matches child under parent with group modifier ({/:section}?)", () => {
+      const routes = internalRoutes([
+        {
+          path: "/docs{/:section}?",
+          component: () => null,
+          children: [{ path: "/page/:id", component: () => null }],
+        },
+      ]);
+
+      const absent = matchRoutes(routes, "/docs/page/5");
+      expect(absent).toHaveLength(2);
+      expect(absent![0].pathname).toBe("/docs");
+      expect(absent![1].params).toEqual({ id: "5" });
+
+      const present = matchRoutes(routes, "/docs/intro/page/5");
+      expect(present).toHaveLength(2);
+      expect(present![1].params).toEqual({ section: "intro", id: "5" });
+    });
+
+    it("matches child under parent with regex group param", () => {
+      const routes = internalRoutes([
+        {
+          path: "/users/:id(\\d+)",
+          component: () => null,
+          children: [{ path: "/posts", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/users/123/posts");
+      expect(result).toHaveLength(2);
+      expect(result![0].params).toEqual({ id: "123" });
+
+      expect(matchRoutes(routes, "/users/abc/posts")).toBeNull();
+    });
+
+    it("matches child under parent with wildcard (*)", () => {
+      const routes = internalRoutes([
+        {
+          path: "/files/*",
+          component: () => null,
+          children: [{ path: "/meta", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/files/a/b/meta");
+      expect(result).toHaveLength(2);
+      expect(result![0].pathname).toBe("/files/a/b");
+      expect(result![1].route.path).toBe("/meta");
+    });
+
+    it("non-exact leaf with :path+ consumes greedily", () => {
+      const routes = internalRoutes([
+        { path: "/files/:path+", component: () => null, exact: false },
+      ]);
+
+      const result = matchRoutes(routes, "/files/a/b");
+      expect(result).toHaveLength(1);
+      expect(result![0].params).toEqual({ path: "a/b" });
+      expect(result![0].pathname).toBe("/files/a/b");
+    });
+
+    it("optional param parent falls back to requireChildren: false when no child matches", () => {
+      const routes = internalRoutes([
+        {
+          path: "/docs/:section?",
+          component: () => null,
+          requireChildren: false,
+          children: [{ path: "/page/:id", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/docs/intro");
+      expect(result).toHaveLength(1);
+      expect(result![0].params).toEqual({ section: "intro" });
+      expect(result![0].pathname).toBe("/docs/intro");
+    });
+  });
+
   describe("pathless routes", () => {
     it("pathless route always matches any pathname", () => {
       const routes = internalRoutes([{ component: () => null }]);
