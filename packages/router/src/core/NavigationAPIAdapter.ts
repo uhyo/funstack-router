@@ -12,6 +12,7 @@ import {
   executeLoaders,
   createLoaderRequest,
   createActionRequest,
+  carryOverLoaderCacheForEntry,
   clearLoaderCacheForEntry,
 } from "./loaderCache.js";
 
@@ -115,10 +116,16 @@ export class NavigationAPIAdapter implements RouterAdapter {
       (event) => {
         // NavigationCurrentEntryChangeEvent.navigationType is null
         // when the change was caused by updateCurrentEntry()
-        const navigationType = (event as NavigationCurrentEntryChangeEvent).navigationType;
+        const { navigationType, from } = event as NavigationCurrentEntryChangeEvent;
         if (navigationType === null) {
           callback({ kind: "state" });
         } else {
+          if (navigationType === "replace") {
+            // Must happen before the callback so subscribers never render
+            // (and execute loaders) with the new entry's cache key while it
+            // is still empty.
+            this.#carryOverLoaderCacheAcrossReplace(from);
+          }
           callback({
             kind: "navigation",
             navigationType,
@@ -193,6 +200,34 @@ export class NavigationAPIAdapter implements RouterAdapter {
         { signal },
       );
     }
+  }
+
+  /**
+   * Preserve cached loader results across a same-URL replace navigation.
+   *
+   * A replace assigns a new NavigationHistoryEntry.id, which changes the
+   * loader cache key. When the URL is unchanged — notably the async
+   * `setState`/`resetState`, which persist state via a replace to the
+   * current URL — the loaders' inputs (URL, params) are identical, so
+   * re-executing them would refetch the same data just to save UI state.
+   * Copy the previous entry's cached results to the new entry's key
+   * instead. (Loaders cannot observe navigation state, so a state change
+   * never requires revalidation; `navigation.reload()` remains the way to
+   * refetch on the same URL.)
+   *
+   * Form submissions are unaffected: their revalidation explicitly clears
+   * the new entry's cache before executing loaders with the action result.
+   */
+  #carryOverLoaderCacheAcrossReplace(from: NavigationHistoryEntry): void {
+    const to = navigation.currentEntry;
+    if (!to?.url || !from.url || from.url !== to.url || from.id === to.id) {
+      return;
+    }
+    // The source must be the previous entry's *effective* key so results
+    // cached under a reload generation (`:rN` suffix) are found. The new
+    // entry has no reload count yet, so its effective key is the composite.
+    const fromKey = this.#effectiveKey(`${from.id}|${from.url}`);
+    carryOverLoaderCacheForEntry(fromKey, `${to.id}|${to.url}`);
   }
 
   /**

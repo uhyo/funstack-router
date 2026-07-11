@@ -50,7 +50,9 @@ type Props = {
             <code>setState</code> - Async method that returns a Promise. Uses replace navigation
             internally, ensuring the state update goes through the full navigation cycle. Because it
             performs a navigation, it is wrapped in a React transition and may set{" "}
-            <code>isPending</code> to <code>true</code>.
+            <code>isPending</code> to <code>true</code>. Loaders do <strong>not</strong> re-execute:
+            since the URL is unchanged, cached loader results are carried over to the new navigation
+            entry.
           </li>
           <li>
             <code>setStateSync</code> - Synchronous method that updates state immediately using{" "}
