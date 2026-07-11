@@ -43,6 +43,64 @@ describe("route() type inference", () => {
     >();
   });
 
+  it("strips URLPattern modifiers from param names", () => {
+    const optional = route({
+      id: "docs",
+      path: "/docs/:section?",
+      component: () => null,
+    });
+    expectTypeOf(optional).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<"docs", { section: string }, undefined, undefined>
+    >();
+
+    const repeated = route({
+      id: "files",
+      path: "/files/:path+",
+      component: () => null,
+    });
+    expectTypeOf(repeated).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<"files", { path: string }, undefined, undefined>
+    >();
+
+    const zeroOrMore = route({
+      id: "assets",
+      path: "/assets/:rest*",
+      component: () => null,
+    });
+    expectTypeOf(zeroOrMore).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<"assets", { rest: string }, undefined, undefined>
+    >();
+  });
+
+  it("strips regex groups and group delimiters from param names", () => {
+    const regex = route({
+      id: "user",
+      path: "/users/:id(\\d+)",
+      component: () => null,
+    });
+    expectTypeOf(regex).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<"user", { id: string }, undefined, undefined>
+    >();
+
+    const grouped = route({
+      id: "docs",
+      path: "/docs{/:section}?",
+      component: () => null,
+    });
+    expectTypeOf(grouped).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<"docs", { section: string }, undefined, undefined>
+    >();
+
+    const regexWithModifier = route({
+      id: "post",
+      path: "/posts/:slug(\\w+)?",
+      component: () => null,
+    });
+    expectTypeOf(regexWithModifier).toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<"post", { slug: string }, undefined, undefined>
+    >();
+  });
+
   it("infers data type from loader", () => {
     const r = route({
       id: "user",

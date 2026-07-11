@@ -4,13 +4,31 @@ const routeDefinitionSymbol = Symbol();
 const partialRouteDefinitionSymbol = Symbol();
 
 /**
+ * Strips URLPattern syntax following a parameter name: modifiers (`?`, `+`,
+ * `*`), regex groups, and group delimiters.
+ * E.g., "section?" -> "section", "path+" -> "path", "id(\\d+)" -> "id",
+ * "section}?" (from "/docs{/:section}?") -> "section"
+ */
+type StripParamModifiers<T extends string> = T extends `${infer Name}(${string}`
+  ? StripParamModifiers<Name>
+  : T extends `${infer Name}}${string}`
+    ? StripParamModifiers<Name>
+    : T extends `${infer Name}?`
+      ? StripParamModifiers<Name>
+      : T extends `${infer Name}+`
+        ? StripParamModifiers<Name>
+        : T extends `${infer Name}*`
+          ? StripParamModifiers<Name>
+          : T;
+
+/**
  * Extracts parameter names from a path pattern.
  * E.g., "/users/:id/posts/:postId" -> "id" | "postId"
  */
 type ExtractParams<T extends string> = T extends `${string}:${infer Param}/${infer Rest}`
-  ? Param | ExtractParams<`/${Rest}`>
+  ? StripParamModifiers<Param> | ExtractParams<`/${Rest}`>
   : T extends `${string}:${infer Param}`
-    ? Param
+    ? StripParamModifiers<Param>
     : never;
 
 /**
