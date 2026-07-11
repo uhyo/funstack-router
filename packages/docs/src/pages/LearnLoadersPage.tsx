@@ -101,8 +101,17 @@ function UserDetail({ data }: { data: Promise<User> }) {
         <p>
           A <strong>push</strong> navigation (the default when clicking a link or calling{" "}
           <code>navigate()</code>) creates a new navigation entry. Since the entry is new, loaders
-          always execute. A <strong>replace</strong> navigation behaves the same way &mdash; it
-          creates a new entry that replaces the current one, so loaders execute fresh.
+          always execute. A <strong>replace</strong> navigation to a <strong>different</strong> URL
+          behaves the same way &mdash; it creates a new entry that replaces the current one, so
+          loaders execute fresh.
+        </p>
+        <p>
+          A replace navigation to the <strong>same</strong> URL &mdash; most commonly the async{" "}
+          <code>setState</code> / <code>resetState</code> props, which persist navigation state via
+          a same-URL replace &mdash; carries the cached loader results over to the new entry, so
+          loaders do <strong>not</strong> re-execute. Loaders cannot observe navigation state (it is
+          not part of their arguments), so saving UI state never requires a refetch. When you do
+          want fresh data on the current URL, use <code>navigation.reload()</code>.
         </p>
 
         <h4>Traverse (Back / Forward)</h4>
@@ -222,9 +231,16 @@ function UserDetail({ data }: { data: Promise<User> }) {
           </thead>
           <tbody>
             <tr>
-              <td>Push / Replace</td>
+              <td>Push / Replace (different URL)</td>
               <td>Yes</td>
               <td>New navigation entry, no cache</td>
+            </tr>
+            <tr>
+              <td>
+                Same-URL replace (async <code>setState</code> / <code>resetState</code>)
+              </td>
+              <td>No</td>
+              <td>Cached results are carried over to the new entry</td>
             </tr>
             <tr>
               <td>Traverse (Back / Forward)</td>

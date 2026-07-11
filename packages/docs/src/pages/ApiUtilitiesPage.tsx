@@ -229,6 +229,11 @@ const productRoute = routeState<{ filter: string }>()({
           <li>State persists when navigating back/forward in history</li>
           <li>Each history entry has its own independent state</li>
           <li>State must be serializable (no functions, Symbols, or DOM nodes)</li>
+          <li>
+            State updates never re-execute loaders &mdash; loaders cannot observe navigation state,
+            and cached loader results are preserved across <code>setState</code>&rsquo;s same-URL
+            replace navigation
+          </li>
         </ul>
         <h4>Internal Storage</h4>
         <p>

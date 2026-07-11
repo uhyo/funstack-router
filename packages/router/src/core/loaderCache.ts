@@ -107,6 +107,26 @@ export function clearLoaderCache(): void {
 }
 
 /**
+ * Copy cached loader results from one entry key to another.
+ *
+ * Used to preserve results across same-URL replace navigations (notably the
+ * async `setState`/`resetState`), where the new entry id would otherwise
+ * change the cache key and re-execute every loader for the same URL.
+ */
+export function carryOverLoaderCacheForEntry(fromEntryKey: string, toEntryKey: string): void {
+  const fromPrefix = `${fromEntryKey}:`;
+  const carried: [suffix: string, value: unknown][] = [];
+  for (const [key, value] of loaderCache) {
+    if (key.startsWith(fromPrefix)) {
+      carried.push([key.slice(fromPrefix.length), value]);
+    }
+  }
+  for (const [suffix, value] of carried) {
+    loaderCache.set(`${toEntryKey}:${suffix}`, value);
+  }
+}
+
+/**
  * Clear loader cache entries for a specific navigation entry.
  * Called when a NavigationHistoryEntry is disposed (removed from history stack).
  */

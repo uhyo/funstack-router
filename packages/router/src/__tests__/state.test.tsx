@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import { Router } from "../Router/index.js";
 import { Outlet } from "../Outlet.js";
@@ -636,6 +636,182 @@ describe("Navigation State Management", () => {
 
       expect(screen.queryByText("apple")).not.toBeInTheDocument();
       expect(screen.getByText("banana")).toBeInTheDocument();
+    });
+  });
+
+  describe("loader cache across async state updates (#204)", () => {
+    it("does not re-execute the loader when setState replaces the current entry", async () => {
+      type PageState = { count: number };
+      const loader = vi.fn(() => ({ message: "loaded" }));
+
+      function Page({
+        data,
+        state,
+        setState,
+      }: RouteComponentProps<Record<string, never>, PageState> & {
+        data: { message: string };
+      }) {
+        return (
+          <div>
+            <span>Data: {data.message}</span>
+            <span>Count: {state?.count ?? 0}</span>
+            <button onClick={() => void setState({ count: 1 })}>Save</button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          loader,
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(screen.getByText("Data: loaded")).toBeInTheDocument();
+      expect(loader).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button"));
+      });
+
+      expect(screen.getByText("Count: 1")).toBeInTheDocument();
+      expect(screen.getByText("Data: loaded")).toBeInTheDocument();
+      expect(loader).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not re-execute any loader in the matched stack on setState", async () => {
+      type PageState = { count: number };
+      const parentLoader = vi.fn(() => ({ title: "Users" }));
+      const childLoader = vi.fn(() => ({ name: "Alice" }));
+
+      setupNavigationMock("http://localhost/users/123");
+
+      function Layout({ data }: { data: { title: string } }) {
+        return (
+          <div>
+            <h1>{data.title}</h1>
+            <Outlet />
+          </div>
+        );
+      }
+
+      function UserDetail({
+        data,
+        state,
+        setState,
+      }: RouteComponentProps<{ id: string }, PageState> & {
+        data: { name: string };
+      }) {
+        return (
+          <div>
+            <span>Name: {data.name}</span>
+            <span>Count: {state?.count ?? 0}</span>
+            <button onClick={() => void setState({ count: 1 })}>Save</button>
+          </div>
+        );
+      }
+
+      const routes = [
+        route({
+          path: "/users",
+          loader: parentLoader,
+          component: Layout,
+          children: [
+            routeState<PageState>()({
+              path: ":id",
+              loader: childLoader,
+              component: UserDetail,
+            }),
+          ],
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(parentLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button"));
+      });
+
+      expect(screen.getByText("Count: 1")).toBeInTheDocument();
+      expect(parentLoader).toHaveBeenCalledTimes(1);
+      expect(childLoader).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not re-execute the loader on resetState", async () => {
+      type PageState = { count: number };
+      const loader = vi.fn(() => ({ message: "loaded" }));
+
+      function Page({
+        data,
+        state,
+        setStateSync,
+        resetState,
+      }: RouteComponentProps<Record<string, never>, PageState> & {
+        data: { message: string };
+      }) {
+        return (
+          <div>
+            <span>Data: {data.message}</span>
+            <span>Count: {state?.count ?? "none"}</span>
+            <button onClick={() => setStateSync({ count: 10 })}>Set</button>
+            <button onClick={() => void resetState()}>Reset</button>
+          </div>
+        );
+      }
+
+      const routes = [
+        routeState<PageState>()({
+          path: "/",
+          loader,
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      act(() => {
+        fireEvent.click(screen.getByText("Set"));
+      });
+      expect(screen.getByText("Count: 10")).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(screen.getByText("Reset"));
+      });
+
+      expect(screen.getByText("Count: none")).toBeInTheDocument();
+      expect(loader).toHaveBeenCalledTimes(1);
+    });
+
+    it("re-executes the loader when a replace navigation changes the URL", () => {
+      const loader = vi.fn(() => ({ message: "loaded" }));
+
+      const mockNavigation = setupNavigationMock("http://localhost/a");
+
+      function Page({ params }: { params: { page: string }; data: { message: string } }) {
+        return <div>Page: {params.page}</div>;
+      }
+
+      const routes = [
+        route({
+          path: "/:page",
+          loader,
+          component: Page,
+        }),
+      ];
+
+      render(<Router routes={routes} />);
+      expect(screen.getByText("Page: a")).toBeInTheDocument();
+      expect(loader).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        mockNavigation.navigate("http://localhost/b", { history: "replace" });
+      });
+
+      expect(screen.getByText("Page: b")).toBeInTheDocument();
+      expect(loader).toHaveBeenCalledTimes(2);
     });
   });
 });
