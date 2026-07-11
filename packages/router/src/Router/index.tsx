@@ -195,9 +195,13 @@ export function Router({
               }
             }
             await wait;
-            // Re-read the snapshot: a superseding navigation may have
-            // resolved the wait, in which case this renders the newest entry.
-            setLocationEntry(adapter.getSnapshot());
+            // Updates after the first await are not part of the transition
+            // unless wrapped in a nested startTransition call.
+            startTransition(() => {
+              // Re-read the snapshot: a superseding navigation may have
+              // resolved the wait, in which case this renders the newest entry.
+              setLocationEntry(adapter.getSnapshot());
+            });
           });
           return;
         }

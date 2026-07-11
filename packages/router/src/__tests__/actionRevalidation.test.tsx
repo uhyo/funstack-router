@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
+import { Suspense, use } from "react";
 import { Router } from "../Router/index.js";
 import { route, type LoaderArgs } from "../route.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
@@ -109,6 +110,65 @@ describe("action revalidation through <Router>", () => {
     expect(screen.getByTestId("out")).toHaveTextContent("loaded(actionResult=OK)");
     expect(loader).toHaveBeenCalledTimes(1);
     expect(loaderArgs).toEqual(["OK"]);
+  });
+
+  it("applies the post-wait update as a transition (async loader keeps old UI, no Suspense fallback)", async () => {
+    let resolveLoader!: (value: string) => void;
+    const action = vi.fn(async () => "OK");
+    const loader = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          resolveLoader = resolve;
+        }),
+    );
+    function FormPage({ data }: { data: Promise<string> }) {
+      const value = use(data);
+      return <div data-testid="out">{value}</div>;
+    }
+    const routes = [
+      route({ path: "/", component: () => <div data-testid="out">home</div> }),
+      route({ path: "/form", action, loader, component: FormPage }),
+    ];
+    render(
+      <Suspense fallback={<div data-testid="out">fallback</div>}>
+        <Router routes={routes} />
+      </Suspense>,
+    );
+
+    const formData = new FormData();
+    const { event, proceed } = mockNavigation.__simulateNavigationWithEvent(
+      "http://localhost/form",
+      { formData },
+    );
+    const handler = (event.intercept as ReturnType<typeof vi.fn>).mock.calls[0][0]
+      .handler as () => Promise<void>;
+
+    await act(async () => {
+      proceed();
+    });
+    // Action resolves immediately, but the loader's promise stays pending, so
+    // the handler (and the navigation) are still in flight.
+    const handlerDone = handler();
+    await act(async () => {
+      // Let the adapter's deferred resolve and the Router's post-wait update
+      // render. The route component suspends on the pending loader promise;
+      // since the update is a transition, the old page must stay up instead
+      // of the Suspense fallback appearing.
+      await Promise.resolve();
+    });
+    expect(screen.getByTestId("out")).toHaveTextContent("home");
+
+    await act(async () => {
+      resolveLoader("loaded-async");
+      await handlerDone;
+    });
+    await act(async () => {
+      mockNavigation
+        .__getListeners("navigatesuccess")
+        ?.forEach((listener) => listener(new Event("navigatesuccess")));
+    });
+    expect(screen.getByTestId("out")).toHaveTextContent("loaded-async");
+    expect(loader).toHaveBeenCalledTimes(1);
   });
 
   it("does not leave the UI hanging when the action throws", async () => {
