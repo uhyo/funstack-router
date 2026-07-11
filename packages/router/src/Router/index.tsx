@@ -179,22 +179,25 @@ export function Router({
           // keeping the old UI and isPending up) until the adapter has
           // dispatched loaders with the action result.
           const { wait, navigationType } = change;
+          // The entry is already committed, so the snapshot has the final
+          // URL. Read it now so transition types can be added synchronously
+          // inside the transition — addTransitionType is not supported
+          // after an await.
+          const committedSnapshot = adapter.getSnapshot();
           startTransition(async () => {
-            await wait;
-            const newSnapshot = adapter.getSnapshot();
-            if (newSnapshot) {
-              // Note: addTransitionType after an await requires async
-              // transition support; on builds without it this is already a
-              // silent no-op (see core/addTransitionType.ts).
+            if (committedSnapshot) {
               const types = getTransitionTypes({
-                url: newSnapshot.url,
+                url: committedSnapshot.url,
                 navigationType,
               });
               for (const type of types) {
                 addTransitionType(type);
               }
             }
-            setLocationEntry(newSnapshot);
+            await wait;
+            // Re-read the snapshot: a superseding navigation may have
+            // resolved the wait, in which case this renders the newest entry.
+            setLocationEntry(adapter.getSnapshot());
           });
           return;
         }

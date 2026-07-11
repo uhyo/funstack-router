@@ -338,11 +338,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
       // data. Must be set before intercept() so it is in place when
       // currententrychange fires.
       if (isFormSubmission) {
-        let resolve!: () => void;
-        const promise = new Promise<void>((r) => {
-          resolve = r;
-        });
-        this.#pendingFormNavigation = { promise, resolve };
+        this.#pendingFormNavigation = Promise.withResolvers<void>();
       }
       const pendingFormNavigation = this.#pendingFormNavigation;
 
