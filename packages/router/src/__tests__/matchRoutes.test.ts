@@ -53,6 +53,44 @@ describe("matchRoutes", () => {
       expect(result).toHaveLength(1);
       expect(result![0].params).toEqual({ userId: "42", postId: "99" });
     });
+
+    it("percent-decodes parameter values", () => {
+      const routes = internalRoutes([{ path: "/users/:name", component: () => null }]);
+
+      const result = matchRoutes(routes, "/users/Jo%C3%A3o");
+      expect(result).toHaveLength(1);
+      expect(result![0].params).toEqual({ name: "João" });
+    });
+
+    it("percent-decodes spaces and reserved characters", () => {
+      const routes = internalRoutes([{ path: "/files/:name", component: () => null }]);
+
+      const result = matchRoutes(routes, "/files/hello%20world%3F");
+      expect(result).toHaveLength(1);
+      expect(result![0].params).toEqual({ name: "hello world?" });
+    });
+
+    it("percent-decodes params inherited from parent routes", () => {
+      const routes = internalRoutes([
+        {
+          path: "/users/:name",
+          component: () => null,
+          children: [{ path: "/posts/:title", component: () => null }],
+        },
+      ]);
+
+      const result = matchRoutes(routes, "/users/Jo%C3%A3o/posts/ol%C3%A1");
+      expect(result).toHaveLength(2);
+      expect(result![1].params).toEqual({ name: "João", title: "olá" });
+    });
+
+    it("falls back to the raw value for malformed percent sequences", () => {
+      const routes = internalRoutes([{ path: "/users/:name", component: () => null }]);
+
+      const result = matchRoutes(routes, "/users/100%zz");
+      expect(result).toHaveLength(1);
+      expect(result![0].params).toEqual({ name: "100%zz" });
+    });
   });
 
   describe("nested routes", () => {

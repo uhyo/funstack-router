@@ -256,13 +256,28 @@ function matchPath(pattern: string, pathname: string, exact: boolean): PathMatch
 
 /**
  * Extract params from a URLPattern match (excluding the wildcard group "0").
+ *
+ * URLPattern matches against the percent-encoded pathname and returns group
+ * values as-is, so param values are decoded here before being exposed.
  */
 function extractParams(match: URLPatternResult): Record<string, string> {
   const params: Record<string, string> = {};
   for (const [key, value] of Object.entries(match.pathname.groups)) {
     if (value !== undefined && key !== "0") {
-      params[key] = value;
+      params[key] = decodeParam(value);
     }
   }
   return params;
+}
+
+/**
+ * Percent-decode a param value, falling back to the raw value for malformed
+ * sequences (e.g. a lone `%`) rather than failing the whole match.
+ */
+function decodeParam(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
