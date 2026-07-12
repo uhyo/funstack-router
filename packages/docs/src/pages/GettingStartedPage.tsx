@@ -119,6 +119,10 @@ const routes = [
     component: UserProfile,
   }),
 ];`}</CodeBlock>
+        <p>
+          Parameter values are percent-decoded: navigating to <code>/users/Jo%C3%A3o</code> yields{" "}
+          <code>params.userId === "João"</code>.
+        </p>
       </section>
 
       <section>
