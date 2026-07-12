@@ -74,8 +74,9 @@ function UserDetail({ data }: { data: Promise<User> }) {
         <h3>Caching by Navigation Entry</h3>
         <p>
           Loader results are cached using the <strong>navigation entry ID</strong> from the
-          Navigation API. Each time you navigate to a new URL, the browser creates a new navigation
-          entry with a unique ID. The Router uses this ID as the cache key, so:
+          Navigation API, combined with the identity of the <strong>loader function</strong> and the
+          matched <strong>params</strong>. Each time you navigate to a new URL, the browser creates
+          a new navigation entry with a unique ID, so:
         </p>
         <ul>
           <li>
@@ -90,6 +91,16 @@ function UserDetail({ data }: { data: Promise<User> }) {
         <p>
           This design ensures that loaders run exactly once per navigation while preventing
           unnecessary re-fetches during React re-renders.
+        </p>
+
+        <h4>Changing the Routes Prop</h4>
+        <p>
+          Because the loader function is part of the cache key, the <code>routes</code> prop can
+          change dynamically &mdash; for example when routes depend on feature flags or user
+          permissions. When a route with a <strong>different loader</strong> matches the current URL
+          after a routes change, that loader executes fresh instead of being served another
+          loader&rsquo;s cached data. Routes that keep the same loader function keep their cached
+          results, even if the route definition objects themselves are recreated.
         </p>
       </section>
 
