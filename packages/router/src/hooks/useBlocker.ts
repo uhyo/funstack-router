@@ -35,6 +35,11 @@ export type UseBlockerOptions = {
  *
  * Note: This hook only handles SPA navigations (links, programmatic navigation).
  * For hard navigations (tab close, refresh), handle `beforeunload` separately.
+ *
+ * Note: Some navigate events are not cancelable — notably certain browser
+ * back/forward traversals, depending on the browser and user activation.
+ * For those, `shouldBlock` is not called and the navigation proceeds,
+ * since the Navigation API provides no way to cancel it.
  */
 export function useBlocker(options: UseBlockerOptions): void {
   const context = useContext(BlockerContext);

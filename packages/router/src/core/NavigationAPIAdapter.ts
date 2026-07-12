@@ -288,8 +288,12 @@ export class NavigationAPIAdapter implements RouterAdapter {
       // Invalidate cached snapshot to pick up new info
       this.#cachedSnapshot = null;
 
-      // Check blockers first - if any blocker returns true, prevent navigation
-      if (checkBlockers?.()) {
+      // Check blockers first - if any blocker returns true, prevent navigation.
+      // Some navigate events are not cancelable (e.g. certain traversals,
+      // depending on browser and user activation); preventDefault() would be
+      // ignored on them, so skip shouldBlock() entirely rather than show a
+      // confirmation dialog whose answer cannot be honored.
+      if (event.cancelable && checkBlockers?.()) {
         event.preventDefault();
         return;
       }

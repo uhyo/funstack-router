@@ -67,11 +67,15 @@ When navigation occurs:
 For navigations within the app (links, programmatic navigation):
 
 1. Navigation event fires
-2. All registered blocker functions are called synchronously
-3. If any returns `true`:
+2. If the event is not cancelable (`event.cancelable === false`), blockers are
+   skipped entirely and navigation proceeds — `preventDefault()` would be
+   ignored, so running blockers (and possibly showing a `confirm()` dialog)
+   would be misleading
+3. All registered blocker functions are called synchronously
+4. If any returns `true`:
    - Navigation is prevented (`event.preventDefault()`)
    - User remains on current page
-4. If all return `false`:
+5. If all return `false`:
    - Navigation proceeds normally
 
 ### Hard Navigations
@@ -226,6 +230,10 @@ Some navigations cannot or should not be blocked:
 - Same-page hash changes (anchor links)
 - `replace` navigations that don't change the path (state-only updates)
 - Hard navigations (tab close, external URL) - use `beforeunload` separately
+- Non-cancelable navigate events — per the Navigation API spec, some events
+  (notably certain back/forward traversals, depending on browser and user
+  activation) have `cancelable: false`. Blockers are skipped for these since
+  the navigation cannot be prevented
 
 ## Comparison with `onNavigate`
 

@@ -113,6 +113,12 @@ function EditForm() {
             This hook only handles SPA navigations (links, programmatic navigation). For hard
             navigations (tab close, refresh), handle <code>beforeunload</code> separately.
           </li>
+          <li>
+            Some navigate events are not cancelable — notably certain browser back/forward
+            traversals, depending on the browser and user activation. For those,{" "}
+            <code>shouldBlock</code> is not called and the navigation proceeds, since the Navigation
+            API provides no way to cancel it.
+          </li>
         </ul>
       </article>
 

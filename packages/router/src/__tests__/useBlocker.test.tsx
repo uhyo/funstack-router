@@ -72,6 +72,37 @@ describe("useBlocker", () => {
     expect(event.preventDefault).toHaveBeenCalled();
   });
 
+  it("skips shouldBlock when the navigate event is not cancelable", () => {
+    const shouldBlock = vi.fn(() => true);
+
+    function TestComponent() {
+      useBlocker({ shouldBlock });
+      return <div>Home</div>;
+    }
+
+    const routes: RouteDefinition[] = [
+      { path: "/", component: TestComponent },
+      { path: "/about", component: () => <div>About</div> },
+    ];
+
+    render(<Router routes={routes} />);
+    expect(screen.getByText("Home")).toBeInTheDocument();
+
+    // Simulate a non-cancelable navigation (e.g. a browser traversal that
+    // cannot be canceled). preventDefault() would be ignored, so the blocker
+    // must not run — otherwise a confirm() dialog would be shown whose
+    // answer cannot be honored.
+    const { event } = mockNavigation.__simulateNavigationWithEvent("/about", {
+      cancelable: false,
+    });
+
+    expect(shouldBlock).not.toHaveBeenCalled();
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+    // Navigation is still handled normally (route matched, so intercepted)
+    expect(event.intercept).toHaveBeenCalled();
+  });
+
   it("blocks navigation based on dynamic condition", async () => {
     function TestComponent() {
       const [isDirty, setIsDirty] = useState(false);
