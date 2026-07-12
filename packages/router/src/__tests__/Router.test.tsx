@@ -401,4 +401,80 @@ describe("Router", () => {
       expect(addTransitionTypeSpy).not.toHaveBeenCalled();
     });
   });
+
+  describe("trailingSlash prop", () => {
+    it("ignores a trailing slash by default", () => {
+      mockNavigation = setupNavigationMock("http://localhost/about/");
+
+      const routes: RouteDefinition[] = [{ path: "/about", component: () => <div>About</div> }];
+
+      render(<Router routes={routes} />);
+      expect(screen.getByText("About")).toBeInTheDocument();
+    });
+
+    it("does not rewrite the URL when ignoring a trailing slash", () => {
+      mockNavigation = setupNavigationMock("http://localhost/about/");
+
+      function About() {
+        const location = useLocation();
+        return <div data-testid="pathname">{location.pathname}</div>;
+      }
+
+      const routes: RouteDefinition[] = [{ path: "/about", component: About }];
+
+      render(<Router routes={routes} />);
+      expect(screen.getByTestId("pathname").textContent).toBe("/about/");
+    });
+
+    it("renders nothing for a trailing-slash URL in strict mode", () => {
+      mockNavigation = setupNavigationMock("http://localhost/about/");
+
+      const routes: RouteDefinition[] = [{ path: "/about", component: () => <div>About</div> }];
+
+      const { container } = render(<Router routes={routes} trailingSlash="strict" />);
+      expect(container.textContent).toBe("");
+    });
+
+    it("intercepts navigation to a trailing-slash URL by default", () => {
+      const onNavigate = vi.fn();
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} onNavigate={onNavigate} />);
+
+      act(() => {
+        const { proceed } = mockNavigation.__simulateNavigationWithEvent("http://localhost/about/");
+        proceed();
+      });
+
+      expect(onNavigate).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ intercepting: true }),
+      );
+      expect(screen.getByText("About")).toBeInTheDocument();
+    });
+
+    it("does not intercept navigation to a trailing-slash URL in strict mode", () => {
+      const onNavigate = vi.fn();
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} onNavigate={onNavigate} trailingSlash="strict" />);
+
+      act(() => {
+        mockNavigation.__simulateNavigationWithEvent("http://localhost/about/");
+      });
+
+      expect(onNavigate).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ matches: null, intercepting: false }),
+      );
+    });
+  });
 });

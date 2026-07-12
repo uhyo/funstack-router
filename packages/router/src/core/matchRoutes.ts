@@ -1,4 +1,4 @@
-import type { InternalRouteDefinition, MatchedRoute } from "../types.js";
+import type { InternalRouteDefinition, MatchedRoute, TrailingSlashMode } from "../types.js";
 
 const SKIPPED = Symbol("skipped");
 type MatchRouteInternalResult = MatchedRoute[] | typeof SKIPPED | null;
@@ -9,6 +9,12 @@ export type MatchRoutesOptions = {
    * Used during SSR where loaders cannot be executed.
    */
   skipLoaders?: boolean;
+  /**
+   * How trailing slashes are treated during matching.
+   *
+   * @default "ignore"
+   */
+  trailingSlash?: TrailingSlashMode;
 };
 
 /**
@@ -20,8 +26,12 @@ export function matchRoutes(
   pathname: string | null,
   options?: MatchRoutesOptions,
 ): MatchedRoute[] | null {
+  const normalizedPathname =
+    pathname !== null && (options?.trailingSlash ?? "ignore") === "ignore"
+      ? stripTrailingSlash(pathname)
+      : pathname;
   for (const route of routes) {
-    const matched = matchRoute(route, pathname, options);
+    const matched = matchRoute(route, normalizedPathname, options);
     if (matched === SKIPPED) return null;
     if (matched) {
       return matched;
@@ -50,7 +60,9 @@ function matchRoute(
         return SKIPPED; // pathless always matches
       }
       const isExact = route.exact ?? !hasChildren;
-      if (matchPath(route.path, pathname, isExact).length > 0) return SKIPPED;
+      if (matchPath(route.path, pathname, isExact, options?.trailingSlash).length > 0) {
+        return SKIPPED;
+      }
     }
     return null;
   }
@@ -100,7 +112,7 @@ function matchRoute(
 
   const isExact = route.exact ?? !hasChildren;
 
-  const candidates = matchPath(route.path, pathname, isExact);
+  const candidates = matchPath(route.path, pathname, isExact, options?.trailingSlash);
 
   if (candidates.length === 0) {
     return null;
@@ -175,6 +187,15 @@ type PathMatchCandidate = {
 };
 
 /**
+ * Strip a single trailing slash from a pathname or pattern. The root `/` is
+ * left untouched, and only one slash is stripped (`/users//` is not repaired
+ * to `/users`).
+ */
+function stripTrailingSlash(path: string): string {
+  return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
+}
+
+/**
  * Matches a pattern segment that always consumes exactly one pathname
  * segment: either a literal without URLPattern syntax, or a plain `:param`.
  */
@@ -192,9 +213,16 @@ function consumesOneSegmentEach(pattern: string): boolean {
  * candidates can be returned, ordered from longest to shortest consumed
  * prefix. Returns an empty array if the pattern doesn't match at all.
  */
-function matchPath(pattern: string, pathname: string, exact: boolean): PathMatchCandidate[] {
+function matchPath(
+  pattern: string,
+  pathname: string,
+  exact: boolean,
+  trailingSlash: TrailingSlashMode = "ignore",
+): PathMatchCandidate[] {
   // Normalize pattern
-  const normalizedPattern = pattern.startsWith("/") ? pattern : `/${pattern}`;
+  const slashPrefixedPattern = pattern.startsWith("/") ? pattern : `/${pattern}`;
+  const normalizedPattern =
+    trailingSlash === "ignore" ? stripTrailingSlash(slashPrefixedPattern) : slashPrefixedPattern;
 
   if (exact) {
     const match = new URLPattern({ pathname: normalizedPattern }).exec({

@@ -244,6 +244,24 @@ const routes = [
 
 // /files → matches FileExplorer (outlet is null)
 // /files/123 → matches FileExplorer + FileDetails`}</CodeBlock>
+
+        <h4>Trailing Slashes</h4>
+        <p>
+          By default, a single trailing slash in the URL is <strong>ignored</strong> during
+          matching: <code>/users/</code> matches a route with <code>path: "/users"</code> (and a
+          trailing slash in a route's <code>path</code> is likewise ignored). Only matching is
+          affected&mdash;the URL itself is never rewritten, so <code>useLocation()</code> still
+          reports the pathname with its trailing slash. The root path <code>/</code> is unaffected.
+        </p>
+        <p>
+          To require URLs to match patterns exactly, set <code>trailingSlash: "strict"</code> on the{" "}
+          <code>{"<Router>"}</code>:
+        </p>
+        <CodeBlock language="tsx">{`<Router routes={routes} trailingSlash="strict" />
+
+// With trailingSlash="strict":
+// /users  → matches path: "/users"
+// /users/ → does NOT match path: "/users"`}</CodeBlock>
       </section>
 
       <section>
@@ -564,6 +582,10 @@ function App() {
           </li>
           <li>Child route paths are relative to their parent route's path</li>
           <li>Parent routes use prefix matching; leaf routes use exact matching</li>
+          <li>
+            A single trailing slash is ignored during matching by default; opt into strict matching
+            with <code>trailingSlash: "strict"</code> on <code>{"<Router>"}</code>
+          </li>
           <li>Use pathless routes for layouts that don't affect the URL</li>
           <li>Parent route loaders run before children, making them ideal for shared data</li>
           <li>Deep nesting is supported&mdash;compose as many layout levels as you need</li>

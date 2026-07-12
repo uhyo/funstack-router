@@ -6,7 +6,7 @@ import type {
   NavigationType,
   OnNavigateCallback,
 } from "../types.js";
-import { matchRoutes } from "./matchRoutes.js";
+import { matchRoutes, type MatchRoutesOptions } from "./matchRoutes.js";
 import { isBypassInterception } from "../bypassInterception.js";
 import {
   executeLoaders,
@@ -260,6 +260,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
     getRoutes: () => InternalRouteDefinition[],
     onNavigate?: OnNavigateCallback,
     checkBlockers?: () => boolean,
+    getMatchOptions?: () => MatchRoutesOptions,
   ): (() => void) | undefined {
     const handleNavigate = (event: NavigateEvent) => {
       // If the navigation was triggered by hardReload/hardNavigate, skip blockers and interception
@@ -305,7 +306,7 @@ export class NavigationAPIAdapter implements RouterAdapter {
 
       // Check if the URL matches any of our routes
       const url = new URL(event.destination.url);
-      const matched = matchRoutes(getRoutes(), url.pathname);
+      const matched = matchRoutes(getRoutes(), url.pathname, getMatchOptions?.());
 
       const isFormSubmission = event.formData !== null;
 

@@ -17,6 +17,7 @@ import {
   type NavigateOptions,
   type OnNavigateCallback,
   type FallbackMode,
+  type TrailingSlashMode,
   type TransitionTypeContext,
   internalRoutes,
 } from "../types.js";
@@ -96,6 +97,19 @@ export type RouterProps = {
    */
   ssr?: SSRConfig;
   /**
+   * How trailing slashes in the URL pathname are treated during route matching.
+   *
+   * - `"ignore"` (default): a single trailing slash is ignored, so `/users/`
+   *   matches a route with `path: "users"` (and a trailing slash in a route's
+   *   `path` pattern is likewise ignored). The URL itself is never rewritten —
+   *   only matching is affected, and the root pathname `/` is unaffected.
+   * - `"strict"`: pathnames must match patterns exactly; `/users/` does not
+   *   match `path: "users"`.
+   *
+   * @default "ignore"
+   */
+  trailingSlash?: TrailingSlashMode;
+  /**
    * **Experimental.** Function returning the React transition types to attach
    * to entry-change transitions via `addTransitionType`. Called inside
    * `startTransition` for each navigation; the returned types replace the
@@ -118,6 +132,7 @@ export function Router({
   onNavigate,
   fallback = "none",
   ssr,
+  trailingSlash,
   experimentalTransitionTypes,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
@@ -225,13 +240,22 @@ export function Router({
     });
   }, [adapter, startTransition]);
 
-  // Wrap in useEffectEvent so interception doesn't re-setup when routes or onNavigate change
+  // Wrap in useEffectEvent so interception doesn't re-setup when routes,
+  // onNavigate, or trailingSlash change
   const getRoutes = useEffectEvent(() => routes);
   const handleNavigate = useEffectEvent<OnNavigateCallback>((...args) => onNavigate?.(...args));
+  // Interception must match with the same trailing-slash policy as rendering,
+  // so the interception decision agrees with what will render.
+  const getMatchOptions = useEffectEvent(() => ({ trailingSlash }));
 
   // Set up navigation interception via adapter
   useEffect(() => {
-    return adapter.setupInterception(getRoutes, handleNavigate, blockerRegistry.checkAll);
+    return adapter.setupInterception(
+      getRoutes,
+      handleNavigate,
+      blockerRegistry.checkAll,
+      getMatchOptions,
+    );
   }, [adapter, blockerRegistry]);
 
   // Navigate function that returns a Promise
@@ -303,6 +327,7 @@ export function Router({
       // Routes with loaders are skipped (skipLoaders: true).
       const matched = matchRoutes(routes, urlObject?.pathname ?? null, {
         skipLoaders: true,
+        trailingSlash,
       });
       if (!matched) return null;
       return matched.map((m) => ({ ...m, data: undefined }));
@@ -314,7 +339,7 @@ export function Router({
 
     // Unified path: SSR with loaders or client-side.
     // Both cases match routes normally and execute loaders.
-    const matched = matchRoutes(routes, urlObject.pathname);
+    const matched = matchRoutes(routes, urlObject.pathname, { trailingSlash });
     if (!matched) return null;
 
     const entryKey = locationKey;
@@ -330,7 +355,16 @@ export function Router({
       // instance instead of the shared module-level cache.
       realLocationKey === null ? instanceLoaderCache : undefined,
     );
-  }, [routes, adapter, urlObject, runLoaders, locationKey, realLocationKey, instanceLoaderCache]);
+  }, [
+    routes,
+    adapter,
+    urlObject,
+    runLoaders,
+    trailingSlash,
+    locationKey,
+    realLocationKey,
+    instanceLoaderCache,
+  ]);
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;

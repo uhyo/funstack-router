@@ -981,4 +981,101 @@ describe("matchRoutes", () => {
       expect(result).toBeNull();
     });
   });
+
+  describe("trailing slash handling", () => {
+    describe('default mode ("ignore")', () => {
+      it("matches a pathname with trailing slash against an exact route", () => {
+        const routes = internalRoutes([{ path: "/users", component: () => null }]);
+
+        const result = matchRoutes(routes, "/users/");
+        expect(result).toHaveLength(1);
+        expect(result![0].pathname).toBe("/users");
+      });
+
+      it("matches a pathname with trailing slash against a param route", () => {
+        const routes = internalRoutes([{ path: "/users/:id", component: () => null }]);
+
+        const result = matchRoutes(routes, "/users/123/");
+        expect(result).toHaveLength(1);
+        expect(result![0].params).toEqual({ id: "123" });
+        expect(result![0].pathname).toBe("/users/123");
+      });
+
+      it("matches a pathname with trailing slash against nested routes", () => {
+        const routes = internalRoutes([
+          {
+            path: "/users",
+            component: () => null,
+            children: [{ path: ":id", component: () => null }],
+          },
+        ]);
+
+        const result = matchRoutes(routes, "/users/123/");
+        expect(result).toHaveLength(2);
+        expect(result![1].params).toEqual({ id: "123" });
+      });
+
+      it("ignores a trailing slash in the route pattern", () => {
+        const routes = internalRoutes([{ path: "/users/", component: () => null }]);
+
+        expect(matchRoutes(routes, "/users")).toHaveLength(1);
+        expect(matchRoutes(routes, "/users/")).toHaveLength(1);
+      });
+
+      it("does not strip the root pathname", () => {
+        const routes = internalRoutes([{ path: "/", component: () => null }]);
+
+        const result = matchRoutes(routes, "/");
+        expect(result).toHaveLength(1);
+      });
+
+      it("excludes the trailing slash from wildcard-like captures", () => {
+        const routes = internalRoutes([{ path: "/files/:path+", component: () => null }]);
+
+        const result = matchRoutes(routes, "/files/a/b/");
+        expect(result).toHaveLength(1);
+        expect(result![0].params).toEqual({ path: "a/b" });
+      });
+
+      it("strips only a single trailing slash", () => {
+        const routes = internalRoutes([{ path: "/users", component: () => null }]);
+
+        // "/users//" contains an empty segment and is not repaired
+        expect(matchRoutes(routes, "/users//")).toBeNull();
+      });
+
+      it("does not fall through to a catch-all for a trailing-slash URL", () => {
+        const routes = internalRoutes([
+          { path: "/users", component: () => null },
+          { path: "/:rest*", component: () => null },
+        ]);
+
+        const result = matchRoutes(routes, "/users/");
+        expect(result).toHaveLength(1);
+        expect(result![0].route.path).toBe("/users");
+      });
+    });
+
+    describe('"strict" mode', () => {
+      it("does not match a pathname with trailing slash against an exact route", () => {
+        const routes = internalRoutes([{ path: "/users", component: () => null }]);
+
+        expect(matchRoutes(routes, "/users/", { trailingSlash: "strict" })).toBeNull();
+        expect(matchRoutes(routes, "/users", { trailingSlash: "strict" })).toHaveLength(1);
+      });
+
+      it("keeps a trailing slash in the route pattern significant", () => {
+        const routes = internalRoutes([{ path: "/users/", component: () => null }]);
+
+        expect(matchRoutes(routes, "/users", { trailingSlash: "strict" })).toBeNull();
+        expect(matchRoutes(routes, "/users/", { trailingSlash: "strict" })).toHaveLength(1);
+      });
+
+      it("still matches the root pathname", () => {
+        const routes = internalRoutes([{ path: "/", component: () => null }]);
+
+        expect(matchRoutes(routes, "/", { trailingSlash: "strict" })).toHaveLength(1);
+      });
+    });
+  });
 });

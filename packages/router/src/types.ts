@@ -184,3 +184,15 @@ export type OnNavigateCallback = (event: NavigateEvent, info: OnNavigateInfo) =>
 export type FallbackMode =
   | "none" // Default: render nothing when Navigation API unavailable
   | "static"; // Render matched routes without navigation capabilities
+
+/**
+ * How trailing slashes are treated during route matching.
+ *
+ * - `"ignore"` (default): a single trailing slash on the pathname (or on a
+ *   route's `path` pattern) is ignored, so `/users/` matches `path: "users"`
+ *   and vice versa. The URL itself is never rewritten — only matching is
+ *   affected. The root pathname `/` is unaffected.
+ * - `"strict"`: pathnames must match patterns exactly; `/users/` does not
+ *   match `path: "users"`.
+ */
+export type TrailingSlashMode = "ignore" | "strict";
