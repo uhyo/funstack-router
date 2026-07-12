@@ -48,15 +48,12 @@ function SearchPage() {
 }`}</CodeBlock>
         <p>The setter accepts an optional second argument with navigation options:</p>
         <CodeBlock language="tsx">{`// Push a new history entry instead of replacing the current one
-setSearchParams({ q: newQuery }, { replace: false });
-
-// Associate navigation state with the entry
-setSearchParams({ q: newQuery }, { state: { fromSearch: true } });`}</CodeBlock>
+setSearchParams({ q: newQuery }, { replace: false });`}</CodeBlock>
         <p>
           By default (<code>replace: true</code>), the setter replaces the current history entry and
           preserves its navigation state, including per-route state set via <code>setState</code>.
-          With <code>replace: false</code>, a new entry is pushed without state. In both cases, an
-          explicit <code>state</code> option takes precedence.
+          With <code>replace: false</code>, a new entry is pushed instead, so the change can be
+          undone with the browser's Back button.
         </p>
       </article>
 

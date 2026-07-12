@@ -197,61 +197,6 @@ describe("hooks", () => {
       });
     });
 
-    it("passes the state option through to the navigation", () => {
-      mockNavigation = setupNavigationMock("http://localhost/page");
-
-      function TestComponent() {
-        const [, setSearchParams] = useSearchParams();
-        return (
-          <button onClick={() => setSearchParams({ q: "new" }, { state: { custom: true } })}>
-            Update
-          </button>
-        );
-      }
-
-      const routes: RouteDefinition[] = [{ path: "/page", component: TestComponent }];
-
-      render(<Router routes={routes} />);
-      screen.getByRole("button").click();
-
-      expect(mockNavigation.navigate).toHaveBeenCalledWith("/page?q=new", {
-        history: "replace",
-        state: { custom: true },
-      });
-    });
-
-    it("clears entry state when state: undefined is passed explicitly", async () => {
-      mockNavigation = setupNavigationMock("http://localhost/page");
-
-      function TestComponent({ setStateSync }: { setStateSync?: (state: unknown) => void }) {
-        const [, setSearchParams] = useSearchParams();
-        return (
-          <div>
-            <button onClick={() => setStateSync?.({ scroll: 42 })}>SaveState</button>
-            <button onClick={() => setSearchParams({ q: "new" }, { state: undefined })}>
-              Update
-            </button>
-          </div>
-        );
-      }
-
-      const routes: RouteDefinition[] = [{ path: "/page", component: TestComponent }];
-
-      render(<Router routes={routes} />);
-
-      await act(async () => {
-        screen.getByText("SaveState").click();
-      });
-      await act(async () => {
-        screen.getByText("Update").click();
-      });
-
-      expect(mockNavigation.navigate).toHaveBeenLastCalledWith("/page?q=new", {
-        history: "replace",
-        state: undefined,
-      });
-    });
-
     it("throws when used outside Router", () => {
       function TestComponent() {
         useSearchParams();

@@ -10,14 +10,6 @@ export type SetSearchParamsOptions = {
    * @default true
    */
   replace?: boolean;
-  /**
-   * State to associate with the navigation.
-   *
-   * When omitted, a replace navigation preserves the current entry's state
-   * (including per-route state set via `setState`), and a push navigation
-   * creates the new entry without state.
-   */
-  state?: unknown;
 };
 
 type SetSearchParams = (
@@ -63,18 +55,12 @@ export function useSearchParams(): [URLSearchParams, SetSearchParams] {
       url.search = newParams.toString();
 
       const replace = options?.replace ?? true;
-      // Replacing the current entry keeps its state by default; pushing
-      // creates a fresh entry without state, like any other push navigation.
-      const state =
-        options !== undefined && "state" in options
-          ? options.state
-          : replace
-            ? locationState
-            : undefined;
-
+      // Replacing the current entry keeps its state (including per-route
+      // state set via setState); pushing creates a fresh entry without
+      // state, like any other push navigation.
       void navigateAsync(url.pathname + url.search + url.hash, {
         replace,
-        state,
+        state: replace ? locationState : undefined,
       });
     },
     [currentUrl, navigateAsync, locationState],

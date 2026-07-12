@@ -359,13 +359,11 @@ routeState<{ tab: string }>()({
         </h3>
         <CodeBlock language="typescript">{`interface SetSearchParamsOptions {
   replace?: boolean;  // default: true
-  state?: unknown;
 }`}</CodeBlock>
         <p>
-          Options for the setter returned by <code>useSearchParams</code>. When <code>state</code>{" "}
-          is omitted, a replace navigation preserves the current entry's state (including per-route
-          state set via <code>setState</code>), and a push navigation creates the new entry without
-          state.
+          Options for the setter returned by <code>useSearchParams</code>. A replace navigation
+          preserves the current entry's state (including per-route state set via{" "}
+          <code>setState</code>), while a push navigation creates the new entry without state.
         </p>
       </article>
     </div>
