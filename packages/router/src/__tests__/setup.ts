@@ -76,11 +76,13 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     eventInfo?: unknown,
     eventFormData?: FormData | null,
     eventNavigationType?: "push" | "replace" | "reload" | "traverse",
+    eventCancelable = true,
   ): NavigateEvent & { defaultPrevented: boolean } => {
     let defaultPrevented = false;
     return {
       type: "navigate",
       canIntercept: true,
+      cancelable: eventCancelable,
       hashChange: false,
       destination: {
         url: destinationUrl,
@@ -103,7 +105,10 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
         return defaultPrevented;
       },
       preventDefault: vi.fn(() => {
-        defaultPrevented = true;
+        // Mimic DOM behavior: preventDefault is ignored on non-cancelable events
+        if (eventCancelable) {
+          defaultPrevented = true;
+        }
       }),
     } as unknown as NavigateEvent & { defaultPrevented: boolean };
   };
@@ -194,13 +199,19 @@ export function createMockNavigation(initialUrl = "http://localhost/") {
     // This allows testing of onNavigate callback behavior
     __simulateNavigationWithEvent(
       url: string,
-      options?: { info?: unknown; formData?: FormData },
+      options?: { info?: unknown; formData?: FormData; cancelable?: boolean },
     ): {
       event: NavigateEvent & { defaultPrevented: boolean };
       proceed: () => void;
     } {
       const newUrl = new URL(url, currentEntry.url).href;
-      const event = createMockNavigateEvent(newUrl, options?.info, options?.formData);
+      const event = createMockNavigateEvent(
+        newUrl,
+        options?.info,
+        options?.formData,
+        undefined,
+        options?.cancelable,
+      );
 
       // Dispatch navigate event first (allows onNavigate to be called)
       dispatchEvent("navigate", event);
