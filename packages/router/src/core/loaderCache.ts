@@ -13,9 +13,48 @@ export class LoaderError {
 
 /**
  * Cache for loader results.
- * Key format: `${entryId}:${matchIndex}`
+ * Key format: `${entryId}:${matchIndex}:${loaderId}:${paramsKey}`
  */
 const loaderCache = new Map<string, unknown>();
+
+/**
+ * Identity of each loader function, issued lazily.
+ *
+ * Included in cache keys so that a cached result is only ever served for the
+ * loader that produced it. Without it, swapping the `routes` prop (feature
+ * flags, permission-dependent routes) or rendering two `<Router>`s would let
+ * a different route matching at the same index pick up another route's
+ * cached data.
+ *
+ * The loader function is used as the identity — rather than the route
+ * definition object — because a cached result is fully determined by the
+ * loader and its args. Route definitions recreated across renders keep their
+ * cached results as long as they reference the same loader function.
+ */
+type LoaderFunction = NonNullable<InternalRouteDefinition["loader"]>;
+
+const loaderIds = new WeakMap<LoaderFunction, number>();
+let nextLoaderId = 0;
+
+function getLoaderId(loader: LoaderFunction): number {
+  let id = loaderIds.get(loader);
+  if (id === undefined) {
+    id = nextLoaderId++;
+    loaderIds.set(loader, id);
+  }
+  return id;
+}
+
+/**
+ * Serialize matched params into a stable cache key component.
+ *
+ * Params are part of the loader's input: the same loader function reached
+ * via a different path pattern (e.g. `/:page` vs `/:section`) receives
+ * different params for the same URL and must not share a cached result.
+ */
+function getParamsKey(params: Record<string, string>): string {
+  return JSON.stringify(Object.entries(params).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+}
 
 /**
  * Get or create a loader result from cache.
@@ -32,7 +71,7 @@ function getOrCreateLoaderResult(
     return undefined;
   }
 
-  const cacheKey = `${entryId}:${matchIndex}`;
+  const cacheKey = `${entryId}:${matchIndex}:${getLoaderId(route.loader)}:${getParamsKey(args.params)}`;
 
   if (!cache.has(cacheKey)) {
     try {
