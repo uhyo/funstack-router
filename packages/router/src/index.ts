@@ -31,6 +31,7 @@ export type {
   OnNavigateInfo,
   FallbackMode,
   NavigationType,
+  TrailingSlashMode,
   TransitionTypeContext,
   GetTransitionTypes,
 } from "./types.js";

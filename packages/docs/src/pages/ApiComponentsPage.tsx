@@ -68,6 +68,21 @@ export function ApiComponentsPage() {
             </tr>
             <tr>
               <td>
+                <code>trailingSlash</code>
+              </td>
+              <td>
+                <code>{'"ignore" | "strict"'}</code>
+              </td>
+              <td>
+                How trailing slashes are treated during route matching. <code>"ignore"</code>{" "}
+                (default) ignores a single trailing slash on the pathname or on route{" "}
+                <code>path</code> patterns, so <code>/users/</code> matches{" "}
+                <code>path: "/users"</code>; the URL itself is never rewritten.{" "}
+                <code>"strict"</code> requires pathnames to match patterns exactly.
+              </td>
+            </tr>
+            <tr>
+              <td>
                 <code>ssr</code>
               </td>
               <td>

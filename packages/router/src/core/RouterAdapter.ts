@@ -4,6 +4,7 @@ import type {
   NavigationType,
   OnNavigateCallback,
 } from "../types.js";
+import type { MatchRoutesOptions } from "./matchRoutes.js";
 
 /**
  * The type of change that caused a location entry update.
@@ -85,11 +86,16 @@ export interface RouterAdapter {
    * @param onNavigate - Optional callback invoked before navigation is intercepted
    * @param checkBlockers - Optional function to check if any blockers are active.
    *                        If this function returns true, navigation is prevented.
+   * @param getMatchOptions - Optional function that returns the matching options
+   *                          (e.g. trailing slash handling). Must be consistent with
+   *                          the options the Router uses for rendering, so the
+   *                          interception decision agrees with what will render.
    */
   setupInterception(
     getRoutes: () => InternalRouteDefinition[],
     onNavigate?: OnNavigateCallback,
     checkBlockers?: () => boolean,
+    getMatchOptions?: () => MatchRoutesOptions,
   ): (() => void) | undefined;
 
   /**
