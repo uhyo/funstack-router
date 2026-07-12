@@ -352,6 +352,20 @@ routeState<{ tab: string }>()({
           navigation that triggered it.
         </p>
       </article>
+
+      <article className="api-item">
+        <h3>
+          <code>SetSearchParamsOptions</code>
+        </h3>
+        <CodeBlock language="typescript">{`interface SetSearchParamsOptions {
+  replace?: boolean;  // default: true
+}`}</CodeBlock>
+        <p>
+          Options for the setter returned by <code>useSearchParams</code>. A replace navigation
+          preserves the current entry's state (including per-route state set via{" "}
+          <code>setState</code>), while a push navigation creates the new entry without state.
+        </p>
+      </article>
     </div>
   );
 }

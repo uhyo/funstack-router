@@ -97,7 +97,7 @@ export function ApiReferenceIndexPage() {
           </li>
           <li>
             <code>RouteDefinition</code>, <code>ActionArgs</code>, <code>LoaderArgs</code>,{" "}
-            <code>Location</code>, <code>NavigateOptions</code>
+            <code>Location</code>, <code>NavigateOptions</code>, <code>SetSearchParamsOptions</code>
           </li>
         </ul>
       </section>
