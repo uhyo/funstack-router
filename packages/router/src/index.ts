@@ -8,7 +8,7 @@ export { Outlet } from "./Outlet.js";
 
 // Hooks
 export { useLocation } from "./hooks/useLocation.js";
-export { useSearchParams } from "./hooks/useSearchParams.js";
+export { useSearchParams, type SetSearchParamsOptions } from "./hooks/useSearchParams.js";
 export { useBlocker, type UseBlockerOptions } from "./hooks/useBlocker.js";
 export { useRouteParams } from "./hooks/useRouteParams.js";
 export { useRouteState } from "./hooks/useRouteState.js";
