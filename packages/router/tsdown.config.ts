@@ -5,5 +5,5 @@ export default defineConfig({
   format: ["esm"],
   dts: true,
   clean: true,
-  external: ["react", "@funstack/skill-installer"],
+  external: ["react", "react-dom", "@funstack/skill-installer"],
 });

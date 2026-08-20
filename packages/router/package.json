@@ -48,6 +48,7 @@
     "@testing-library/react": "^16.3.2",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "jsdom": "^30.0.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -57,6 +58,7 @@
     "vitest": "^4.1.10"
   },
   "peerDependencies": {
-    "react": "^19.2.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

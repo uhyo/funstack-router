@@ -22,6 +22,7 @@ import {
   internalRoutes,
 } from "../types.js";
 import { addTransitionType } from "../core/addTransitionType.js";
+import { getBrowserFn } from "../core/browserBailout.js";
 import { matchRoutes } from "../core/matchRoutes.js";
 import { createAdapter } from "../core/createAdapter.js";
 import { executeLoaders, createLoaderRequest } from "../core/loaderCache.js";
@@ -125,6 +126,29 @@ export type RouterProps = {
    * @default () => ["navigation"]
    */
   experimentalTransitionTypes?: GetTransitionTypes;
+  /**
+   * **Experimental.** Use React's `browser()` API to defer unmatched outlet
+   * content to the browser during pathless SSR.
+   *
+   * During pathless SSR (no `ssr` prop), path-based child routes cannot match
+   * because no URL is available, so `<Outlet />` renders `null` on the server
+   * while the same outlet renders content in the browser. When this option is
+   * enabled, `<Outlet />` instead calls `use(browser())` in that situation,
+   * suspending server rendering at the nearest `<Suspense>` boundary and
+   * deferring the outlet content to the browser — avoiding hydration
+   * mismatches. Each such outlet must be wrapped in a `<Suspense>` boundary,
+   * or the server render fails.
+   *
+   * Requires a React build that exports `browser` from react-dom (currently
+   * React Canary). On builds that don't expose the API, enabling this option
+   * throws an error when the Router renders.
+   *
+   * The `experimental` prefix will be dropped once `browser` becomes stable
+   * in React.
+   *
+   * @default false
+   */
+  experimentalBrowserBailout?: boolean;
 };
 
 export function Router({
@@ -134,8 +158,15 @@ export function Router({
   ssr,
   trailingSlash,
   experimentalTransitionTypes,
+  experimentalBrowserBailout = false,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
+
+  if (experimentalBrowserBailout) {
+    // Fail fast (on both server and client) when the host React build
+    // doesn't support the browser() API.
+    getBrowserFn();
+  }
 
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
@@ -390,6 +421,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
+      experimentalBrowserBailout,
     }),
     [
       locationState,
@@ -400,6 +432,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
+      experimentalBrowserBailout,
     ],
   );
 
