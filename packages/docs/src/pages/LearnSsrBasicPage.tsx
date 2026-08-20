@@ -116,7 +116,7 @@ function HomePage() {
 
       <section>
         <h3>
-          Deferring Outlet Content with <code>experimentalBrowserBailout</code>
+          Deferring Outlet Content with <code>pathlessSSROutletDeferral</code>
         </h3>
         <p>
           During pathless SSR, an <code>{"<Outlet />"}</code> whose child routes are all path-based
@@ -125,13 +125,13 @@ function HomePage() {
           <a href="https://react.dev/reference/react-dom/browser">
             <code>browser()</code>
           </a>{" "}
-          API offers a cleaner way to express this: the <code>experimentalBrowserBailout</code> prop
-          makes such outlets call <code>use(browser())</code> instead, suspending server rendering
-          at the nearest <code>{"<Suspense>"}</code> boundary and deferring the outlet content to
-          the browser.
+          API offers a cleaner way to express this: the <code>pathlessSSROutletDeferral</code>{" "}
+          feature flag makes such outlets call <code>use(browser())</code> instead, suspending
+          server rendering at the nearest <code>{"<Suspense>"}</code> boundary and deferring the
+          outlet content to the browser.
         </p>
-        <CodeBlock language="tsx">{`// Opt in on the Router:
-<Router routes={routes} experimentalBrowserBailout />
+        <CodeBlock language="tsx">{`// Opt in via the Router's features prop:
+<Router routes={routes} features={{ pathlessSSROutletDeferral: true }} />
 
 // Each outlet that can be unmatched during pathless SSR
 // must be wrapped in a Suspense boundary:
@@ -153,10 +153,13 @@ function AppShell() {
           hydration mismatches.
         </p>
         <p>
-          This option requires a React build that exports <code>browser</code> from{" "}
+          This feature requires a React build that exports <code>browser</code> from{" "}
           <code>react-dom</code> (currently React Canary). On builds without the API, enabling the
-          option throws an error when the Router renders. The <code>experimental</code> prefix will
-          be dropped once <code>browser</code> becomes stable in React.
+          flag throws an error when the Router renders.
+        </p>
+        <p>
+          <code>pathlessSSROutletDeferral</code> is opt-in in the current major version and will
+          become the default behavior in the next major version of FUNSTACK Router.
         </p>
       </section>
 

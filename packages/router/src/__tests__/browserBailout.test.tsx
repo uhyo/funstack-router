@@ -43,14 +43,16 @@ function makeRoutes(): RouteDefinition[] {
   ];
 }
 
-describe("experimentalBrowserBailout (browser() supported)", () => {
+describe("pathlessSSROutletDeferral (browser() supported)", () => {
   beforeEach(() => {
     browserMock.mockClear();
   });
 
   describe("pathless SSR", () => {
     it("defers unmatched outlet content to the nearest Suspense boundary", () => {
-      const html = renderToString(<Router routes={makeRoutes()} experimentalBrowserBailout />);
+      const html = renderToString(
+        <Router routes={makeRoutes()} features={{ pathlessSSROutletDeferral: true }} />,
+      );
 
       expect(html).toContain("shell");
       expect(html).toContain("suspense-fallback");
@@ -83,7 +85,9 @@ describe("experimentalBrowserBailout (browser() supported)", () => {
         }),
       ];
 
-      const html = renderToString(<Router routes={routes} experimentalBrowserBailout />);
+      const html = renderToString(
+        <Router routes={routes} features={{ pathlessSSROutletDeferral: true }} />,
+      );
 
       expect(html).toContain("pathless-child");
       expect(html).not.toContain("suspense-fallback");
@@ -94,7 +98,11 @@ describe("experimentalBrowserBailout (browser() supported)", () => {
   describe("SSR with ssr.path", () => {
     it("does not bail out because the URL is available", () => {
       const html = renderToString(
-        <Router routes={makeRoutes()} ssr={{ path: "/" }} experimentalBrowserBailout />,
+        <Router
+          routes={makeRoutes()}
+          ssr={{ path: "/" }}
+          features={{ pathlessSSROutletDeferral: true }}
+        />,
       );
 
       expect(html).toContain("home");
@@ -113,7 +121,7 @@ describe("experimentalBrowserBailout (browser() supported)", () => {
     });
 
     it("does not bail out because the URL is available", () => {
-      render(<Router routes={makeRoutes()} experimentalBrowserBailout />);
+      render(<Router routes={makeRoutes()} features={{ pathlessSSROutletDeferral: true }} />);
 
       expect(screen.getByText("home")).toBeInTheDocument();
       expect(browserMock).not.toHaveBeenCalled();

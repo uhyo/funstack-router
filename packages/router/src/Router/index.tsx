@@ -127,12 +127,25 @@ export type RouterProps = {
    */
   experimentalTransitionTypes?: GetTransitionTypes;
   /**
-   * **Experimental.** Use React's `browser()` API to defer unmatched outlet
-   * content to the browser during pathless SSR.
+   * Opt-in feature flags that change the Router's behavior.
+   *
+   * Each flag is opt-in in the current major version; see the documentation
+   * of the individual flags on {@link RouterFeatures} for details.
+   */
+  features?: RouterFeatures;
+};
+
+/**
+ * Opt-in feature flags for the Router, passed via the `features` prop.
+ */
+export type RouterFeatures = {
+  /**
+   * Use React's `browser()` API to defer unmatched outlet content to the
+   * browser during pathless SSR.
    *
    * During pathless SSR (no `ssr` prop), path-based child routes cannot match
    * because no URL is available, so `<Outlet />` renders `null` on the server
-   * while the same outlet renders content in the browser. When this option is
+   * while the same outlet renders content in the browser. When this flag is
    * enabled, `<Outlet />` instead calls `use(browser())` in that situation,
    * suspending server rendering at the nearest `<Suspense>` boundary and
    * deferring the outlet content to the browser — avoiding hydration
@@ -140,15 +153,15 @@ export type RouterProps = {
    * or the server render fails.
    *
    * Requires a React build that exports `browser` from react-dom (currently
-   * React Canary). On builds that don't expose the API, enabling this option
+   * React Canary). On builds that don't expose the API, enabling this flag
    * throws an error when the Router renders.
    *
-   * The `experimental` prefix will be dropped once `browser` becomes stable
-   * in React.
+   * This behavior will become the default in the next major version of
+   * FUNSTACK Router.
    *
    * @default false
    */
-  experimentalBrowserBailout?: boolean;
+  pathlessSSROutletDeferral?: boolean;
 };
 
 export function Router({
@@ -158,15 +171,23 @@ export function Router({
   ssr,
   trailingSlash,
   experimentalTransitionTypes,
-  experimentalBrowserBailout = false,
+  features,
 }: RouterProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
-  if (experimentalBrowserBailout) {
+  const pathlessSSROutletDeferral = features?.pathlessSSROutletDeferral ?? false;
+
+  if (pathlessSSROutletDeferral) {
     // Fail fast (on both server and client) when the host React build
     // doesn't support the browser() API.
     getBrowserFn();
   }
+
+  // Feature flags with defaults applied, for consumption via RouterContext
+  const resolvedFeatures = useMemo(
+    () => ({ pathlessSSROutletDeferral }),
+    [pathlessSSROutletDeferral],
+  );
 
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
@@ -421,7 +442,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
-      experimentalBrowserBailout,
+      features: resolvedFeatures,
     }),
     [
       locationState,
@@ -432,7 +453,7 @@ export function Router({
       isPending,
       navigateAsync,
       updateCurrentEntryState,
-      experimentalBrowserBailout,
+      resolvedFeatures,
     ],
   );
 

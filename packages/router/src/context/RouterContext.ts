@@ -1,5 +1,7 @@
 import { createContext } from "react";
 import type { NavigateOptions } from "../types.js";
+// Type-only import; erased at runtime, so no circular dependency.
+import type { RouterFeatures } from "../Router/index.js";
 
 export type RouterContextValue = {
   /**
@@ -24,11 +26,8 @@ export type RouterContextValue = {
   navigateAsync: (to: string, options?: NavigateOptions) => Promise<void>;
   /** Update current entry's state without navigation */
   updateCurrentEntryState: (state: unknown) => void;
-  /**
-   * Whether to use React's `browser()` API to defer to the browser content
-   * that cannot be rendered during pathless SSR.
-   */
-  experimentalBrowserBailout: boolean;
+  /** Feature flags from the Router's `features` prop, with defaults applied */
+  features: Required<RouterFeatures>;
 };
 
 export const RouterContext = createContext<RouterContextValue | null>(null);

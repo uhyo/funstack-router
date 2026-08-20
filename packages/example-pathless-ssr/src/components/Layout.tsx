@@ -7,9 +7,9 @@ export function Layout() {
     <div className="layout">
       <Header />
       <main className="main">
-        {/* The Suspense boundary is required by experimentalBrowserBailout:
-            during pathless SSR the outlet bails out to the browser, leaving
-            this fallback in the server-rendered HTML. */}
+        {/* The Suspense boundary is required by the pathlessSSROutletDeferral
+            feature: during pathless SSR the outlet bails out to the browser,
+            leaving this fallback in the server-rendered HTML. */}
         <Suspense fallback={<p>Loading…</p>}>
           <Outlet />
         </Suspense>

@@ -97,6 +97,21 @@ export function ApiComponentsPage() {
                 takes over. See the <a href="/learn/ssr">SSR guide</a> for details.
               </td>
             </tr>
+            <tr>
+              <td>
+                <code>features</code>
+              </td>
+              <td>
+                <code>RouterFeatures</code>
+              </td>
+              <td>
+                Opt-in feature flags that change the Router's behavior. Currently supports{" "}
+                <code>pathlessSSROutletDeferral</code>, which uses React Canary's{" "}
+                <code>browser()</code> API to defer unmatched outlet content to the browser during
+                pathless SSR (this will become the default behavior in the next major version). See
+                the <a href="/learn/ssr">SSR guide</a> for details.
+              </td>
+            </tr>
           </tbody>
         </table>
       </article>

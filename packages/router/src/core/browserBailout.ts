@@ -26,9 +26,10 @@ const browserFn: BrowserFn | null =
 export function getBrowserFn(): BrowserFn {
   if (browserFn === null) {
     throw new Error(
-      "The `experimentalBrowserBailout` option requires a React build that " +
+      "The `pathlessSSROutletDeferral` feature requires a React build that " +
         "supports the `browser()` API from react-dom (currently React Canary). " +
-        "Upgrade react and react-dom, or remove the `experimentalBrowserBailout` prop.",
+        "Upgrade react and react-dom, or remove `pathlessSSROutletDeferral` " +
+        "from the Router's `features` prop.",
     );
   }
   return browserFn;

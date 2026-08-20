@@ -10,11 +10,13 @@ function makeRoutes(): RouteDefinition[] {
   return [route({ component: () => <div>shell</div> })];
 }
 
-describe("experimentalBrowserBailout (browser() unsupported)", () => {
+describe("pathlessSSROutletDeferral (browser() unsupported)", () => {
   it("throws when opted in on a React build without the browser() API", () => {
     expect(() =>
-      renderToString(<Router routes={makeRoutes()} experimentalBrowserBailout />),
-    ).toThrowError(/experimentalBrowserBailout.*browser\(\)/s);
+      renderToString(
+        <Router routes={makeRoutes()} features={{ pathlessSSROutletDeferral: true }} />,
+      ),
+    ).toThrowError(/pathlessSSROutletDeferral.*browser\(\)/s);
   });
 
   it("does not throw when not opted in", () => {
