@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Outlet } from "@funstack/router";
 import { Header } from "./Header.js";
 
@@ -6,7 +7,12 @@ export function Layout() {
     <div className="layout">
       <Header />
       <main className="main">
-        <Outlet />
+        {/* The Suspense boundary is required by the pathlessSSROutletDeferral
+            feature: during pathless SSR the outlet bails out to the browser,
+            leaving this fallback in the server-rendered HTML. */}
+        <Suspense fallback={<p>Loading…</p>}>
+          <Outlet />
+        </Suspense>
       </main>
       <footer className="footer">
         <p>

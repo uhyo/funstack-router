@@ -116,6 +116,55 @@ function HomePage() {
 
       <section>
         <h3>
+          Deferring Outlet Content with <code>pathlessSSROutletDeferral</code>
+        </h3>
+        <p>
+          During pathless SSR, an <code>{"<Outlet />"}</code> whose child routes are all path-based
+          renders <code>null</code> on the server, while the same outlet renders content in the
+          browser. React Canary's{" "}
+          <a href="https://react.dev/reference/react-dom/browser">
+            <code>browser()</code>
+          </a>{" "}
+          API offers a cleaner way to express this: the <code>pathlessSSROutletDeferral</code>{" "}
+          feature flag makes such outlets call <code>use(browser())</code> instead, suspending
+          server rendering at the nearest <code>{"<Suspense>"}</code> boundary and deferring the
+          outlet content to the browser.
+        </p>
+        <CodeBlock language="tsx">{`// Opt in via the Router's features prop:
+<Router routes={routes} features={{ pathlessSSROutletDeferral: true }} />
+
+// Each outlet that can be unmatched during pathless SSR
+// must be wrapped in a Suspense boundary:
+function AppShell() {
+  return (
+    <div>
+      <header>My App</header>
+      <main>
+        <Suspense fallback={<p>Loading…</p>}>
+          <Outlet />
+        </Suspense>
+      </main>
+    </div>
+  );
+}`}</CodeBlock>
+        <p>
+          The server-rendered HTML then contains the Suspense fallback in place of the outlet, and
+          the browser renders the matched route content there after hydration &mdash; without
+          hydration mismatches.
+        </p>
+        <p>
+          This feature requires a React build that exports <code>browser</code> from{" "}
+          <code>react-dom</code> (currently React Canary). On builds without the API, enabling the
+          flag throws an error when the Router renders.
+        </p>
+        <p>
+          <code>pathlessSSROutletDeferral</code> is opt-in in the current major version and will
+          become the default behavior in the next major version of FUNSTACK Router.
+        </p>
+      </section>
+
+      <section>
+        <h3>
           The <code>fallback="static"</code> Mode
         </h3>
         <p>

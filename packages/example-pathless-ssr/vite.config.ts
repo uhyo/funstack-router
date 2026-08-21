@@ -11,4 +11,10 @@ export default defineConfig({
     react(),
   ],
   base: "/",
+  resolve: {
+    // Ensure all react imports resolve to the same instance.
+    // Without this, the workspace router package may resolve to a different
+    // React version than the one used by this example (React Canary).
+    dedupe: ["react", "react-dom"],
+  },
 });
