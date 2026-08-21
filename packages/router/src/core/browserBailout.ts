@@ -8,8 +8,10 @@ import * as ReactDOM from "react-dom";
  */
 type BrowserFn = (reason?: string | (() => unknown)) => PromiseLike<undefined>;
 
+// The API shipped directly under the `browser` name in both the Canary and
+// Experimental channels — there is no `unstable_`-prefixed variant.
 const reactDOMExports = ReactDOM as unknown as Record<string, unknown>;
-const candidate = reactDOMExports.browser ?? reactDOMExports.unstable_browser;
+const candidate = reactDOMExports.browser;
 
 /**
  * The `browser` function from react-dom, or `null` when the host React build

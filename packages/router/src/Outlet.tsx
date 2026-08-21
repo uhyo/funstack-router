@@ -21,6 +21,11 @@ export function Outlet(): ReactNode {
   }
 
   if (
+    // `outlet` is null exactly when this route is the deepest matched route,
+    // i.e. no child route matched below it (see RouteRenderer). Combined with
+    // `url === null` (pathless SSR) below, this identifies an outlet that is
+    // empty only because its path-based children had no URL to match against
+    // — not one that is legitimately empty on the client as well.
     routeContext.outlet === null &&
     routerContext !== null &&
     routerContext.features.pathlessSSROutletDeferral &&
