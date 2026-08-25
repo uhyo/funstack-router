@@ -24,6 +24,12 @@ function collectPaths(routeDefs: RouteDefinition[], prefix: string): string[] {
   return paths;
 }
 
+// All page paths of the site (including the "/*" 404 path).
+// Also used by build.ts to generate sitemap.xml.
+export function collectSitePaths(): string[] {
+  return collectPaths(routes, "");
+}
+
 function toEntry(path: string): { ssrPath: string; outputPath: string } {
   if (path === "/*") {
     return { ssrPath: "/__404__", outputPath: "404.html" };
@@ -37,7 +43,7 @@ function toEntry(path: string): { ssrPath: string; outputPath: string } {
 }
 
 export default function getEntries(): EntryDefinition[] {
-  const paths = collectPaths(routes, "");
+  const paths = collectSitePaths();
   return paths.map((path) => {
     const { ssrPath, outputPath } = toEntry(path);
     return {

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://router.funstack.work/sitemap.xml
