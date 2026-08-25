@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function ExamplesPage() {
   return (
     <div className="page docs-page">
+      <PageHead
+        title="Examples"
+        description="Code examples for FUNSTACK Router: basic routing, layouts with nested routes, route params, and programmatic navigation."
+      />
       <h1>Examples</h1>
 
       <section>

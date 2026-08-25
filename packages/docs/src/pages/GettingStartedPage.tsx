@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function GettingStartedPage() {
   return (
     <div className="page docs-page">
+      <PageHead
+        title="Getting Started"
+        description="Install @funstack/router and build your first routes: define a route tree, render the Router component, and navigate with plain anchor tags."
+      />
       <h1>Getting Started</h1>
 
       <section>

@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnNavigationApiPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Navigation API"
+        description="How FUNSTACK Router builds on the browser's Navigation API instead of the History API, and what that means for interception, transitions, and native anchor navigation."
+      />
       <h2>Navigation API</h2>
 
       <p className="page-intro">

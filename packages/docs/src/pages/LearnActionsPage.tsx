@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnActionsPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Form Actions"
+        description="Intercept form submissions with FUNSTACK Router actions: run client-side logic before navigation while keeping progressive enhancement in mind."
+      />
       <h2>Form Actions</h2>
 
       <p className="page-intro">

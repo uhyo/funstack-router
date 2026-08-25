@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnSsgPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Static Site Generation"
+        description="Pre-render FUNSTACK Router pages to static HTML at build time, including per-path rendering with the ssrPath option."
+      />
       <h2>Static Site Generation</h2>
 
       <p className="page-intro">

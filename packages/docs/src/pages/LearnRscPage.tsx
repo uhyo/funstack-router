@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnRscPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="React Server Components"
+        description="Use FUNSTACK Router in React Server Components environments, where route components render on the server and stream to the client."
+      />
       <h2>React Server Components</h2>
 
       <p className="page-intro">

@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function ApiTypesPage() {
   return (
     <div className="page docs-page api-page">
+      <PageHead
+        title="Types API"
+        description="API reference for TypeScript types exported by @funstack/router, including route definitions and matched routes."
+      />
       <h1>Types</h1>
       <p className="page-intro">TypeScript types and interfaces exported by the router.</p>
 

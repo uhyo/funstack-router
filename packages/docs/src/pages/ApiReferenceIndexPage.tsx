@@ -1,6 +1,12 @@
+import { PageHead } from "../components/PageHead.js";
+
 export function ApiReferenceIndexPage() {
   return (
     <div className="api-overview">
+      <PageHead
+        title="API Reference"
+        description="Complete API reference for @funstack/router: components, hooks, utilities, and TypeScript types."
+      />
       <p>
         Complete API documentation for <code>@funstack/router</code>. Select a category above or
         browse below.

@@ -1,8 +1,10 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function HomePage() {
   return (
     <div className="page home-page">
+      <PageHead description="FUNSTACK Router is a truly modern router for React SPAs, built on the Navigation API and URLPattern instead of the History API, with async React support, type safety, SSR, and RSC." />
       <section className="hero">
         <h1>FUNSTACK Router</h1>
         <p className="tagline">

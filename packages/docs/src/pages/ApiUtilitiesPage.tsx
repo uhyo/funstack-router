@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function ApiUtilitiesPage() {
   return (
     <div className="page docs-page api-page">
+      <PageHead
+        title="Utilities API"
+        description="API reference for FUNSTACK Router utility functions, including route definition helpers."
+      />
       <h1>Utilities</h1>
       <p className="page-intro">Helper functions for defining routes and managing state.</p>
 

@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnErrorHandlingPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Error Handling"
+        description="Handle route errors in FUNSTACK Router by placing Error Boundaries around the Outlet in layout routes, keeping shared UI visible when child routes fail."
+      />
       <h2>Error Handling</h2>
 
       <p className="page-intro">

@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnSsrWithLoadersPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="SSR with Loaders"
+        description="Run loaders during server-side rendering with FUNSTACK Router to produce fully rendered HTML that includes loader data."
+      />
       <h2>SSR with Loaders</h2>
 
       <p className="page-intro">

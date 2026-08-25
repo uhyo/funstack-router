@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function FaqPage() {
   return (
     <div className="page docs-page">
+      <PageHead
+        title="FAQ"
+        description="Frequently asked questions about FUNSTACK Router, including browser support, comparison with other routers, and migration tips."
+      />
       <h1>FAQ</h1>
 
       <section>

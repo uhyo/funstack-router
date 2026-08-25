@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnNestedRoutesPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Nested Routes"
+        description="Compose layouts and child routes in FUNSTACK Router with nested route definitions and the Outlet component."
+      />
       <h2>Nested Routes</h2>
 
       <p className="page-intro">

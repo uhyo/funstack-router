@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnSsrBasicPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Server-Side Rendering"
+        description="FUNSTACK Router's two-stage SSR model: pathless layout routes render an app shell on the server, while path-based routes and loaders activate after client hydration."
+      />
       <h2>How SSR Works</h2>
 
       <p className="page-intro">

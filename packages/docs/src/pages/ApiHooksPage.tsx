@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function ApiHooksPage() {
   return (
     <div className="page docs-page api-page">
+      <PageHead
+        title="Hooks API"
+        description="API reference for FUNSTACK Router hooks for accessing route params, navigation state, and programmatic navigation."
+      />
       <h1>Hooks</h1>
       <p className="page-intro">React hooks for accessing router state and navigation.</p>
 
