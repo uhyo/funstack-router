@@ -1,6 +1,12 @@
+import { PageHead } from "../components/PageHead.js";
+
 export function LearnIndexPage() {
   return (
     <div className="learn-overview">
+      <PageHead
+        title="Learn"
+        description="Practical, use-case-driven guides for @funstack/router: nested routes, type safety, loaders, actions, transitions, SSR, and React Server Components."
+      />
       <p className="page-intro">
         These guides teach you how to use <code>@funstack/router</code> through practical,
         use-case-driven examples.

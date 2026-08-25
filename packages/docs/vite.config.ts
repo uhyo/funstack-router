@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [
     funstackStatic({
       entries: "./src/entries.tsx",
+      build: "./src/build.ts",
       ssr: true,
     }),
     react(),

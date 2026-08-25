@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnRouteDefinitionsPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="RSC with Route Features"
+        description="Combine React Server Components with FUNSTACK Router features like loaders and route params using the server route definition API."
+      />
       <h2>RSC with Route Features</h2>
 
       <p className="page-intro">

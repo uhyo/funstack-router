@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnTypeSafetyPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Type Safety"
+        description="How FUNSTACK Router derives TypeScript types for route params from your path patterns, keeping route components type-safe."
+      />
       <h2>Type Safety</h2>
 
       <p className="page-intro">

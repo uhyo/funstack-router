@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnTransitionsPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Controlling Transitions"
+        description="FUNSTACK Router wraps navigations in React's startTransition. Learn how transitions affect rendering and how to control them."
+      />
       <h2>Controlling Transitions</h2>
 
       <p className="page-intro">

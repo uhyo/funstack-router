@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function ApiComponentsPage() {
   return (
     <div className="page docs-page api-page">
+      <PageHead
+        title="Components API"
+        description="API reference for FUNSTACK Router components, including Router and Outlet."
+      />
       <h1>Components</h1>
       <p className="page-intro">Core components for building routing in your React application.</p>
 

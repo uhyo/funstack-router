@@ -1,8 +1,13 @@
 import { CodeBlock } from "../components/CodeBlock.js";
+import { PageHead } from "../components/PageHead.js";
 
 export function LearnLoadersPage() {
   return (
     <div className="learn-content">
+      <PageHead
+        title="Loaders"
+        description="When FUNSTACK Router loaders execute, how their results are cached, and how different types of navigation affect loader behavior."
+      />
       <h2>How Loaders Run</h2>
 
       <p className="page-intro">
