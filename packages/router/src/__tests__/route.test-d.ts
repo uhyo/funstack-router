@@ -401,6 +401,54 @@ describe("RouteComponentPropsOf utility type", () => {
   });
 });
 
+describe("route prop on component props", () => {
+  it("RouteComponentProps carries the route definition type", () => {
+    type Props = RouteComponentProps<{ userId: string }, undefined>;
+    expectTypeOf<Props["route"]>().toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<string, { userId: string }, undefined, unknown>
+    >();
+  });
+
+  it("RouteComponentPropsWithData narrows the route data type", () => {
+    type Props = RouteComponentPropsWithData<{ userId: string }, { name: string }, undefined>;
+    expectTypeOf<Props["route"]>().toEqualTypeOf<
+      TypefulOpaqueRouteDefinition<string, { userId: string }, undefined, { name: string }>
+    >();
+  });
+
+  it("typed hooks accept the route prop and return typed values", () => {
+    type MyState = { tab: string };
+    function UserPage(
+      props: RouteComponentPropsWithData<{ userId: string }, { name: string }, MyState>,
+    ) {
+      const params = useRouteParams(props.route);
+      expectTypeOf(params).toEqualTypeOf<{ userId: string }>();
+      const state = useRouteState(props.route);
+      expectTypeOf(state).toEqualTypeOf<MyState | undefined>();
+      const data = useRouteData(props.route);
+      expectTypeOf(data).toEqualTypeOf<{ name: string }>();
+      return null;
+    }
+    expectTypeOf(UserPage).toBeFunction();
+  });
+
+  it("component authored against RouteComponentPropsOf is accepted by bindRoute", () => {
+    const partialRoute = route({
+      id: "user",
+      path: "/users/:userId",
+      loader: () => ({ name: "John" }),
+    });
+
+    function UserPage(props: RouteComponentPropsOf<typeof partialRoute>) {
+      const params = useRouteParams(props.route);
+      expectTypeOf(params).toEqualTypeOf<{ userId: string }>();
+      return null;
+    }
+
+    bindRoute(partialRoute, { component: UserPage });
+  });
+});
+
 describe("route() with action type inference", () => {
   it("route with action and loader infers data type from loader", () => {
     const r = route({

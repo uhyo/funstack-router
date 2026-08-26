@@ -104,6 +104,7 @@ export function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): Rea
     }
     if (route.loader) {
       const ComponentWithData = Component as React.ComponentType<{
+        route: unknown;
         data: unknown;
         params: Record<string, string>;
         state: unknown;
@@ -116,6 +117,7 @@ export function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): Rea
       }>;
       return (
         <ComponentWithData
+          route={route}
           data={data}
           params={params}
           {...stateProps}
@@ -125,6 +127,7 @@ export function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): Rea
       );
     }
     const ComponentWithoutData = Component as React.ComponentType<{
+      route: unknown;
       params: Record<string, string>;
       state: unknown;
       setState: (s: unknown | ((prev: unknown) => unknown)) => Promise<void>;
@@ -135,7 +138,13 @@ export function RouteRenderer({ matchedRoutes, index }: RouteRendererProps): Rea
       isPending: boolean;
     }>;
     return (
-      <ComponentWithoutData params={params} {...stateProps} info={info} isPending={isPending} />
+      <ComponentWithoutData
+        route={route}
+        params={params}
+        {...stateProps}
+        info={info}
+        isPending={isPending}
+      />
     );
   };
 

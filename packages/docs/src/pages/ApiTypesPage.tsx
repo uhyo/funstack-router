@@ -28,6 +28,8 @@ type Props = RouteComponentProps<
 
 // Equivalent to:
 type Props = {
+  // The route definition object for this route
+  route: TypefulOpaqueRouteDefinition<string, { userId: string }, { scrollPosition: number }, unknown>;
   params: { userId: string };
   state: { scrollPosition: number } | undefined;
   // Async state update via replace navigation
@@ -47,6 +49,12 @@ type Props = {
   info: unknown; // Ephemeral navigation info
   isPending: boolean; // Whether a navigation transition is pending
 };`}</CodeBlock>
+        <p>
+          The <code>route</code> prop is the route definition object this component was registered
+          with. Pass it to typed hooks such as <code>useRouteParams</code>,{" "}
+          <code>useRouteState</code> and <code>useRouteData</code> when the route definition cannot
+          be imported directly — for example, when route definitions are managed by a framework.
+        </p>
         <p>
           <strong>setState vs setStateSync:</strong>
         </p>
@@ -96,6 +104,8 @@ type Props = RouteComponentPropsWithData<
 
 // Equivalent to:
 type Props = {
+  // The route definition object for this route
+  route: TypefulOpaqueRouteDefinition<string, { userId: string }, { selectedTab: string }, User>;
   params: { userId: string };
   data: User;
   state: { selectedTab: string } | undefined;

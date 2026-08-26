@@ -45,6 +45,7 @@ export type InternalRouteDefinition = {
   /** Component to render when this route matches */
   component?:
     | ComponentType<{
+        route?: unknown;
         data?: unknown;
         params?: Record<string, string>;
         state?: unknown;

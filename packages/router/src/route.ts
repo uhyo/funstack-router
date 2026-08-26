@@ -71,6 +71,13 @@ export type LoaderArgs<Params extends Record<string, string>, ActionResult = und
  * Includes navigation state management props.
  */
 export interface RouteComponentProps<TParams extends Record<string, string>, TState = undefined> {
+  /**
+   * The route definition object for this route.
+   *
+   * Pass it to typed hooks such as `useRouteParams` when the route definition
+   * cannot be imported directly (e.g. framework-managed routes).
+   */
+  route: TypefulOpaqueRouteDefinition<string, TParams, TState, unknown>;
   /** Extracted path parameters */
   params: TParams;
   /** Current navigation state for this route (undefined on first visit) */
@@ -98,6 +105,13 @@ export interface RouteComponentPropsWithData<
   TData,
   TState = undefined,
 > extends RouteComponentProps<TParams, TState> {
+  /**
+   * The route definition object for this route.
+   *
+   * Pass it to typed hooks such as `useRouteData` when the route definition
+   * cannot be imported directly (e.g. framework-managed routes).
+   */
+  route: TypefulOpaqueRouteDefinition<string, TParams, TState, TData>;
   /** Data returned from the loader */
   data: TData;
 }
