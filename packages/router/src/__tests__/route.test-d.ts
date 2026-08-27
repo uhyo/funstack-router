@@ -4,6 +4,7 @@ import type {
   TypefulOpaqueRouteDefinition,
   OpaqueRouteDefinition,
   PartialRouteDefinition,
+  RouteDefinition,
   ExtractRouteId,
   ExtractRouteParams,
   ExtractRouteState,
@@ -30,6 +31,26 @@ describe("route() type inference", () => {
     expectTypeOf(r).toEqualTypeOf<
       TypefulOpaqueRouteDefinition<"home", Record<string, never>, undefined, undefined>
     >();
+  });
+
+  it("TypefulOpaqueRouteDefinition is opaque: only path is declared among definition fields", () => {
+    type T = TypefulOpaqueRouteDefinition<"user", { userId: string }, undefined, undefined>;
+    expectTypeOf<T>().toHaveProperty("path");
+    expectTypeOf<
+      Extract<keyof T, "children" | "exact" | "requireChildren" | "component" | "loader" | "action">
+    >().toEqualTypeOf<never>();
+  });
+
+  it("TypefulOpaqueRouteDefinition remains usable as RouteDefinition and as children", () => {
+    const child = route({ id: "child", path: "child", component: () => null });
+    const asDefinition: RouteDefinition = child;
+    expectTypeOf(asDefinition).toEqualTypeOf<RouteDefinition>();
+    route({
+      id: "parent",
+      path: "/parent",
+      component: () => null,
+      children: [child],
+    });
   });
 
   it("infers params from path pattern", () => {

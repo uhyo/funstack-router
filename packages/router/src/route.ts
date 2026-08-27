@@ -129,7 +129,12 @@ export interface OpaqueRouteDefinition {
 
 /**
  * Type-carrying route definition created by the `route` helper function when an `id` is provided.
- * This type carries type information for params, state, and data, enabling type-safe hooks in the future.
+ * This type carries type information for params, state, and data, enabling type-safe hooks.
+ *
+ * This is an opaque handle: apart from `path`, the definition's fields are not
+ * declared for direct access. Use the typed hooks (`useRouteParams`,
+ * `useRouteState`, `useRouteData`) and the `Extract*` helper types to consume
+ * the carried type information.
  */
 export interface TypefulOpaqueRouteDefinition<
   Id extends string,
@@ -144,9 +149,6 @@ export interface TypefulOpaqueRouteDefinition<
     data: Data;
   };
   path?: string;
-  children?: RouteDefinition[];
-  exact?: boolean;
-  requireChildren?: boolean;
 }
 
 /**
