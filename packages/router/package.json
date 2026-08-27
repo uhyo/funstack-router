@@ -1,6 +1,6 @@
 {
   "name": "@funstack/router",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A modern React router based on the Navigation API",
   "keywords": [
     "navigation-api",
