@@ -188,35 +188,35 @@ export interface PartialRouteDefinition<
   path?: string;
 }
 
-/** Extract the Id type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
+/** Extract the Id type from a RouteHandle (including TypefulOpaqueRouteDefinition) or PartialRouteDefinition */
 export type ExtractRouteId<T> =
   T extends PartialRouteDefinition<infer Id, infer _Params, infer _State, infer _Data>
     ? Id
-    : T extends TypefulOpaqueRouteDefinition<infer Id, infer _Params, infer _State, infer _Data>
+    : T extends RouteHandle<infer Id, infer _Params, infer _State, infer _Data>
       ? Id
       : never;
 
-/** Extract the Params type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
+/** Extract the Params type from a RouteHandle (including TypefulOpaqueRouteDefinition) or PartialRouteDefinition */
 export type ExtractRouteParams<T> =
   T extends PartialRouteDefinition<infer _Id, infer Params, infer _State, infer _Data>
     ? Params
-    : T extends TypefulOpaqueRouteDefinition<infer _Id, infer Params, infer _State, infer _Data>
+    : T extends RouteHandle<infer _Id, infer Params, infer _State, infer _Data>
       ? Params
       : never;
 
-/** Extract the State type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
+/** Extract the State type from a RouteHandle (including TypefulOpaqueRouteDefinition) or PartialRouteDefinition */
 export type ExtractRouteState<T> =
   T extends PartialRouteDefinition<infer _Id, infer _Params, infer State, infer _Data>
     ? State
-    : T extends TypefulOpaqueRouteDefinition<infer _Id, infer _Params, infer State, infer _Data>
+    : T extends RouteHandle<infer _Id, infer _Params, infer State, infer _Data>
       ? State
       : never;
 
-/** Extract the Data type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
+/** Extract the Data type from a RouteHandle (including TypefulOpaqueRouteDefinition) or PartialRouteDefinition */
 export type ExtractRouteData<T> =
   T extends PartialRouteDefinition<infer _Id, infer _Params, infer _State, infer Data>
     ? Data
-    : T extends TypefulOpaqueRouteDefinition<infer _Id, infer _Params, infer _State, infer Data>
+    : T extends RouteHandle<infer _Id, infer _Params, infer _State, infer Data>
       ? Data
       : never;
 

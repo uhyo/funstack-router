@@ -178,8 +178,9 @@ function MyComponent() {
       <p>
         These hooks provide type-safe access to route data when using routes defined with an{" "}
         <code>id</code>. They extract type information from{" "}
-        <code>TypefulOpaqueRouteDefinition</code> and validate at runtime that the specified route
-        exists in the current route hierarchy.
+        <code>TypefulOpaqueRouteDefinition</code> — or any <code>RouteHandle</code>, such as the{" "}
+        <code>route</code> prop received by route components — and validate at runtime that the
+        specified route exists in the current route hierarchy.
       </p>
       <p>
         In nested routes, these hooks can access data from any ancestor route in the hierarchy. For

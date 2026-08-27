@@ -480,6 +480,29 @@ describe("route prop on component props", () => {
   });
 });
 
+describe("RouteHandle acceptance", () => {
+  it("typed hooks accept a value typed as RouteHandle", () => {
+    const handle: RouteHandle<"user", { userId: string }, undefined, { name: string }> = route({
+      id: "user",
+      path: "/users/:userId",
+      loader: () => ({ name: "John" }),
+      component: () => null,
+    });
+
+    expectTypeOf(useRouteParams(handle)).toEqualTypeOf<{ userId: string }>();
+    expectTypeOf(useRouteState(handle)).toEqualTypeOf<undefined>();
+    expectTypeOf(useRouteData(handle)).toEqualTypeOf<{ name: string }>();
+  });
+
+  it("Extract* utilities work with RouteHandle", () => {
+    type H = RouteHandle<"user", { userId: string }, { tab: string }, { name: string }>;
+    expectTypeOf<ExtractRouteId<H>>().toEqualTypeOf<"user">();
+    expectTypeOf<ExtractRouteParams<H>>().toEqualTypeOf<{ userId: string }>();
+    expectTypeOf<ExtractRouteState<H>>().toEqualTypeOf<{ tab: string }>();
+    expectTypeOf<ExtractRouteData<H>>().toEqualTypeOf<{ name: string }>();
+  });
+});
+
 describe("route() with action type inference", () => {
   it("route with action and loader infers data type from loader", () => {
     const r = route({
