@@ -71,6 +71,13 @@ export type LoaderArgs<Params extends Record<string, string>, ActionResult = und
  * Includes navigation state management props.
  */
 export interface RouteComponentProps<TParams extends Record<string, string>, TState = undefined> {
+  /**
+   * Opaque handle to this route's definition.
+   *
+   * Pass it to typed hooks such as `useRouteParams` when the route definition
+   * cannot be imported directly (e.g. framework-managed routes).
+   */
+  route: RouteHandle<string, TParams, TState, unknown>;
   /** Extracted path parameters */
   params: TParams;
   /** Current navigation state for this route (undefined on first visit) */
@@ -98,6 +105,13 @@ export interface RouteComponentPropsWithData<
   TData,
   TState = undefined,
 > extends RouteComponentProps<TParams, TState> {
+  /**
+   * Opaque handle to this route's definition.
+   *
+   * Pass it to typed hooks such as `useRouteData` when the route definition
+   * cannot be imported directly (e.g. framework-managed routes).
+   */
+  route: RouteHandle<string, TParams, TState, TData>;
   /** Data returned from the loader */
   data: TData;
 }
@@ -114,10 +128,16 @@ export interface OpaqueRouteDefinition {
 }
 
 /**
- * Type-carrying route definition created by the `route` helper function when an `id` is provided.
- * This type carries type information for params, state, and data, enabling type-safe hooks in the future.
+ * Opaque handle to a route definition, carrying its type information.
+ *
+ * This is the type of the `route` prop that route components receive. Apart
+ * from `path`, no definition fields are declared for direct access; pass the
+ * handle to the typed hooks (`useRouteParams`, `useRouteState`,
+ * `useRouteData`) to consume the carried type information.
+ *
+ * Every `TypefulOpaqueRouteDefinition` is a `RouteHandle`.
  */
-export interface TypefulOpaqueRouteDefinition<
+export interface RouteHandle<
   Id extends string,
   Params extends Record<string, string>,
   State,
@@ -130,6 +150,18 @@ export interface TypefulOpaqueRouteDefinition<
     data: Data;
   };
   path?: string;
+}
+
+/**
+ * Type-carrying route definition created by the `route` helper function when an `id` is provided.
+ * This type carries type information for params, state, and data, enabling type-safe hooks in the future.
+ */
+export interface TypefulOpaqueRouteDefinition<
+  Id extends string,
+  Params extends Record<string, string>,
+  State,
+  Data,
+> extends RouteHandle<Id, Params, State, Data> {
   children?: RouteDefinition[];
   exact?: boolean;
   requireChildren?: boolean;
@@ -156,35 +188,35 @@ export interface PartialRouteDefinition<
   path?: string;
 }
 
-/** Extract the Id type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
+/** Extract the Id type from a RouteHandle (including TypefulOpaqueRouteDefinition) or PartialRouteDefinition */
 export type ExtractRouteId<T> =
   T extends PartialRouteDefinition<infer Id, infer _Params, infer _State, infer _Data>
     ? Id
-    : T extends TypefulOpaqueRouteDefinition<infer Id, infer _Params, infer _State, infer _Data>
+    : T extends RouteHandle<infer Id, infer _Params, infer _State, infer _Data>
       ? Id
       : never;
 
-/** Extract the Params type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
+/** Extract the Params type from a RouteHandle (including TypefulOpaqueRouteDefinition) or PartialRouteDefinition */
 export type ExtractRouteParams<T> =
   T extends PartialRouteDefinition<infer _Id, infer Params, infer _State, infer _Data>
     ? Params
-    : T extends TypefulOpaqueRouteDefinition<infer _Id, infer Params, infer _State, infer _Data>
+    : T extends RouteHandle<infer _Id, infer Params, infer _State, infer _Data>
       ? Params
       : never;
 
-/** Extract the State type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
+/** Extract the State type from a RouteHandle (including TypefulOpaqueRouteDefinition) or PartialRouteDefinition */
 export type ExtractRouteState<T> =
   T extends PartialRouteDefinition<infer _Id, infer _Params, infer State, infer _Data>
     ? State
-    : T extends TypefulOpaqueRouteDefinition<infer _Id, infer _Params, infer State, infer _Data>
+    : T extends RouteHandle<infer _Id, infer _Params, infer State, infer _Data>
       ? State
       : never;
 
-/** Extract the Data type from a TypefulOpaqueRouteDefinition or PartialRouteDefinition */
+/** Extract the Data type from a RouteHandle (including TypefulOpaqueRouteDefinition) or PartialRouteDefinition */
 export type ExtractRouteData<T> =
   T extends PartialRouteDefinition<infer _Id, infer _Params, infer _State, infer Data>
     ? Data
-    : T extends TypefulOpaqueRouteDefinition<infer _Id, infer _Params, infer _State, infer Data>
+    : T extends RouteHandle<infer _Id, infer _Params, infer _State, infer Data>
       ? Data
       : never;
 

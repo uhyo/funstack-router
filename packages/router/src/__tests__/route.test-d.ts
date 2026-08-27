@@ -4,6 +4,8 @@ import type {
   TypefulOpaqueRouteDefinition,
   OpaqueRouteDefinition,
   PartialRouteDefinition,
+  RouteDefinition,
+  RouteHandle,
   ExtractRouteId,
   ExtractRouteParams,
   ExtractRouteState,
@@ -30,6 +32,35 @@ describe("route() type inference", () => {
     expectTypeOf(r).toEqualTypeOf<
       TypefulOpaqueRouteDefinition<"home", Record<string, never>, undefined, undefined>
     >();
+  });
+
+  it("RouteHandle is opaque: only path is declared among definition fields", () => {
+    type T = RouteHandle<"user", { userId: string }, undefined, undefined>;
+    expectTypeOf<T>().toHaveProperty("path");
+    expectTypeOf<
+      Extract<keyof T, "children" | "exact" | "requireChildren" | "component" | "loader" | "action">
+    >().toEqualTypeOf<never>();
+  });
+
+  it("TypefulOpaqueRouteDefinition keeps its declared fields and is assignable to RouteHandle", () => {
+    type T = TypefulOpaqueRouteDefinition<"user", { userId: string }, undefined, undefined>;
+    expectTypeOf<T>().toHaveProperty("path");
+    expectTypeOf<T>().toHaveProperty("children");
+    expectTypeOf<T>().toHaveProperty("exact");
+    expectTypeOf<T>().toHaveProperty("requireChildren");
+    expectTypeOf<T>().toExtend<RouteHandle<"user", { userId: string }, undefined, undefined>>();
+  });
+
+  it("TypefulOpaqueRouteDefinition remains usable as RouteDefinition and as children", () => {
+    const child = route({ id: "child", path: "child", component: () => null });
+    const asDefinition: RouteDefinition = child;
+    expectTypeOf(asDefinition).toEqualTypeOf<RouteDefinition>();
+    route({
+      id: "parent",
+      path: "/parent",
+      component: () => null,
+      children: [child],
+    });
   });
 
   it("infers params from path pattern", () => {
@@ -398,6 +429,77 @@ describe("RouteComponentPropsOf utility type", () => {
 
     // @ts-expect-error - RouteComponentPropsOf requires a route with id
     type _Props = RouteComponentPropsOf<typeof noIdRoute>;
+  });
+});
+
+describe("route prop on component props", () => {
+  it("RouteComponentProps carries the route handle type", () => {
+    type Props = RouteComponentProps<{ userId: string }, undefined>;
+    expectTypeOf<Props["route"]>().toEqualTypeOf<
+      RouteHandle<string, { userId: string }, undefined, unknown>
+    >();
+  });
+
+  it("RouteComponentPropsWithData narrows the route handle data type", () => {
+    type Props = RouteComponentPropsWithData<{ userId: string }, { name: string }, undefined>;
+    expectTypeOf<Props["route"]>().toEqualTypeOf<
+      RouteHandle<string, { userId: string }, undefined, { name: string }>
+    >();
+  });
+
+  it("typed hooks accept the route prop and return typed values", () => {
+    type MyState = { tab: string };
+    function UserPage(
+      props: RouteComponentPropsWithData<{ userId: string }, { name: string }, MyState>,
+    ) {
+      const params = useRouteParams(props.route);
+      expectTypeOf(params).toEqualTypeOf<{ userId: string }>();
+      const state = useRouteState(props.route);
+      expectTypeOf(state).toEqualTypeOf<MyState | undefined>();
+      const data = useRouteData(props.route);
+      expectTypeOf(data).toEqualTypeOf<{ name: string }>();
+      return null;
+    }
+    expectTypeOf(UserPage).toBeFunction();
+  });
+
+  it("component authored against RouteComponentPropsOf is accepted by bindRoute", () => {
+    const partialRoute = route({
+      id: "user",
+      path: "/users/:userId",
+      loader: () => ({ name: "John" }),
+    });
+
+    function UserPage(props: RouteComponentPropsOf<typeof partialRoute>) {
+      const params = useRouteParams(props.route);
+      expectTypeOf(params).toEqualTypeOf<{ userId: string }>();
+      return null;
+    }
+
+    bindRoute(partialRoute, { component: UserPage });
+  });
+});
+
+describe("RouteHandle acceptance", () => {
+  it("typed hooks accept a value typed as RouteHandle", () => {
+    const handle: RouteHandle<"user", { userId: string }, undefined, { name: string }> = route({
+      id: "user",
+      path: "/users/:userId",
+      loader: () => ({ name: "John" }),
+      component: () => null,
+    });
+
+    expectTypeOf(useRouteParams(handle)).toEqualTypeOf<{ userId: string }>();
+    expectTypeOf(useRouteState(handle)).toEqualTypeOf<undefined>();
+    expectTypeOf(useRouteData(handle)).toEqualTypeOf<{ name: string }>();
+  });
+
+  it("Extract* utilities work with RouteHandle", () => {
+    type H = RouteHandle<"user", { userId: string }, { tab: string }, { name: string }>;
+    expectTypeOf<ExtractRouteId<H>>().toEqualTypeOf<"user">();
+    expectTypeOf<ExtractRouteParams<H>>().toEqualTypeOf<{ userId: string }>();
+    expectTypeOf<ExtractRouteState<H>>().toEqualTypeOf<{ tab: string }>();
+    expectTypeOf<ExtractRouteData<H>>().toEqualTypeOf<{ name: string }>();
   });
 });
 

@@ -45,6 +45,7 @@ export type {
   RouteComponentPropsWithData,
   OpaqueRouteDefinition,
   TypefulOpaqueRouteDefinition,
+  RouteHandle,
   ExtractRouteId,
   ExtractRouteParams,
   ExtractRouteState,

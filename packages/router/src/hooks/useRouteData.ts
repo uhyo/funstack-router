@@ -1,8 +1,4 @@
-import type {
-  TypefulOpaqueRouteDefinition,
-  PartialRouteDefinition,
-  ExtractRouteData,
-} from "../route.js";
+import type { RouteHandle, PartialRouteDefinition, ExtractRouteData } from "../route.js";
 import { useRouteContext } from "./useRouteContext.js";
 
 /**
@@ -31,7 +27,7 @@ import { useRouteContext } from "./useRouteContext.js";
  */
 export function useRouteData<
   T extends
-    | TypefulOpaqueRouteDefinition<string, Record<string, string>, unknown, unknown>
+    | RouteHandle<string, Record<string, string>, unknown, unknown>
     | PartialRouteDefinition<string, Record<string, string>, unknown, unknown>,
 >(route: T): ExtractRouteData<T> {
   const routeId = (route as { id?: string }).id;

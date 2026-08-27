@@ -439,6 +439,23 @@ function UserPostsPage() {
           This pattern is especially powerful in nested routes where child components need access to
           data loaded by parent routes without prop drilling.
         </p>
+
+        <h4>The route prop</h4>
+        <p>
+          Route components also receive their own route definition as the <code>route</code> prop,
+          so they can pass it to the typed hooks without importing the definition. This matters when
+          the route definition cannot be imported — for example, when route definitions are managed
+          internally by a framework built on top of FUNSTACK Router.
+        </p>
+        <CodeBlock language="tsx">{`import { useRouteParams, type RouteComponentProps } from "@funstack/router";
+
+function UserPage(props: RouteComponentProps<{ userId: string }>) {
+  // props.route is the route definition this component was registered with
+  const params = useRouteParams(props.route);
+  // params.userId is typed as string
+
+  return <h1>User {params.userId}</h1>;
+}`}</CodeBlock>
       </section>
 
       <section>
