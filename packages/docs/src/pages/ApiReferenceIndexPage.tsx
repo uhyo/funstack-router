@@ -97,6 +97,10 @@ export function ApiReferenceIndexPage() {
             <code>TypefulOpaqueRouteDefinition</code> — Type-safe route definition
           </li>
           <li>
+            <code>RouteHandle</code> — Opaque handle to a route definition (the <code>route</code>{" "}
+            prop)
+          </li>
+          <li>
             <code>ExtractRouteId</code>, <code>ExtractRouteParams</code>,{" "}
             <code>ExtractRouteState</code>, <code>ExtractRouteData</code> — Type extraction
             utilities

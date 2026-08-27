@@ -72,12 +72,12 @@ export type LoaderArgs<Params extends Record<string, string>, ActionResult = und
  */
 export interface RouteComponentProps<TParams extends Record<string, string>, TState = undefined> {
   /**
-   * The route definition object for this route.
+   * Opaque handle to this route's definition.
    *
    * Pass it to typed hooks such as `useRouteParams` when the route definition
    * cannot be imported directly (e.g. framework-managed routes).
    */
-  route: TypefulOpaqueRouteDefinition<string, TParams, TState, unknown>;
+  route: RouteHandle<string, TParams, TState, unknown>;
   /** Extracted path parameters */
   params: TParams;
   /** Current navigation state for this route (undefined on first visit) */
@@ -106,12 +106,12 @@ export interface RouteComponentPropsWithData<
   TState = undefined,
 > extends RouteComponentProps<TParams, TState> {
   /**
-   * The route definition object for this route.
+   * Opaque handle to this route's definition.
    *
    * Pass it to typed hooks such as `useRouteData` when the route definition
    * cannot be imported directly (e.g. framework-managed routes).
    */
-  route: TypefulOpaqueRouteDefinition<string, TParams, TState, TData>;
+  route: RouteHandle<string, TParams, TState, TData>;
   /** Data returned from the loader */
   data: TData;
 }
@@ -128,15 +128,16 @@ export interface OpaqueRouteDefinition {
 }
 
 /**
- * Type-carrying route definition created by the `route` helper function when an `id` is provided.
- * This type carries type information for params, state, and data, enabling type-safe hooks.
+ * Opaque handle to a route definition, carrying its type information.
  *
- * This is an opaque handle: apart from `path`, the definition's fields are not
- * declared for direct access. Use the typed hooks (`useRouteParams`,
- * `useRouteState`, `useRouteData`) and the `Extract*` helper types to consume
- * the carried type information.
+ * This is the type of the `route` prop that route components receive. Apart
+ * from `path`, no definition fields are declared for direct access; pass the
+ * handle to the typed hooks (`useRouteParams`, `useRouteState`,
+ * `useRouteData`) to consume the carried type information.
+ *
+ * Every `TypefulOpaqueRouteDefinition` is a `RouteHandle`.
  */
-export interface TypefulOpaqueRouteDefinition<
+export interface RouteHandle<
   Id extends string,
   Params extends Record<string, string>,
   State,
@@ -149,6 +150,21 @@ export interface TypefulOpaqueRouteDefinition<
     data: Data;
   };
   path?: string;
+}
+
+/**
+ * Type-carrying route definition created by the `route` helper function when an `id` is provided.
+ * This type carries type information for params, state, and data, enabling type-safe hooks in the future.
+ */
+export interface TypefulOpaqueRouteDefinition<
+  Id extends string,
+  Params extends Record<string, string>,
+  State,
+  Data,
+> extends RouteHandle<Id, Params, State, Data> {
+  children?: RouteDefinition[];
+  exact?: boolean;
+  requireChildren?: boolean;
 }
 
 /**

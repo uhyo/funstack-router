@@ -28,8 +28,8 @@ type Props = RouteComponentProps<
 
 // Equivalent to:
 type Props = {
-  // The route definition object for this route
-  route: TypefulOpaqueRouteDefinition<string, { userId: string }, { scrollPosition: number }, unknown>;
+  // Opaque handle to this route's definition
+  route: RouteHandle<string, { userId: string }, { scrollPosition: number }, unknown>;
   params: { userId: string };
   state: { scrollPosition: number } | undefined;
   // Async state update via replace navigation
@@ -50,10 +50,11 @@ type Props = {
   isPending: boolean; // Whether a navigation transition is pending
 };`}</CodeBlock>
         <p>
-          The <code>route</code> prop is the route definition object this component was registered
-          with. Pass it to typed hooks such as <code>useRouteParams</code>,{" "}
-          <code>useRouteState</code> and <code>useRouteData</code> when the route definition cannot
-          be imported directly — for example, when route definitions are managed by a framework.
+          The <code>route</code> prop is an opaque <code>RouteHandle</code> to the route definition
+          this component was registered with. Pass it to typed hooks such as{" "}
+          <code>useRouteParams</code>, <code>useRouteState</code> and <code>useRouteData</code> when
+          the route definition cannot be imported directly — for example, when route definitions are
+          managed by a framework.
         </p>
         <p>
           <strong>setState vs setStateSync:</strong>
@@ -104,8 +105,8 @@ type Props = RouteComponentPropsWithData<
 
 // Equivalent to:
 type Props = {
-  // The route definition object for this route
-  route: TypefulOpaqueRouteDefinition<string, { userId: string }, { selectedTab: string }, User>;
+  // Opaque handle to this route's definition
+  route: RouteHandle<string, { userId: string }, { selectedTab: string }, User>;
   params: { userId: string };
   data: User;
   state: { selectedTab: string } | undefined;
@@ -160,6 +161,27 @@ const aboutRoute = route({
   component: AboutPage,
 });
 // Type: OpaqueRouteDefinition`}</CodeBlock>
+      </article>
+
+      <article className="api-item">
+        <h3>
+          <code>RouteHandle&lt;Id, Params, State, Data&gt;</code>
+        </h3>
+        <p>
+          An opaque handle to a route definition, carrying its type information. This is the type of
+          the <code>route</code> prop that route components receive. Apart from <code>path</code>,
+          no definition fields are declared for direct access; pass the handle to the typed hooks to
+          consume the carried type information. Every <code>TypefulOpaqueRouteDefinition</code> is a{" "}
+          <code>RouteHandle</code>.
+        </p>
+        <CodeBlock language="tsx">{`import { useRouteParams, type RouteComponentProps } from "@funstack/router";
+
+function UserPage(props: RouteComponentProps<{ userId: string }>) {
+  // props.route: RouteHandle<string, { userId: string }, undefined, unknown>
+  const params = useRouteParams(props.route);
+  // params.userId is typed as string
+  return <h1>User {params.userId}</h1>;
+}`}</CodeBlock>
       </article>
 
       <article className="api-item">

@@ -5,6 +5,7 @@ import type {
   OpaqueRouteDefinition,
   PartialRouteDefinition,
   RouteDefinition,
+  RouteHandle,
   ExtractRouteId,
   ExtractRouteParams,
   ExtractRouteState,
@@ -33,12 +34,21 @@ describe("route() type inference", () => {
     >();
   });
 
-  it("TypefulOpaqueRouteDefinition is opaque: only path is declared among definition fields", () => {
-    type T = TypefulOpaqueRouteDefinition<"user", { userId: string }, undefined, undefined>;
+  it("RouteHandle is opaque: only path is declared among definition fields", () => {
+    type T = RouteHandle<"user", { userId: string }, undefined, undefined>;
     expectTypeOf<T>().toHaveProperty("path");
     expectTypeOf<
       Extract<keyof T, "children" | "exact" | "requireChildren" | "component" | "loader" | "action">
     >().toEqualTypeOf<never>();
+  });
+
+  it("TypefulOpaqueRouteDefinition keeps its declared fields and is assignable to RouteHandle", () => {
+    type T = TypefulOpaqueRouteDefinition<"user", { userId: string }, undefined, undefined>;
+    expectTypeOf<T>().toHaveProperty("path");
+    expectTypeOf<T>().toHaveProperty("children");
+    expectTypeOf<T>().toHaveProperty("exact");
+    expectTypeOf<T>().toHaveProperty("requireChildren");
+    expectTypeOf<T>().toExtend<RouteHandle<"user", { userId: string }, undefined, undefined>>();
   });
 
   it("TypefulOpaqueRouteDefinition remains usable as RouteDefinition and as children", () => {
@@ -423,17 +433,17 @@ describe("RouteComponentPropsOf utility type", () => {
 });
 
 describe("route prop on component props", () => {
-  it("RouteComponentProps carries the route definition type", () => {
+  it("RouteComponentProps carries the route handle type", () => {
     type Props = RouteComponentProps<{ userId: string }, undefined>;
     expectTypeOf<Props["route"]>().toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<string, { userId: string }, undefined, unknown>
+      RouteHandle<string, { userId: string }, undefined, unknown>
     >();
   });
 
-  it("RouteComponentPropsWithData narrows the route data type", () => {
+  it("RouteComponentPropsWithData narrows the route handle data type", () => {
     type Props = RouteComponentPropsWithData<{ userId: string }, { name: string }, undefined>;
     expectTypeOf<Props["route"]>().toEqualTypeOf<
-      TypefulOpaqueRouteDefinition<string, { userId: string }, undefined, { name: string }>
+      RouteHandle<string, { userId: string }, undefined, { name: string }>
     >();
   });
 

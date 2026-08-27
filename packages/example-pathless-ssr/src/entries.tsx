@@ -3,14 +3,9 @@ import type { RouteDefinition } from "@funstack/router";
 import { routes } from "./App.js";
 import App from "./App.js";
 
-// Structural view of a route definition for path collection. Opaque route
-// definitions no longer declare `children` for direct access, but the runtime
-// shape is unchanged.
-type RouteNode = { path?: string; children?: RouteDefinition[] };
-
 function collectPaths(routeDefs: RouteDefinition[], prefix: string): string[] {
   const paths: string[] = [];
-  for (const r of routeDefs as RouteNode[]) {
+  for (const r of routeDefs) {
     const routePath = r.path;
     if (routePath === undefined) {
       // Pathless route: recurse with same prefix
