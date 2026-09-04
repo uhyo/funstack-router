@@ -24,14 +24,14 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^1.2.0
-        version: 1.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
+        specifier: ^1.3.1
+        version: 1.3.1(@funstack/router@packages+router)(@types/react@19.2.18)(react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719))(react@19.3.0-canary-83840902-20260719)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
       react:
-        specifier: ^19.2.8
-        version: 19.2.8
+        specifier: ^19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719
       react-dom:
-        specifier: ^19.2.8
-        version: 19.2.8(react@19.2.8)
+        specifier: ^19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719)
       shiki:
         specifier: ^4.4.3
         version: 4.4.3
@@ -43,8 +43,8 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
       '@types/react-dom':
-        specifier: ^19.2.4
-        version: 19.2.4(@types/react@19.2.18)
+        specifier: ^19.2.5
+        version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: ^6.1.1
         version: 6.1.1(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
@@ -64,18 +64,18 @@ importers:
         specifier: workspace:*
         version: link:../router
       react:
-        specifier: ^19.2.8
-        version: 19.2.8
+        specifier: ^19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719
       react-dom:
-        specifier: ^19.2.8
-        version: 19.2.8(react@19.2.8)
+        specifier: ^19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719)
     devDependencies:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
       '@types/react-dom':
-        specifier: ^19.2.4
-        version: 19.2.4(@types/react@19.2.18)
+        specifier: ^19.2.5
+        version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: ^6.1.1
         version: 6.1.1(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
@@ -92,21 +92,21 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^1.2.0
-        version: 1.2.0(react-dom@19.3.0-canary-eb8feb71-20260814(react@19.3.0-canary-eb8feb71-20260814))(react@19.3.0-canary-eb8feb71-20260814)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
+        specifier: ^1.3.1
+        version: 1.3.1(@funstack/router@packages+router)(@types/react@19.2.18)(react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719))(react@19.3.0-canary-83840902-20260719)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
       react:
-        specifier: 19.3.0-canary-eb8feb71-20260814
-        version: 19.3.0-canary-eb8feb71-20260814
+        specifier: 19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719
       react-dom:
-        specifier: 19.3.0-canary-eb8feb71-20260814
-        version: 19.3.0-canary-eb8feb71-20260814(react@19.3.0-canary-eb8feb71-20260814)
+        specifier: 19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719)
     devDependencies:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
       '@types/react-dom':
-        specifier: ^19.2.4
-        version: 19.2.4(@types/react@19.2.18)
+        specifier: ^19.2.5
+        version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: ^6.1.1
         version: 6.1.1(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
@@ -123,21 +123,21 @@ importers:
         specifier: workspace:*
         version: link:../router
       '@funstack/static':
-        specifier: ^1.2.0
-        version: 1.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
+        specifier: ^1.3.1
+        version: 1.3.1(@funstack/router@packages+router)(@types/react@19.2.18)(react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719))(react@19.3.0-canary-83840902-20260719)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
       react:
-        specifier: ^19.2.8
-        version: 19.2.8
+        specifier: ^19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719
       react-dom:
-        specifier: ^19.2.8
-        version: 19.2.8(react@19.2.8)
+        specifier: ^19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719)
     devDependencies:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
       '@types/react-dom':
-        specifier: ^19.2.4
-        version: 19.2.4(@types/react@19.2.18)
+        specifier: ^19.2.5
+        version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: ^6.1.1
         version: 6.1.1(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
@@ -159,7 +159,7 @@ importers:
         version: 7.0.1(@testing-library/dom@10.4.1)(vitest@4.1.11(@types/node@26.4.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1)))
       '@testing-library/react':
         specifier: ^16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719))(react@19.3.0-canary-83840902-20260719)
       '@types/node':
         specifier: ^26.4.0
         version: 26.4.0
@@ -167,17 +167,17 @@ importers:
         specifier: ^19.2.18
         version: 19.2.18
       '@types/react-dom':
-        specifier: ^19.2.4
-        version: 19.2.4(@types/react@19.2.18)
+        specifier: ^19.2.5
+        version: 19.2.5(@types/react@19.2.18)
       jsdom:
         specifier: ^30.0.1
         version: 30.0.1
       react:
-        specifier: ^19.2.8
-        version: 19.2.8
+        specifier: ^19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719
       react-dom:
-        specifier: ^19.2.8
-        version: 19.2.8(react@19.2.8)
+        specifier: ^19.3.0-canary-83840902-20260719
+        version: 19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719)
       tsdown:
         specifier: ^0.22.14
         version: 0.22.14(typescript@7.0.2)(unrun@0.2.37)
@@ -489,21 +489,21 @@ packages:
       '@noble/hashes':
         optional: true
 
-  '@funstack/skill-installer@1.0.0':
-    resolution: {integrity: sha512-lEYZQ4tFOLidvxy60tE7/28LUy4bJOlbT8o0ebcolaFV/cluSGtnDpWEUWIQWORtnGhrWnYl7Gr9aHvjHYkoEQ==}
-    hasBin: true
-
   '@funstack/skill-installer@1.1.0':
     resolution: {integrity: sha512-reB4V8FE8foqDULiqOhrlMq5ZqrdKpqlM8ulU/gtklf9OW71O4w5z5EZWjzygmIthmTriDo745EcRGm5+DQR1w==}
     hasBin: true
 
-  '@funstack/static@1.2.0':
-    resolution: {integrity: sha512-oB5BrlwyQt+4GkZriPt7MzaF7Nt1a+A6ttvA+Kgpc2/zkWzr/0l58J0LtMzyap1gor42lSOSrJy5MUIYpw1OWA==}
+  '@funstack/static@1.3.1':
+    resolution: {integrity: sha512-w/oHBwpwEA/l7LJmeB5aWueSTLwCj7Q0YbvejXwhoWGohzRfVDmNoRRo45yURSsMa0whNMNLzwCS9riXfAaKMg==}
     hasBin: true
     peerDependencies:
+      '@funstack/router': ^1.4.0
       react: ^19.2.3
       react-dom: ^19.2.3
       vite: ^7.0.0 || ^8.0.0
+    peerDependenciesMeta:
+      '@funstack/router':
+        optional: true
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1244,9 +1244,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/pluginutils@1.0.0-rc.13':
-    resolution: {integrity: sha512-3ngTAv6F/Py35BsYbeeLeecvhMKdsKm4AoOETVhAA+Qc8nrA2I0kF7oa93mE9qnIurngOSpMnQ0x2nQY2FPviA==}
-
   '@rolldown/pluginutils@1.0.0-rc.17':
     resolution: {integrity: sha512-n8iosDOt6Ig1UhJ2AYqoIhHWh/isz0xpicHTzpKBeotdVsTEcxsSA/i3EVM7gQAj0rU27OLAxCjzlj15IWY7bg==}
 
@@ -1365,8 +1362,8 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
-  '@types/estree@1.0.8':
-    resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+  '@types/estree@1.0.9':
+    resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
   '@types/hast@3.0.5':
     resolution: {integrity: sha512-rp/ezSWaD1m44dPKICGhiskI13nVr7qTloFwDa/IYkhhf5nzwP+zIQcIJh3WIFSBOy/H1PzB40jPjMDksN4F+g==}
@@ -1377,8 +1374,8 @@ packages:
   '@types/node@26.4.0':
     resolution: {integrity: sha512-faiGnoIrLH/V8cibOMEAZ8pMw6oXqSukl29ra4mN8GdaB2ZewzeaLj+INpV5N+Z1eKWzY+IzaIZH2EIR6YZRNQ==}
 
-  '@types/react-dom@19.2.4':
-    resolution: {integrity: sha512-Bsc+QHgp+P/F02XDzNCY9jnZNCUuLki36KT7VKrTXXLdHf+vHMNZnW1rVu5DNW/rCK+fya3DATySbLM4yhtKUw==}
+  '@types/react-dom@19.2.5':
+    resolution: {integrity: sha512-fMPwH9v7r/pp43yUd2/Mbiex5KouJwwR3dzHkhLREUC6764VyDsqxhAxv6OFEYR1RhjOyD1naqba8ECDBe7ZQg==}
     peerDependencies:
       '@types/react': ^19.2.0
 
@@ -1527,8 +1524,8 @@ packages:
       oxc-transform-react:
         optional: true
 
-  '@vitejs/plugin-rsc@0.5.23':
-    resolution: {integrity: sha512-CV6kWPE4E241qDStwK3ErYjuZqW1i1xun3/P1wsm94RJoActLTrQsGzGsf75ioeVxEK0roPqLGhcV2WlSlPePQ==}
+  '@vitejs/plugin-rsc@0.5.34':
+    resolution: {integrity: sha512-95V6fyGQklQMYIWTr5qwwNmpDYxsHkTunuzq8i/keIcgdckL9zb6nyEgTnb1CEl1IPJWVxGgORMkTFHrct7XJg==}
     peerDependencies:
       react: '*'
       react-dom: '*'
@@ -1805,9 +1802,6 @@ packages:
   error-stack-parser-es@1.0.5:
     resolution: {integrity: sha512-5qucVt2XcuGMcEGgWI7i+yZpmpByQ8J1lHhcL7PwqCwu9FPP3VUXzT4ltHe5i2z9dePwEHcDVOAfSnHsOlCXRA==}
 
-  es-module-lexer@2.0.0:
-    resolution: {integrity: sha512-5POEcUuZybH7IdmGsD8wlf0AI55wMecM9rVBTI/qEAy2c1kTOm3DjFYjrBdI2K3BaJjJYfYFeRtM0t9ssnRuxw==}
-
   es-module-lexer@2.3.2:
     resolution: {integrity: sha512-poHGpORABojJJucnV9KbOavETW8lBVnphkW77ER5/BQ5Fz7oXSoCNek7IH3vR5nRjdsEz926ibFYX8KtLQmdyw==}
 
@@ -2076,30 +2070,25 @@ packages:
   quansync@1.0.0:
     resolution: {integrity: sha512-5xZacEEufv3HSTPQuchrvV6soaiACMFnq1H8wkVioctoH3TRha9Sz66lOxRwPK/qZj7HPiSveih9yAyh98gvqA==}
 
-  react-dom@19.2.8:
-    resolution: {integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==}
+  react-dom@19.3.0-canary-83840902-20260719:
+    resolution: {integrity: sha512-Am+TKCYi93izuLNoAdvtxTsznn5NAGABl4dcW0ROeKeKE1una1IiDeYcf+hbHeSy5XBwWScWjEm6G+uxHxOGQQ==}
     peerDependencies:
-      react: ^19.2.8
+      react: 19.3.0-canary-83840902-20260719
 
-  react-dom@19.3.0-canary-eb8feb71-20260814:
-    resolution: {integrity: sha512-sURKF6v4XliFLgl9+lT3S9zM9EEqJFDzYwE7+BtHdUesovByKQbM9dm4WqGr/b3kiTq6jw7ASIYG10j/t2pbbQ==}
+  react-error-boundary@6.1.4:
+    resolution: {integrity: sha512-7FgvbyjCFhu4dtKSZu807cW1MWG2nWAM4bwGqUByAtHVJXtlzoCJX0SSyZRyFrb+aBd7wtJkcOR4DsxXVEuDsA==}
     peerDependencies:
-      react: 19.3.0-canary-eb8feb71-20260814
-
-  react-error-boundary@6.1.1:
-    resolution: {integrity: sha512-BrYwPOdXi5mqkk5lw+Uvt0ThHx32rCt3BkukS4X23A2AIWDPSGX6iaWTc0y9TU/mHDA/6qOSGel+B2ERkOvD1w==}
-    peerDependencies:
+      '@types/react': ^18.0.0 || ^19.0.0
       react: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
-  react@19.2.8:
-    resolution: {integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==}
-    engines: {node: '>=0.10.0'}
-
-  react@19.3.0-canary-eb8feb71-20260814:
-    resolution: {integrity: sha512-4CF6VVbInQ54749LzFJ6POm1SREXQmNZ6yFjTq67yCL3NrYlK+aO6nzO3i1Fe7szu/fXUr3NRzitdHj+l/O5EQ==}
+  react@19.3.0-canary-83840902-20260719:
+    resolution: {integrity: sha512-GXus9O3WYvGEa11ovWy4/YVYyVsLO/QGYV31KHM20OL9yKSAl+3j8HXugSTz0ZV87clEvQ1uVNQAM3Orr3OVYg==}
     engines: {node: '>=0.10.0'}
 
   redent@3.0.0:
@@ -2156,18 +2145,15 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  rsc-html-stream@0.0.7:
-    resolution: {integrity: sha512-v9+fuY7usTgvXdNl8JmfXCvSsQbq2YMd60kOeeMIqCJFZ69fViuIxztHei7v5mlMMa2h3SqS+v44Gu9i9xANZA==}
+  rsc-html-stream@0.0.8:
+    resolution: {integrity: sha512-5wSLqZmmxqVYV/70Ueq2XMw0NRPeTeUlUCxA+CEdDqE/IGDXG8EOUOjENzC3WYwWkeYSAI8ZrWbpIhPRK4UuRw==}
 
   saxes@6.0.0:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
 
-  scheduler@0.27.0:
-    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
-
-  scheduler@0.28.0-canary-eb8feb71-20260814:
-    resolution: {integrity: sha512-TjXQVWDPcNnqesHvbi5WB587WPFr8to90JVhOIO0szb0GFgg0fF0PPJCWoxi0poyxJ98OThXb22akDHfZyXG6A==}
+  scheduler@0.28.0-canary-83840902-20260719:
+    resolution: {integrity: sha512-R+hOXfzZC9lGunT3FcgcaMxVnvpl1YkLiGeNgZB785/T8OPu4iwihsQIe4BAmT0ywMBVIVFr5886d5kycQpEQw==}
 
   semver@7.8.5:
     resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
@@ -2192,8 +2178,8 @@ packages:
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
 
-  srvx@0.11.15:
-    resolution: {integrity: sha512-iXsux0UcOjdvs0LCMa2Ws3WwcDUozA3JN3BquNXkaFPP7TpRqgunKdEgoZ/uwb1J6xaYHfxtz9Twlh6yzwM6Tg==}
+  srvx@0.12.7:
+    resolution: {integrity: sha512-PIaq1pDGg3EU2OGSN3pzRfYVu9MJDzLdojlGN6E3lvhAdxqn/lNMJFMA1xGA38jYkBb0V9xw02QEVVMDb0PExA==}
     engines: {node: '>=20.16.0'}
     hasBin: true
 
@@ -2302,8 +2288,8 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  turbo-stream@3.2.0:
-    resolution: {integrity: sha512-EK+bZ9UVrVh7JLslVFOV0GEMsociOqVOvEMTAd4ixMyffN5YNIEdLZWXUx5PJqDbTxSIBWw04HS9gCY4frYQDQ==}
+  turbo-stream@3.2.1:
+    resolution: {integrity: sha512-BaX0eWz3IrypOVDFqPv3VGD6uZZW8y3oFAOJqZQ+oopmOyQ8/xNm7IMwAJFvxax2DBa8zSk+/AeqA6D6b1PXGg==}
 
   turbo@2.10.12:
     resolution: {integrity: sha512-AswgMPnpOoaVZHrrSBejETzEbuIA69OVGwfkHwfrY0A23VjWXBANzgq9+OymWOHAIArB7D1+1z498WY8fGg1Jw==}
@@ -2739,34 +2725,22 @@ snapshots:
 
   '@exodus/bytes@1.15.1': {}
 
-  '@funstack/skill-installer@1.0.0': {}
-
   '@funstack/skill-installer@1.1.0': {}
 
-  '@funstack/static@1.2.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))':
+  '@funstack/static@1.3.1(@funstack/router@packages+router)(@types/react@19.2.18)(react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719))(react@19.3.0-canary-83840902-20260719)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))':
     dependencies:
-      '@funstack/skill-installer': 1.0.0
-      '@vitejs/plugin-rsc': 0.5.23(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      react-error-boundary: 6.1.1(react@19.2.8)
-      rsc-html-stream: 0.0.7
-      srvx: 0.11.15
+      '@funstack/skill-installer': 1.1.0
+      '@vitejs/plugin-rsc': 0.5.34(react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719))(react@19.3.0-canary-83840902-20260719)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
+      react: 19.3.0-canary-83840902-20260719
+      react-dom: 19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719)
+      react-error-boundary: 6.1.4(@types/react@19.2.18)(react@19.3.0-canary-83840902-20260719)
+      rsc-html-stream: 0.0.8
+      srvx: 0.12.7
       vite: 8.2.2(@types/node@26.4.0)(esbuild@0.28.1)
+    optionalDependencies:
+      '@funstack/router': link:packages/router
     transitivePeerDependencies:
-      - react-server-dom-webpack
-
-  '@funstack/static@1.2.0(react-dom@19.3.0-canary-eb8feb71-20260814(react@19.3.0-canary-eb8feb71-20260814))(react@19.3.0-canary-eb8feb71-20260814)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))':
-    dependencies:
-      '@funstack/skill-installer': 1.0.0
-      '@vitejs/plugin-rsc': 0.5.23(react-dom@19.3.0-canary-eb8feb71-20260814(react@19.3.0-canary-eb8feb71-20260814))(react@19.3.0-canary-eb8feb71-20260814)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
-      react: 19.3.0-canary-eb8feb71-20260814
-      react-dom: 19.3.0-canary-eb8feb71-20260814(react@19.3.0-canary-eb8feb71-20260814)
-      react-error-boundary: 6.1.1(react@19.3.0-canary-eb8feb71-20260814)
-      rsc-html-stream: 0.0.7
-      srvx: 0.11.15
-      vite: 8.2.2(@types/node@26.4.0)(esbuild@0.28.1)
-    transitivePeerDependencies:
+      - '@types/react'
       - react-server-dom-webpack
 
   '@img/colour@1.1.0': {}
@@ -3180,8 +3154,6 @@ snapshots:
   '@rolldown/binding-win32-x64-msvc@1.2.5':
     optional: true
 
-  '@rolldown/pluginutils@1.0.0-rc.13': {}
-
   '@rolldown/pluginutils@1.0.0-rc.17':
     optional: true
 
@@ -3256,15 +3228,15 @@ snapshots:
     optionalDependencies:
       vitest: 4.1.11(@types/node@26.4.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
 
-  '@testing-library/react@16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@testing-library/react@16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719))(react@19.3.0-canary-83840902-20260719)':
     dependencies:
       '@babel/runtime': 7.29.7
       '@testing-library/dom': 10.4.1
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
+      react: 19.3.0-canary-83840902-20260719
+      react-dom: 19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719)
     optionalDependencies:
       '@types/react': 19.2.18
-      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      '@types/react-dom': 19.2.5(@types/react@19.2.18)
 
   '@turbo/darwin-64@2.10.12':
     optional: true
@@ -3298,7 +3270,7 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
-  '@types/estree@1.0.8': {}
+  '@types/estree@1.0.9': {}
 
   '@types/hast@3.0.5':
     dependencies:
@@ -3312,7 +3284,7 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
-  '@types/react-dom@19.2.4(@types/react@19.2.18)':
+  '@types/react-dom@19.2.5(@types/react@19.2.18)':
     dependencies:
       '@types/react': 19.2.18
 
@@ -3389,31 +3361,17 @@ snapshots:
       '@rolldown/pluginutils': 1.0.1
       vite: 8.2.2(@types/node@26.4.0)(esbuild@0.28.1)
 
-  '@vitejs/plugin-rsc@0.5.23(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))':
+  '@vitejs/plugin-rsc@0.5.34(react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719))(react@19.3.0-canary-83840902-20260719)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))':
     dependencies:
-      '@rolldown/pluginutils': 1.0.0-rc.13
-      es-module-lexer: 2.0.0
+      '@rolldown/pluginutils': 1.0.1
+      es-module-lexer: 2.3.2
       estree-walker: 3.0.3
       magic-string: 0.30.21
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      srvx: 0.11.15
+      react: 19.3.0-canary-83840902-20260719
+      react-dom: 19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719)
+      srvx: 0.12.7
       strip-literal: 3.1.0
-      turbo-stream: 3.2.0
-      vite: 8.2.2(@types/node@26.4.0)(esbuild@0.28.1)
-      vitefu: 1.1.3(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
-
-  '@vitejs/plugin-rsc@0.5.23(react-dom@19.3.0-canary-eb8feb71-20260814(react@19.3.0-canary-eb8feb71-20260814))(react@19.3.0-canary-eb8feb71-20260814)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))':
-    dependencies:
-      '@rolldown/pluginutils': 1.0.0-rc.13
-      es-module-lexer: 2.0.0
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-      react: 19.3.0-canary-eb8feb71-20260814
-      react-dom: 19.3.0-canary-eb8feb71-20260814(react@19.3.0-canary-eb8feb71-20260814)
-      srvx: 0.11.15
-      strip-literal: 3.1.0
-      turbo-stream: 3.2.0
+      turbo-stream: 3.2.1
       vite: 8.2.2(@types/node@26.4.0)(esbuild@0.28.1)
       vitefu: 1.1.3(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.1))
 
@@ -3602,8 +3560,6 @@ snapshots:
 
   error-stack-parser-es@1.0.5: {}
 
-  es-module-lexer@2.0.0: {}
-
   es-module-lexer@2.3.2: {}
 
   esbuild@0.28.1:
@@ -3637,7 +3593,7 @@ snapshots:
 
   estree-walker@3.0.3:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
 
   expect-type@1.4.0: {}
 
@@ -3908,29 +3864,20 @@ snapshots:
 
   quansync@1.0.0: {}
 
-  react-dom@19.2.8(react@19.2.8):
+  react-dom@19.3.0-canary-83840902-20260719(react@19.3.0-canary-83840902-20260719):
     dependencies:
-      react: 19.2.8
-      scheduler: 0.27.0
+      react: 19.3.0-canary-83840902-20260719
+      scheduler: 0.28.0-canary-83840902-20260719
 
-  react-dom@19.3.0-canary-eb8feb71-20260814(react@19.3.0-canary-eb8feb71-20260814):
+  react-error-boundary@6.1.4(@types/react@19.2.18)(react@19.3.0-canary-83840902-20260719):
     dependencies:
-      react: 19.3.0-canary-eb8feb71-20260814
-      scheduler: 0.28.0-canary-eb8feb71-20260814
-
-  react-error-boundary@6.1.1(react@19.2.8):
-    dependencies:
-      react: 19.2.8
-
-  react-error-boundary@6.1.1(react@19.3.0-canary-eb8feb71-20260814):
-    dependencies:
-      react: 19.3.0-canary-eb8feb71-20260814
+      react: 19.3.0-canary-83840902-20260719
+    optionalDependencies:
+      '@types/react': 19.2.18
 
   react-is@17.0.2: {}
 
-  react@19.2.8: {}
-
-  react@19.3.0-canary-eb8feb71-20260814: {}
+  react@19.3.0-canary-83840902-20260719: {}
 
   redent@3.0.0:
     dependencies:
@@ -4029,15 +3976,13 @@ snapshots:
       '@rolldown/binding-win32-arm64-msvc': 1.2.5
       '@rolldown/binding-win32-x64-msvc': 1.2.5
 
-  rsc-html-stream@0.0.7: {}
+  rsc-html-stream@0.0.8: {}
 
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
 
-  scheduler@0.27.0: {}
-
-  scheduler@0.28.0-canary-eb8feb71-20260814: {}
+  scheduler@0.28.0-canary-83840902-20260719: {}
 
   semver@7.8.5: {}
 
@@ -4090,7 +4035,7 @@ snapshots:
 
   space-separated-tokens@2.0.2: {}
 
-  srvx@0.11.15: {}
+  srvx@0.12.7: {}
 
   stackback@0.0.2: {}
 
@@ -4175,7 +4120,7 @@ snapshots:
   tslib@2.8.1:
     optional: true
 
-  turbo-stream@3.2.0: {}
+  turbo-stream@3.2.1: {}
 
   turbo@2.10.12:
     optionalDependencies:
