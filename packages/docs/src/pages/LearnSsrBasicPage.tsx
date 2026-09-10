@@ -126,14 +126,14 @@ function HomePage() {
         <p>
           During pathless SSR, an <code>{"<Outlet />"}</code> whose child routes are all path-based
           renders <code>null</code> on the server, while the same outlet renders content in the
-          browser. React Canary's{" "}
+          browser. React's{" "}
           <a href="https://react.dev/reference/react-dom/browser">
             <code>browser()</code>
           </a>{" "}
-          API offers a cleaner way to express this: the <code>pathlessSSROutletDeferral</code>{" "}
-          feature flag makes such outlets call <code>use(browser())</code> instead, suspending
-          server rendering at the nearest <code>{"<Suspense>"}</code> boundary and deferring the
-          outlet content to the browser.
+          API (stable since React 19.3) offers a cleaner way to express this: the{" "}
+          <code>pathlessSSROutletDeferral</code> feature flag makes such outlets call{" "}
+          <code>use(browser())</code> instead, suspending server rendering at the nearest{" "}
+          <code>{"<Suspense>"}</code> boundary and deferring the outlet content to the browser.
         </p>
         <CodeBlock language="tsx">{`// Opt in via the Router's features prop:
 <Router routes={routes} features={{ pathlessSSROutletDeferral: true }} />
@@ -159,8 +159,8 @@ function AppShell() {
         </p>
         <p>
           This feature requires a React build that exports <code>browser</code> from{" "}
-          <code>react-dom</code> (currently React Canary). On builds without the API, enabling the
-          flag throws an error when the Router renders.
+          <code>react-dom</code> (React 19.3 or later). On builds without the API, enabling the flag
+          throws an error when the Router renders.
         </p>
         <p>
           <code>pathlessSSROutletDeferral</code> is opt-in in the current major version and will
