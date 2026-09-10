@@ -13,8 +13,8 @@ const candidate = reactDOMExports.browser;
 
 /**
  * The `browser` function from react-dom, or `null` when the host React build
- * doesn't expose the API. `browser` is currently available only in React
- * Canary.
+ * doesn't expose the API. `browser` is available in react-dom starting with
+ * React 19.3.
  */
 const browserFn: BrowserFn | null =
   typeof candidate === "function" ? (candidate as BrowserFn) : null;
@@ -27,7 +27,7 @@ export function getBrowserFn(): BrowserFn {
   if (browserFn === null) {
     throw new Error(
       "The `pathlessSSROutletDeferral` feature requires a React build that " +
-        "supports the `browser()` API from react-dom (currently React Canary). " +
+        "supports the `browser()` API from react-dom (React 19.3 or later). " +
         "Upgrade react and react-dom, or remove `pathlessSSROutletDeferral` " +
         "from the Router's `features` prop.",
     );

@@ -3,8 +3,8 @@ import { renderToString } from "react-dom/server";
 import { Router } from "../Router/index.js";
 import { route, type RouteDefinition } from "../route.js";
 
-// These tests run against the real react-dom installed in this repo (stable),
-// which does not expose the browser() API.
+// These tests run against the real react-dom installed in this repo (19.2),
+// which predates the browser() API introduced in React 19.3.
 
 function makeRoutes(): RouteDefinition[] {
   return [route({ component: () => <div>shell</div> })];
