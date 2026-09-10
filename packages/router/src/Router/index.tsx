@@ -152,8 +152,8 @@ export type RouterFeatures = {
    * mismatches. Each such outlet must be wrapped in a `<Suspense>` boundary,
    * or the server render fails.
    *
-   * Requires a React build that exports `browser` from react-dom (currently
-   * React Canary). On builds that don't expose the API, enabling this flag
+   * Requires a React build that exports `browser` from react-dom (React 19.3
+   * or later). On builds that don't expose the API, enabling this flag
    * throws an error when the Router renders.
    *
    * This behavior will become the default in the next major version of

@@ -7,10 +7,10 @@ import { Outlet } from "../Outlet.js";
 import { route, type RouteDefinition } from "../route.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
 
-// Simulate a React build that supports the browser() API (React Canary).
+// Simulate a React build that supports the browser() API (React 19.3+).
 // The mocked browser() returns a never-resolving thenable so that use()
 // suspends during server rendering, leaving the nearest <Suspense> fallback
-// in place — approximating the canary behavior of use(browser()).
+// in place — approximating the real behavior of use(browser()).
 const { browserMock } = vi.hoisted(() => {
   return {
     browserMock: vi.fn((_reason?: unknown): PromiseLike<undefined> => ({
