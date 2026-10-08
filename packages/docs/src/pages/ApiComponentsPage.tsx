@@ -105,6 +105,21 @@ export function ApiComponentsPage() {
               </tr>
               <tr>
                 <td>
+                  <code>transitionTypes</code>
+                </td>
+                <td>
+                  <code>GetTransitionTypes</code>
+                </td>
+                <td>
+                  Function returning the React transition types to attach to each navigation via{" "}
+                  <code>addTransitionType</code> (React 19.3+). Receives the destination{" "}
+                  <code>url</code> and <code>navigationType</code>; the returned types replace the
+                  default <code>["navigation"]</code>. See the{" "}
+                  <a href="/learn/transitions">Transitions guide</a> for details.
+                </td>
+              </tr>
+              <tr>
+                <td>
                   <code>features</code>
                 </td>
                 <td>
