@@ -1,5 +1,6 @@
 import { CodeBlock } from "../components/CodeBlock.js";
 import { PageHead } from "../components/PageHead.js";
+import { GITHUB_URL } from "../navigation.js";
 
 export function HomePage() {
   return (
@@ -17,6 +18,14 @@ export function HomePage() {
           </a>
           <a href="/api" className="button secondary">
             API Reference
+          </a>
+          <a
+            href={GITHUB_URL}
+            className="button secondary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
           </a>
         </div>
       </section>
