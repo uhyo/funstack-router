@@ -3,6 +3,7 @@ import { PageMeta } from "./pageMeta.js";
 import { route } from "@funstack/router/server";
 import { defer } from "@funstack/static/server";
 import { Layout } from "./components/Layout.js";
+import { DocsLayout } from "./components/DocsLayout.js";
 import { ApiReferencePage } from "./pages/ApiReferencePage.js";
 import { LearnPage } from "./pages/LearnPage.js";
 import { ClientApp } from "./ClientApp.js";
@@ -142,159 +143,170 @@ export const routes = [
             component: defer(withMeta("/", <HomePage />), { name: "HomePage" }),
           }),
           route({
-            path: "/getting-started",
-            component: defer(withMeta("/getting-started", <GettingStartedPage />), {
-              name: "GettingStartedPage",
-            }),
-          }),
-          route({
-            path: "/learn",
-            component: LearnPage,
+            component: <DocsLayout />,
             children: [
               route({
-                path: "/",
-                component: defer(withMeta("/learn", <LearnIndexPage />), {
-                  name: "LearnIndexPage",
+                path: "/getting-started",
+                component: defer(withMeta("/getting-started", <GettingStartedPage />), {
+                  name: "GettingStartedPage",
                 }),
               }),
               route({
-                path: "/navigation-api",
-                component: defer(withMeta("/learn/navigation-api", <LearnNavigationApiPage />), {
-                  name: "LearnNavigationApiPage",
-                }),
-              }),
-              route({
-                path: "/nested-routes",
-                component: defer(withMeta("/learn/nested-routes", <LearnNestedRoutesPage />), {
-                  name: "LearnNestedRoutesPage",
-                }),
-              }),
-              route({
-                path: "/type-safety",
-                component: defer(withMeta("/learn/type-safety", <LearnTypeSafetyPage />), {
-                  name: "LearnTypeSafetyPage",
-                }),
-              }),
-              route({
-                path: "/ssr",
-                component: <Outlet />,
+                path: "/learn",
+                component: LearnPage,
                 children: [
                   route({
                     path: "/",
-                    component: defer(withMeta("/learn/ssr", <LearnSsrBasicPage />), {
-                      name: "LearnSsrBasicPage",
+                    component: defer(withMeta("/learn", <LearnIndexPage />), {
+                      name: "LearnIndexPage",
                     }),
                   }),
                   route({
-                    path: "/static-site-generation",
+                    path: "/navigation-api",
                     component: defer(
-                      withMeta("/learn/ssr/static-site-generation", <LearnSsgPage />),
+                      withMeta("/learn/navigation-api", <LearnNavigationApiPage />),
                       {
-                        name: "LearnSsgPage",
+                        name: "LearnNavigationApiPage",
                       },
                     ),
                   }),
                   route({
-                    path: "/with-loaders",
+                    path: "/nested-routes",
+                    component: defer(withMeta("/learn/nested-routes", <LearnNestedRoutesPage />), {
+                      name: "LearnNestedRoutesPage",
+                    }),
+                  }),
+                  route({
+                    path: "/type-safety",
+                    component: defer(withMeta("/learn/type-safety", <LearnTypeSafetyPage />), {
+                      name: "LearnTypeSafetyPage",
+                    }),
+                  }),
+                  route({
+                    path: "/ssr",
+                    component: <Outlet />,
+                    children: [
+                      route({
+                        path: "/",
+                        component: defer(withMeta("/learn/ssr", <LearnSsrBasicPage />), {
+                          name: "LearnSsrBasicPage",
+                        }),
+                      }),
+                      route({
+                        path: "/static-site-generation",
+                        component: defer(
+                          withMeta("/learn/ssr/static-site-generation", <LearnSsgPage />),
+                          {
+                            name: "LearnSsgPage",
+                          },
+                        ),
+                      }),
+                      route({
+                        path: "/with-loaders",
+                        component: defer(
+                          withMeta("/learn/ssr/with-loaders", <LearnSsrWithLoadersPage />),
+                          {
+                            name: "LearnSsrWithLoadersPage",
+                          },
+                        ),
+                      }),
+                    ],
+                  }),
+                  route({
+                    path: "/rsc",
+                    component: <Outlet />,
+                    children: [
+                      route({
+                        path: "/",
+                        component: defer(withMeta("/learn/rsc", <LearnRscPage />), {
+                          name: "LearnRscPage",
+                        }),
+                      }),
+                      route({
+                        path: "/route-features",
+                        component: defer(
+                          withMeta("/learn/rsc/route-features", <LearnRouteDefinitionsPage />),
+                          {
+                            name: "LearnRouteDefinitionsPage",
+                          },
+                        ),
+                      }),
+                    ],
+                  }),
+                  route({
+                    path: "/actions",
+                    component: defer(withMeta("/learn/actions", <LearnActionsPage />), {
+                      name: "LearnActionsPage",
+                    }),
+                  }),
+                  route({
+                    path: "/error-handling",
                     component: defer(
-                      withMeta("/learn/ssr/with-loaders", <LearnSsrWithLoadersPage />),
+                      withMeta("/learn/error-handling", <LearnErrorHandlingPage />),
                       {
-                        name: "LearnSsrWithLoadersPage",
+                        name: "LearnErrorHandlingPage",
                       },
                     ),
+                  }),
+                  route({
+                    path: "/transitions",
+                    component: defer(withMeta("/learn/transitions", <LearnTransitionsPage />), {
+                      name: "LearnTransitionsPage",
+                    }),
+                  }),
+                  route({
+                    path: "/loaders",
+                    component: defer(withMeta("/learn/loaders", <LearnLoadersPage />), {
+                      name: "LearnLoadersPage",
+                    }),
                   }),
                 ],
               }),
               route({
-                path: "/rsc",
-                component: <Outlet />,
+                path: "/api",
+                component: ApiReferencePage,
                 children: [
                   route({
                     path: "/",
-                    component: defer(withMeta("/learn/rsc", <LearnRscPage />), {
-                      name: "LearnRscPage",
+                    component: defer(withMeta("/api", <ApiReferenceIndexPage />), {
+                      name: "ApiReferenceIndexPage",
                     }),
                   }),
                   route({
-                    path: "/route-features",
-                    component: defer(
-                      withMeta("/learn/rsc/route-features", <LearnRouteDefinitionsPage />),
-                      {
-                        name: "LearnRouteDefinitionsPage",
-                      },
-                    ),
+                    path: "/components",
+                    component: defer(withMeta("/api/components", <ApiComponentsPage />), {
+                      name: "ApiComponentsPage",
+                    }),
+                  }),
+                  route({
+                    path: "/hooks",
+                    component: defer(withMeta("/api/hooks", <ApiHooksPage />), {
+                      name: "ApiHooksPage",
+                    }),
+                  }),
+                  route({
+                    path: "/utilities",
+                    component: defer(withMeta("/api/utilities", <ApiUtilitiesPage />), {
+                      name: "ApiUtilitiesPage",
+                    }),
+                  }),
+                  route({
+                    path: "/types",
+                    component: defer(withMeta("/api/types", <ApiTypesPage />), {
+                      name: "ApiTypesPage",
+                    }),
                   }),
                 ],
               }),
               route({
-                path: "/actions",
-                component: defer(withMeta("/learn/actions", <LearnActionsPage />), {
-                  name: "LearnActionsPage",
-                }),
+                path: "/examples",
+                component: defer(withMeta("/examples", <ExamplesPage />), { name: "ExamplesPage" }),
               }),
               route({
-                path: "/error-handling",
-                component: defer(withMeta("/learn/error-handling", <LearnErrorHandlingPage />), {
-                  name: "LearnErrorHandlingPage",
-                }),
-              }),
-              route({
-                path: "/transitions",
-                component: defer(withMeta("/learn/transitions", <LearnTransitionsPage />), {
-                  name: "LearnTransitionsPage",
-                }),
-              }),
-              route({
-                path: "/loaders",
-                component: defer(withMeta("/learn/loaders", <LearnLoadersPage />), {
-                  name: "LearnLoadersPage",
-                }),
+                path: "/faq",
+                component: defer(withMeta("/faq", <FaqPage />), { name: "FaqPage" }),
               }),
             ],
-          }),
-          route({
-            path: "/api",
-            component: ApiReferencePage,
-            children: [
-              route({
-                path: "/",
-                component: defer(withMeta("/api", <ApiReferenceIndexPage />), {
-                  name: "ApiReferenceIndexPage",
-                }),
-              }),
-              route({
-                path: "/components",
-                component: defer(withMeta("/api/components", <ApiComponentsPage />), {
-                  name: "ApiComponentsPage",
-                }),
-              }),
-              route({
-                path: "/hooks",
-                component: defer(withMeta("/api/hooks", <ApiHooksPage />), {
-                  name: "ApiHooksPage",
-                }),
-              }),
-              route({
-                path: "/utilities",
-                component: defer(withMeta("/api/utilities", <ApiUtilitiesPage />), {
-                  name: "ApiUtilitiesPage",
-                }),
-              }),
-              route({
-                path: "/types",
-                component: defer(withMeta("/api/types", <ApiTypesPage />), {
-                  name: "ApiTypesPage",
-                }),
-              }),
-            ],
-          }),
-          route({
-            path: "/examples",
-            component: defer(withMeta("/examples", <ExamplesPage />), { name: "ExamplesPage" }),
-          }),
-          route({
-            path: "/faq",
-            component: defer(withMeta("/faq", <FaqPage />), { name: "FaqPage" }),
           }),
           route({
             path: "/*",

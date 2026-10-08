@@ -27,113 +27,115 @@ export function ApiComponentsPage() {
   }}
 />`}</CodeBlock>
         <h4>Props</h4>
-        <table className="props-table">
-          <thead>
-            <tr>
-              <th>Prop</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <code>routes</code>
-              </td>
-              <td>
-                <code>RouteDefinition[]</code>
-              </td>
-              <td>Array of route definitions</td>
-            </tr>
-            <tr>
-              <td>
-                <code>onNavigate</code>
-              </td>
-              <td>
-                <code>OnNavigateCallback</code>
-              </td>
-              <td>
-                Callback fired before navigation is intercepted. Receives the NavigateEvent and an
-                info object with matched routes and whether the router will intercept the
-                navigation.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>fallback</code>
-              </td>
-              <td>
-                <code>{'"none" | "static"'}</code>
-              </td>
-              <td>
-                Fallback mode when Navigation API is unavailable. <code>"none"</code> (default)
-                renders nothing; <code>"static"</code> renders matched routes using{" "}
-                <code>window.location</code> without navigation interception (MPA behavior).
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>trailingSlash</code>
-              </td>
-              <td>
-                <code>{'"ignore" | "strict"'}</code>
-              </td>
-              <td>
-                How trailing slashes are treated during route matching. <code>"ignore"</code>{" "}
-                (default) ignores a single trailing slash on the pathname or on route{" "}
-                <code>path</code> patterns, so <code>/users/</code> matches{" "}
-                <code>path: "/users"</code>; the URL itself is never rewritten.{" "}
-                <code>"strict"</code> requires pathnames to match patterns exactly.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>ssr</code>
-              </td>
-              <td>
-                <code>SSRConfig</code>
-              </td>
-              <td>
-                SSR configuration for route matching during server-side rendering. Accepts an object
-                with <code>path</code> (the pathname to match against) and an optional{" "}
-                <code>runLoaders</code> boolean (defaults to <code>false</code>
-                ). When <code>runLoaders</code> is <code>false</code>, routes with loaders are
-                skipped during SSR. Once the client hydrates, the real URL from the Navigation API
-                takes over. See the <a href="/learn/ssr">SSR guide</a> for details.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>transitionTypes</code>
-              </td>
-              <td>
-                <code>GetTransitionTypes</code>
-              </td>
-              <td>
-                Function returning the React transition types to attach to each navigation via{" "}
-                <code>addTransitionType</code> (React 19.3+). Receives the destination{" "}
-                <code>url</code> and <code>navigationType</code>; the returned types replace the
-                default <code>["navigation"]</code>. See the{" "}
-                <a href="/learn/transitions">Transitions guide</a> for details.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>features</code>
-              </td>
-              <td>
-                <code>RouterFeatures</code>
-              </td>
-              <td>
-                Opt-in feature flags that change the Router's behavior. Currently supports{" "}
-                <code>pathlessSSROutletDeferral</code>, which uses React's <code>browser()</code>{" "}
-                API (React 19.3+) to defer unmatched outlet content to the browser during pathless
-                SSR (this will become the default behavior in the next major version). See the{" "}
-                <a href="/learn/ssr">SSR guide</a> for details.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="table-scroll">
+          <table className="props-table">
+            <thead>
+              <tr>
+                <th>Prop</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <code>routes</code>
+                </td>
+                <td>
+                  <code>RouteDefinition[]</code>
+                </td>
+                <td>Array of route definitions</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>onNavigate</code>
+                </td>
+                <td>
+                  <code>OnNavigateCallback</code>
+                </td>
+                <td>
+                  Callback fired before navigation is intercepted. Receives the NavigateEvent and an
+                  info object with matched routes and whether the router will intercept the
+                  navigation.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>fallback</code>
+                </td>
+                <td>
+                  <code>{'"none" | "static"'}</code>
+                </td>
+                <td>
+                  Fallback mode when Navigation API is unavailable. <code>"none"</code> (default)
+                  renders nothing; <code>"static"</code> renders matched routes using{" "}
+                  <code>window.location</code> without navigation interception (MPA behavior).
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>trailingSlash</code>
+                </td>
+                <td>
+                  <code>{'"ignore" | "strict"'}</code>
+                </td>
+                <td>
+                  How trailing slashes are treated during route matching. <code>"ignore"</code>{" "}
+                  (default) ignores a single trailing slash on the pathname or on route{" "}
+                  <code>path</code> patterns, so <code>/users/</code> matches{" "}
+                  <code>path: "/users"</code>; the URL itself is never rewritten.{" "}
+                  <code>"strict"</code> requires pathnames to match patterns exactly.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>ssr</code>
+                </td>
+                <td>
+                  <code>SSRConfig</code>
+                </td>
+                <td>
+                  SSR configuration for route matching during server-side rendering. Accepts an
+                  object with <code>path</code> (the pathname to match against) and an optional{" "}
+                  <code>runLoaders</code> boolean (defaults to <code>false</code>
+                  ). When <code>runLoaders</code> is <code>false</code>, routes with loaders are
+                  skipped during SSR. Once the client hydrates, the real URL from the Navigation API
+                  takes over. See the <a href="/learn/ssr">SSR guide</a> for details.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>transitionTypes</code>
+                </td>
+                <td>
+                  <code>GetTransitionTypes</code>
+                </td>
+                <td>
+                  Function returning the React transition types to attach to each navigation via{" "}
+                  <code>addTransitionType</code> (React 19.3+). Receives the destination{" "}
+                  <code>url</code> and <code>navigationType</code>; the returned types replace the
+                  default <code>["navigation"]</code>. See the{" "}
+                  <a href="/learn/transitions">Transitions guide</a> for details.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>features</code>
+                </td>
+                <td>
+                  <code>RouterFeatures</code>
+                </td>
+                <td>
+                  Opt-in feature flags that change the Router's behavior. Currently supports{" "}
+                  <code>pathlessSSROutletDeferral</code>, which uses React's <code>browser()</code>{" "}
+                  API (React 19.3+) to defer unmatched outlet content to the browser during pathless
+                  SSR (this will become the default behavior in the next major version). See the{" "}
+                  <a href="/learn/ssr">SSR guide</a> for details.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </article>
 
       <article className="api-item">

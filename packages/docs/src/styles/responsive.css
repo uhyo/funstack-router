@@ -1,4 +1,14 @@
 /* Responsive */
+@media (max-width: 1024px) {
+  .docs-layout {
+    display: block;
+  }
+
+  .docs-sidebar {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .header-content {
     padding: 0 16px;
@@ -23,6 +33,16 @@
     background: var(--color-bg);
     border-bottom: 1px solid var(--color-border);
     padding: 8px 16px 16px;
+    max-height: calc(100dvh - var(--header-height));
+    overflow-y: auto;
+  }
+
+  .mobile-nav .docs-nav-section {
+    margin-top: 16px;
+  }
+
+  .mobile-nav .docs-nav-link {
+    padding: 8px 16px;
   }
 
   .mobile-nav-link {
