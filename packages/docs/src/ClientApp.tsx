@@ -6,7 +6,7 @@ import "./styles.css";
 
 export function ClientApp({ routes, ssrPath }: { routes: RouteDefinition[]; ssrPath?: string }) {
   // Auto scroll to top - this should be handled by the browser per spec,
-  // but Safari and older versions of Chrome do not follow the spec (Chrome 153+ does).
+  // but Safari and older versions of Chrome do not follow the spec (Chrome 149+ does).
   useEffect(() => {
     const navigation = window.navigation;
     if (!navigation) {

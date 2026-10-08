@@ -14,9 +14,9 @@ export function FaqPage() {
         <h2>Browser doesn't scroll to top after navigation</h2>
         <p>
           According to the Navigation API specification, the browser should automatically scroll to
-          the top of the page after a same-document navigation. Recent versions of Chrome (153 and
-          later) follow this part of the spec, but Safari and older versions of Chrome (such as
-          Chrome 141) keep the previous scroll position instead.
+          the top of the page after a same-document navigation. Chrome follows this part of the spec
+          since version 149, but Safari and Chrome 148 and earlier keep the previous scroll position
+          instead.
         </p>
         <p>
           As a workaround, you can listen to the <code>navigatesuccess</code> event and scroll to
