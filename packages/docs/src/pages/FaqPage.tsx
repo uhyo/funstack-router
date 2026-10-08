@@ -14,12 +14,14 @@ export function FaqPage() {
         <h2>Browser doesn't scroll to top after navigation</h2>
         <p>
           According to the Navigation API specification, the browser should automatically scroll to
-          the top of the page after a same-document navigation. However, as of now, Chrome and
-          Safari do not follow this part of the spec.
+          the top of the page after a same-document navigation. Chrome follows this part of the spec
+          since version 149, but Safari and Chrome 148 and earlier keep the previous scroll position
+          instead.
         </p>
         <p>
           As a workaround, you can listen to the <code>navigatesuccess</code> event and scroll to
-          the top manually:
+          the top manually. This is harmless in browsers that already follow the spec, since the
+          page is already at the top:
         </p>
         <CodeBlock language="tsx">{`import { useEffect } from "react";
 
