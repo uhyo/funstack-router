@@ -109,7 +109,7 @@ export type OnNavigateInfo = {
 export type NavigationType = "push" | "replace" | "reload" | "traverse";
 
 /**
- * Context passed to an `experimentalTransitionTypes` callback.
+ * Context passed to a `transitionTypes` callback.
  */
 export type TransitionTypeContext = {
   /** URL of the new navigation entry. */
@@ -122,7 +122,7 @@ export type TransitionTypeContext = {
  * Returns the React transition types to associate with a navigation entry
  * change. Called inside `startTransition` for each navigation; the return
  * value is passed to React's `addTransitionType`. Requires a React build
- * that exports `addTransitionType` (currently React Canary).
+ * that exports `addTransitionType` (React 19.3 or later).
  */
 export type GetTransitionTypes = (context: TransitionTypeContext) => readonly string[];
 

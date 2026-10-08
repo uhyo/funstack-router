@@ -111,19 +111,21 @@ export type RouterProps = {
    */
   trailingSlash?: TrailingSlashMode;
   /**
-   * **Experimental.** Function returning the React transition types to attach
-   * to entry-change transitions via `addTransitionType`. Called inside
-   * `startTransition` for each navigation; the returned types replace the
-   * default `["navigation"]`.
+   * Function returning the React transition types to attach to entry-change
+   * transitions via `addTransitionType`. Called inside `startTransition` for
+   * each navigation; the returned types replace the default `["navigation"]`.
    *
-   * Requires a React build that exports `addTransitionType` (currently React
-   * Canary). On builds that don't expose the API, the function is still
+   * Requires a React build that exports `addTransitionType` (React 19.3 or
+   * later). On builds that don't expose the API, the function is still
    * invoked but the types are silently discarded.
    *
-   * The `experimental` prefix will be dropped once `addTransitionType`
-   * becomes stable in React.
-   *
    * @default () => ["navigation"]
+   */
+  transitionTypes?: GetTransitionTypes;
+  /**
+   * @deprecated Use {@link RouterProps.transitionTypes} instead. This alias
+   * will be removed in the next major version. When both are given,
+   * `transitionTypes` takes precedence.
    */
   experimentalTransitionTypes?: GetTransitionTypes;
   /**
@@ -170,6 +172,7 @@ export function Router({
   fallback = "none",
   ssr,
   trailingSlash,
+  transitionTypes,
   experimentalTransitionTypes,
   features,
 }: RouterProps): ReactNode {
@@ -230,10 +233,11 @@ export function Router({
 
   // Resolve transition types for the current navigation. Wrapped in
   // useEffectEvent so the subscription effect doesn't re-run when the
-  // `experimentalTransitionTypes` prop identity changes.
-  const getTransitionTypes = useEffectEvent((context: TransitionTypeContext): readonly string[] =>
-    experimentalTransitionTypes ? experimentalTransitionTypes(context) : ["navigation"],
-  );
+  // `transitionTypes` prop identity changes.
+  const getTransitionTypes = useEffectEvent((context: TransitionTypeContext): readonly string[] => {
+    const getTypes = transitionTypes ?? experimentalTransitionTypes;
+    return getTypes ? getTypes(context) : ["navigation"];
+  });
 
   // Subscribe to navigation changes (conditionally wrapped in transition)
   useEffect(() => {

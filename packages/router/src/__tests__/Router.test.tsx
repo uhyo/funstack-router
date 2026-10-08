@@ -295,7 +295,7 @@ describe("Router", () => {
     });
   });
 
-  describe("experimentalTransitionTypes", () => {
+  describe("transitionTypes", () => {
     let addTransitionTypeSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
@@ -324,8 +324,30 @@ describe("Router", () => {
       expect(addTransitionTypeSpy).toHaveBeenCalledWith("navigation");
     });
 
-    it("uses the returned types when experimentalTransitionTypes is provided", () => {
+    it("uses the returned types when transitionTypes is provided", () => {
       const getTypes: GetTransitionTypes = vi.fn(() => ["page", "fade"]);
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(<Router routes={routes} transitionTypes={getTypes} />);
+
+      addTransitionTypeSpy.mockClear();
+
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/about");
+      });
+
+      expect(addTransitionTypeSpy).toHaveBeenCalledTimes(2);
+      expect(addTransitionTypeSpy).toHaveBeenNthCalledWith(1, "page");
+      expect(addTransitionTypeSpy).toHaveBeenNthCalledWith(2, "fade");
+      expect(addTransitionTypeSpy).not.toHaveBeenCalledWith("navigation");
+    });
+
+    it("supports the deprecated experimentalTransitionTypes alias", () => {
+      const getTypes: GetTransitionTypes = () => ["legacy"];
 
       const routes: RouteDefinition[] = [
         { path: "/", component: () => <div>Home</div> },
@@ -340,10 +362,36 @@ describe("Router", () => {
         mockNavigation.__simulateNavigation("http://localhost/about");
       });
 
-      expect(addTransitionTypeSpy).toHaveBeenCalledTimes(2);
-      expect(addTransitionTypeSpy).toHaveBeenNthCalledWith(1, "page");
-      expect(addTransitionTypeSpy).toHaveBeenNthCalledWith(2, "fade");
-      expect(addTransitionTypeSpy).not.toHaveBeenCalledWith("navigation");
+      expect(addTransitionTypeSpy).toHaveBeenCalledTimes(1);
+      expect(addTransitionTypeSpy).toHaveBeenCalledWith("legacy");
+    });
+
+    it("prefers transitionTypes over experimentalTransitionTypes", () => {
+      const getTypes: GetTransitionTypes = () => ["new"];
+      const getLegacyTypes: GetTransitionTypes = vi.fn(() => ["legacy"]);
+
+      const routes: RouteDefinition[] = [
+        { path: "/", component: () => <div>Home</div> },
+        { path: "/about", component: () => <div>About</div> },
+      ];
+
+      render(
+        <Router
+          routes={routes}
+          transitionTypes={getTypes}
+          experimentalTransitionTypes={getLegacyTypes}
+        />,
+      );
+
+      addTransitionTypeSpy.mockClear();
+
+      act(() => {
+        mockNavigation.__simulateNavigation("http://localhost/about");
+      });
+
+      expect(addTransitionTypeSpy).toHaveBeenCalledTimes(1);
+      expect(addTransitionTypeSpy).toHaveBeenCalledWith("new");
+      expect(getLegacyTypes).not.toHaveBeenCalled();
     });
 
     it("passes the new URL and navigationType to the callback", () => {
@@ -358,7 +406,7 @@ describe("Router", () => {
         { path: "/about", component: () => <div>About</div> },
       ];
 
-      render(<Router routes={routes} experimentalTransitionTypes={getTypes} />);
+      render(<Router routes={routes} transitionTypes={getTypes} />);
 
       // Push
       act(() => {

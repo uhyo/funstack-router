@@ -64,7 +64,7 @@ function UserDetail({ data }: { data: Promise<User> }) {
 
       <section>
         <h3>
-          Tagging Navigations with <code>experimentalTransitionTypes</code>
+          Tagging Navigations with <code>transitionTypes</code>
         </h3>
         <p>
           React's{" "}
@@ -77,15 +77,14 @@ function UserDetail({ data }: { data: Promise<User> }) {
           <code>"navigation"</code> by default.
         </p>
         <p>
-          You can replace the default by passing an <code>experimentalTransitionTypes</code>{" "}
-          function to <code>{"<Router>"}</code>. The function receives the destination{" "}
-          <code>url</code> and the underlying <code>navigationType</code> (one of <code>push</code>,{" "}
-          <code>replace</code>, <code>reload</code>, <code>traverse</code>) and returns an array of
-          transition types:
+          You can replace the default by passing a <code>transitionTypes</code> function to{" "}
+          <code>{"<Router>"}</code>. The function receives the destination <code>url</code> and the
+          underlying <code>navigationType</code> (one of <code>push</code>, <code>replace</code>,{" "}
+          <code>reload</code>, <code>traverse</code>) and returns an array of transition types:
         </p>
         <CodeBlock language="tsx">{`<Router
   routes={routes}
-  experimentalTransitionTypes={({ navigationType, url }) => [
+  transitionTypes={({ navigationType, url }) => [
     "navigation",
     \`navigation-\${navigationType}\`,
     url.pathname.startsWith("/admin") ? "admin" : "public",
@@ -95,14 +94,14 @@ function UserDetail({ data }: { data: Promise<User> }) {
           The returned types <strong>replace</strong> the default — include{" "}
           <code>"navigation"</code> yourself if you want it.
         </p>
-        <div className="callout callout-warning">
-          <strong>React Canary required.</strong> At the time of writing,{" "}
-          <code>addTransitionType</code> is only available in React Canary (exported as{" "}
-          <code>unstable_addTransitionType</code>). On stable React, the prop is still invoked but
-          the returned types are silently discarded. The prop is named with an{" "}
-          <code>experimental</code> prefix to reflect this; it will be renamed once{" "}
-          <code>addTransitionType</code> becomes stable in React.
-        </div>
+        <p>
+          <code>addTransitionType</code> is available in React 19.3 or later. On older React
+          versions, the function is still invoked but the returned types are silently discarded.
+        </p>
+        <p>
+          The prop was previously named <code>experimentalTransitionTypes</code>. The old name is
+          still accepted as a deprecated alias and will be removed in the next major version.
+        </p>
       </section>
 
       <section>
