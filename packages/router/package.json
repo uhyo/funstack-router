@@ -36,6 +36,7 @@
   "scripts": {
     "build": "tsdown",
     "build:docs": "node --experimental-strip-types scripts/generate-ai-docs.ts",
+    "prepack": "cp ../../README.md ../../LICENSE .",
     "dev": "tsdown --watch",
     "test": "vitest",
     "test:run": "vitest run",
