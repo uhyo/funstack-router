@@ -1,13 +1,7 @@
 "use client";
 
 import { Outlet, useLocation } from "@funstack/router";
-
-const apiNavItems = [
-  { path: "/api/components", label: "Components" },
-  { path: "/api/hooks", label: "Hooks" },
-  { path: "/api/utilities", label: "Utilities" },
-  { path: "/api/types", label: "Types" },
-];
+import { apiNavItems } from "../navigation.js";
 
 export function ApiReferencePage() {
   const location = useLocation();

@@ -2,6 +2,8 @@
 
 import { useLocation } from "@funstack/router";
 import { useState } from "react";
+import { GITHUB_URL } from "../navigation.js";
+import { DocsNav } from "./DocsNav.js";
 
 const navItems = [
   { path: "/", label: "Home" },
@@ -51,34 +53,28 @@ export function Header() {
             </a>
           ))}
         </nav>
-        <a
-          href="https://github.com/uhyo/funstack-router"
-          className="github-link"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a href={GITHUB_URL} className="github-link" target="_blank" rel="noopener noreferrer">
           GitHub
         </a>
         <button
           className="hamburger"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle navigation menu"
+          aria-expanded={isMenuOpen}
         >
           {isMenuOpen ? "✕" : "☰"}
         </button>
       </div>
       {isMenuOpen && (
-        <nav className="mobile-nav">
-          {navItems.map((item) => (
-            <a
-              key={item.path}
-              href={item.path}
-              className={`mobile-nav-link ${isActive(item.path) ? "active" : ""}`}
-              onClick={closeMenu}
-            >
-              {item.label}
-            </a>
-          ))}
+        <nav className="mobile-nav" aria-label="Site">
+          <a
+            href="/"
+            className={`mobile-nav-link ${isActive("/") ? "active" : ""}`}
+            onClick={closeMenu}
+          >
+            Home
+          </a>
+          <DocsNav onNavigate={closeMenu} />
         </nav>
       )}
     </header>
