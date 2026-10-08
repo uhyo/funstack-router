@@ -64,10 +64,15 @@
 }
 
 /* Props Table */
+/* Wide tables scroll within this container instead of widening the page */
+.table-scroll {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
 .props-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 16px 0;
 }
 
 .props-table th,
@@ -131,6 +136,7 @@
 }
 
 .api-item h3 code {
+  overflow-wrap: anywhere;
   font-size: 1.1rem;
   background: var(--color-bg-secondary);
   padding: 4px 12px;

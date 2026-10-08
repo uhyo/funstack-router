@@ -53,100 +53,102 @@ const myRoute = route({
   ],
 });`}</CodeBlock>
         <h4>Options</h4>
-        <table className="props-table">
-          <thead>
-            <tr>
-              <th>Option</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <code>path</code>
-              </td>
-              <td>
-                <code>string</code> (optional)
-              </td>
-              <td>
-                URL path pattern (supports <code>:param</code> syntax). If omitted, creates a
-                pathless route that always matches and consumes no pathname. Useful for layout
-                wrappers.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>component</code>
-              </td>
-              <td>
-                <code>ComponentType</code>
-              </td>
-              <td>
-                React component to render. Receives <code>params</code> prop (and <code>data</code>{" "}
-                prop if loader is defined)
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>action</code>
-              </td>
-              <td>
-                <code>(args: ActionArgs) =&gt; T</code>
-              </td>
-              <td>
-                Function to handle form submissions (POST navigations). Receives a{" "}
-                <code>Request</code> with <code>FormData</code> body. The return value is passed to
-                the loader as <code>actionResult</code>.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>loader</code>
-              </td>
-              <td>
-                <code>(args: LoaderArgs) =&gt; T</code>
-              </td>
-              <td>Function to load data. May be synchronous or asynchronous</td>
-            </tr>
-            <tr>
-              <td>
-                <code>children</code>
-              </td>
-              <td>
-                <code>RouteDefinition[]</code>
-              </td>
-              <td>Nested child routes</td>
-            </tr>
-            <tr>
-              <td>
-                <code>exact</code>
-              </td>
-              <td>
-                <code>boolean</code>
-              </td>
-              <td>
-                Override default matching. <code>true</code> = exact match only, <code>false</code>{" "}
-                = prefix match. Defaults to <code>true</code> for leaf routes, <code>false</code>{" "}
-                for parent routes.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>requireChildren</code>
-              </td>
-              <td>
-                <code>boolean</code>
-              </td>
-              <td>
-                Whether a parent route requires a child to match. <code>true</code> (default) =
-                parent only matches if a child matches, <code>false</code> = parent can match alone
-                with <code>outlet</code> as <code>null</code>. Enables catch-all routes to work
-                intuitively.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="table-scroll">
+          <table className="props-table">
+            <thead>
+              <tr>
+                <th>Option</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <code>path</code>
+                </td>
+                <td>
+                  <code>string</code> (optional)
+                </td>
+                <td>
+                  URL path pattern (supports <code>:param</code> syntax). If omitted, creates a
+                  pathless route that always matches and consumes no pathname. Useful for layout
+                  wrappers.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>component</code>
+                </td>
+                <td>
+                  <code>ComponentType</code>
+                </td>
+                <td>
+                  React component to render. Receives <code>params</code> prop (and{" "}
+                  <code>data</code> prop if loader is defined)
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>action</code>
+                </td>
+                <td>
+                  <code>(args: ActionArgs) =&gt; T</code>
+                </td>
+                <td>
+                  Function to handle form submissions (POST navigations). Receives a{" "}
+                  <code>Request</code> with <code>FormData</code> body. The return value is passed
+                  to the loader as <code>actionResult</code>.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>loader</code>
+                </td>
+                <td>
+                  <code>(args: LoaderArgs) =&gt; T</code>
+                </td>
+                <td>Function to load data. May be synchronous or asynchronous</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>children</code>
+                </td>
+                <td>
+                  <code>RouteDefinition[]</code>
+                </td>
+                <td>Nested child routes</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>exact</code>
+                </td>
+                <td>
+                  <code>boolean</code>
+                </td>
+                <td>
+                  Override default matching. <code>true</code> = exact match only,{" "}
+                  <code>false</code> = prefix match. Defaults to <code>true</code> for leaf routes,{" "}
+                  <code>false</code> for parent routes.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>requireChildren</code>
+                </td>
+                <td>
+                  <code>boolean</code>
+                </td>
+                <td>
+                  Whether a parent route requires a child to match. <code>true</code> (default) =
+                  parent only matches if a child matches, <code>false</code> = parent can match
+                  alone with <code>outlet</code> as <code>null</code>. Enables catch-all routes to
+                  work intuitively.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </article>
 
       <article className="api-item">
@@ -283,26 +285,28 @@ hardReload();`}</CodeBlock>
 // Full page navigation — bypasses the router and all blockers
 hardNavigate("/other-page");`}</CodeBlock>
         <h4>Parameters</h4>
-        <table className="props-table">
-          <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <code>url</code>
-              </td>
-              <td>
-                <code>string</code>
-              </td>
-              <td>The URL to navigate to</td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="table-scroll">
+          <table className="props-table">
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <code>url</code>
+                </td>
+                <td>
+                  <code>string</code>
+                </td>
+                <td>The URL to navigate to</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </article>
 
       <article className="api-item">
