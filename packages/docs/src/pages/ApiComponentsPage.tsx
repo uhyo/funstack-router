@@ -6,7 +6,7 @@ export function ApiComponentsPage() {
     <div className="page docs-page api-page">
       <PageHead
         title="Components API"
-        description="API reference for FUNSTACK Router components, including Router and Outlet."
+        description="API reference for FUNSTACK Router components, including Router, StaticRouter, and Outlet."
       />
       <h1>Components</h1>
       <p className="page-intro">Core components for building routing in your React application.</p>
@@ -131,6 +131,92 @@ export function ApiComponentsPage() {
                   API (React 19.3+) to defer unmatched outlet content to the browser during pathless
                   SSR (this will become the default behavior in the next major version). See the{" "}
                   <a href="/learn/ssr">SSR guide</a> for details.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article className="api-item">
+        <h3>
+          <code>{"<StaticRouter>"}</code>
+        </h3>
+        <p>
+          A router that only renders the routes matching the current URL. Unlike{" "}
+          <code>{"<Router>"}</code>, it does not subscribe to or intercept navigations: links and
+          form submissions cause regular full page loads. Use it for multi-page applications (MPAs)
+          where each page is a separate document but still uses route definitions to decide what to
+          render. It does not depend on the Navigation API, so it works in all browsers.
+        </p>
+        <CodeBlock language="tsx">{`import { StaticRouter } from "@funstack/router";
+
+// Client: matches routes against window.location
+<StaticRouter routes={routes} />
+
+// Server: matches routes against the given path
+<StaticRouter routes={routes} ssr={{ path: "/about", runLoaders: true }} />`}</CodeBlock>
+        <p>
+          Hooks that read the location (<code>useLocation</code>, <code>useSearchParams</code>,{" "}
+          <code>useRouteParams</code>, <code>useRouteData</code>, etc.) work as usual. Features that
+          rely on client-side navigation are inert: <code>useBlocker</code> never blocks, route
+          state is always <code>undefined</code>, <code>useIsPending</code> is always{" "}
+          <code>false</code>, and route actions are not intercepted. Setters that would navigate
+          (such as the one from <code>useSearchParams</code>) log a warning and do nothing.
+        </p>
+        <h4>Props</h4>
+        <div className="table-scroll">
+          <table className="props-table">
+            <thead>
+              <tr>
+                <th>Prop</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <code>routes</code>
+                </td>
+                <td>
+                  <code>RouteDefinition[]</code>
+                </td>
+                <td>Array of route definitions</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>ssr</code>
+                </td>
+                <td>
+                  <code>SSRConfig</code>
+                </td>
+                <td>
+                  Same as <code>{"<Router>"}</code>'s <code>ssr</code> prop. Used only during SSR
+                  and hydration; afterwards, the page URL from <code>window.location</code> takes
+                  over.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>trailingSlash</code>
+                </td>
+                <td>
+                  <code>{'"ignore" | "strict"'}</code>
+                </td>
+                <td>
+                  Same as <code>{"<Router>"}</code>'s <code>trailingSlash</code> prop.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <code>features</code>
+                </td>
+                <td>
+                  <code>RouterFeatures</code>
+                </td>
+                <td>
+                  Same as <code>{"<Router>"}</code>'s <code>features</code> prop.
                 </td>
               </tr>
             </tbody>

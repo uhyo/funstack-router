@@ -188,6 +188,14 @@ function AppShell() {
 // Static fallback: renders routes using window.location
 // when Navigation API is unavailable
 <Router routes={routes} fallback="static" />`}</CodeBlock>
+        <p>
+          If you are building a multi-page application and never want client-side navigation, use{" "}
+          <a href="/api/components">
+            <code>{"<StaticRouter>"}</code>
+          </a>{" "}
+          instead. It always behaves like static fallback mode, whether or not the Navigation API is
+          available.
+        </p>
       </section>
 
       <section>
