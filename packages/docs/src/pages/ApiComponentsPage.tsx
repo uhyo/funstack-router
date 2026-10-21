@@ -6,7 +6,7 @@ export function ApiComponentsPage() {
     <div className="page docs-page api-page">
       <PageHead
         title="Components API"
-        description="API reference for FUNSTACK Router components, including Router, StaticRouter, and Outlet."
+        description="API reference for FUNSTACK Router components, including Router, RouteDisplay, and Outlet."
       />
       <h1>Components</h1>
       <p className="page-intro">Core components for building routing in your React application.</p>
@@ -140,29 +140,36 @@ export function ApiComponentsPage() {
 
       <article className="api-item">
         <h3>
-          <code>{"<StaticRouter>"}</code>
+          <code>{"<RouteDisplay>"}</code>
         </h3>
         <p>
-          A router that only renders the routes matching the current URL. Unlike{" "}
-          <code>{"<Router>"}</code>, it does not subscribe to or intercept navigations: links and
-          form submissions cause regular full page loads. Use it for multi-page applications (MPAs)
-          where each page is a separate document but still uses route definitions to decide what to
-          render. It does not depend on the Navigation API, so it works in all browsers.
+          Renders the routes matching the current URL, without client-side routing. Unlike{" "}
+          <code>{"<Router>"}</code>, it does not intercept navigations: links and form submissions
+          cause regular full page loads. Use it for multi-page applications (MPAs) where each page
+          is a separate document but still uses route definitions to decide what to render. It works
+          in all browsers, with or without the Navigation API.
         </p>
-        <CodeBlock language="tsx">{`import { StaticRouter } from "@funstack/router";
+        <CodeBlock language="tsx">{`import { RouteDisplay } from "@funstack/router";
 
-// Client: matches routes against window.location
-<StaticRouter routes={routes} />
+// Client: matches routes against the current page URL
+<RouteDisplay routes={routes} />
 
 // Server: matches routes against the given path
-<StaticRouter routes={routes} ssr={{ path: "/about", runLoaders: true }} />`}</CodeBlock>
+<RouteDisplay routes={routes} ssr={{ path: "/about", runLoaders: true }} />`}</CodeBlock>
         <p>
           Hooks that read the location (<code>useLocation</code>, <code>useSearchParams</code>,{" "}
-          <code>useRouteParams</code>, <code>useRouteData</code>, etc.) work as usual. Features that
-          rely on client-side navigation are inert: <code>useBlocker</code> never blocks, route
-          state is always <code>undefined</code>, <code>useIsPending</code> is always{" "}
-          <code>false</code>, and route actions are not intercepted. Setters that would navigate
-          (such as the one from <code>useSearchParams</code>) log a warning and do nothing.
+          <code>useRouteParams</code>, <code>useRouteData</code>, etc.) work as usual. When the
+          Navigation API is available, the current entry's id, key and state are exposed, so route
+          state works too; without it, they are <code>null</code> / <code>undefined</code>.
+        </p>
+        <p>
+          Setters that navigate (such as the one from <code>useSearchParams</code>, or a route's{" "}
+          <code>setState</code>) perform a full page navigation. With the Navigation API, the new
+          entry keeps the given state; without it, the state is lost. <code>setStateSync</code>{" "}
+          updates the current entry's state in place without navigating (Navigation API only).
+          Features that depend on intercepting navigations are inert: <code>useBlocker</code> never
+          blocks, <code>useIsPending</code> is always <code>false</code>, and route actions are not
+          run (forms submit to the server).
         </p>
         <h4>Props</h4>
         <div className="table-scroll">

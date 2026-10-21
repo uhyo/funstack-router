@@ -1,16 +1,16 @@
-import { type ReactNode, useCallback, useMemo, useState, useSyncExternalStore } from "react";
+import { type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
 import { RouterContext, type RouterContextValue } from "../context/RouterContext.js";
 import { BlockerContext, createBlockerRegistry } from "../context/BlockerContext.js";
-import { type NavigateOptions, type TrailingSlashMode, internalRoutes } from "../types.js";
+import { type TrailingSlashMode, internalRoutes } from "../types.js";
 import { getBrowserFn } from "../core/browserBailout.js";
 import { matchRoutes } from "../core/matchRoutes.js";
 import { executeLoaders, createLoaderRequest } from "../core/loaderCache.js";
 import type { RouteDefinition } from "../route.js";
 import type { RouterFeatures, SSRConfig } from "../Router/index.js";
-import { noopSubscribe } from "../Router/ServerLocationSnapshot.js";
 import { RouteRenderer } from "../Router/RouteRenderer.js";
+import { createDisplayLocationSource } from "./locationSource.js";
 
-export type StaticRouterProps = {
+export type RouteDisplayProps = {
   routes: RouteDefinition[];
   /**
    * SSR configuration for the router.
@@ -37,32 +37,39 @@ export type StaticRouterProps = {
 };
 
 /**
- * Loader cache key used for every render of a StaticRouter. The URL never
- * changes during the lifetime of a StaticRouter, and the cache is scoped to
- * the instance, so a single key suffices. Using the same key for the
- * hydration render and the post-hydration render lets loader results from
- * hydration be reused instead of re-executed.
+ * Loader cache key used for every render of a RouteDisplay. The document
+ * (and thus the pathname, barring same-document URL changes made outside the
+ * router) doesn't change during the lifetime of a RouteDisplay, and the cache
+ * is scoped to the instance and keyed by params as well, so a single key
+ * suffices. Using the same key for the hydration render and the
+ * post-hydration render lets loader results from hydration be reused instead
+ * of re-executed, and fragment navigations and entry state updates don't
+ * re-run loaders.
  */
-const staticLoaderCacheKey = "__static__";
+const displayLoaderCacheKey = "__display__";
 
 const getServerSnapshot = () => null;
 
 /**
- * Router that only renders the routes matching the current URL.
+ * Renders the routes matching the current URL, without client-side routing.
  *
- * Unlike `Router`, it does not subscribe to or intercept navigations:
- * links and form submissions cause regular full page loads. This makes it
- * suitable for multi-page applications (MPAs), where each page is a separate
- * document but still uses route definitions to decide what to render.
+ * Unlike `Router`, it does not intercept navigations: links and form
+ * submissions cause regular full page loads, and navigations requested by
+ * hooks (e.g. the setter of `useSearchParams`) are performed as full page
+ * navigations. This makes it suitable for multi-page applications (MPAs),
+ * where each page is a separate document but still uses route definitions
+ * to decide what to render.
  *
- * It does not depend on the Navigation API, so it works in all browsers.
+ * When the Navigation API is available, the current entry's id, key and
+ * state are exposed (so route state works); otherwise, it falls back to
+ * `window.location` and works in all browsers.
  */
-export function StaticRouter({
+export function RouteDisplay({
   routes: inputRoutes,
   ssr,
   trailingSlash,
   features,
-}: StaticRouterProps): ReactNode {
+}: RouteDisplayProps): ReactNode {
   const routes = internalRoutes(inputRoutes);
 
   const pathlessSSROutletDeferral = features?.pathlessSSROutletDeferral ?? false;
@@ -78,14 +85,13 @@ export function StaticRouter({
     [pathlessSSROutletDeferral],
   );
 
-  // The page URL never changes without a full page load, so it is read once
-  // and cached for this instance.
-  const [getSnapshot] = useState(() => {
-    let cachedUrl: string | null = null;
-    return () => (cachedUrl ??= window.location.href);
-  });
-  // null during SSR/hydration; React re-renders with the real URL after hydration.
-  const clientUrl = useSyncExternalStore(noopSubscribe, getSnapshot, getServerSnapshot);
+  const [locationSource] = useState(createDisplayLocationSource);
+  // null during SSR/hydration; React re-renders with the real location after hydration.
+  const clientLocation = useSyncExternalStore(
+    locationSource.subscribe,
+    locationSource.getSnapshot,
+    getServerSnapshot,
+  );
 
   // useBlocker requires a registry. Blockers never fire because no
   // navigation is intercepted.
@@ -98,29 +104,18 @@ export function StaticRouter({
   // the same process (SSR requests, SSG pages) don't share them.
   const [instanceLoaderCache] = useState(() => new Map<string, unknown>());
 
-  const navigateAsync = useCallback(async (_to: string, _options?: NavigateOptions) => {
-    console.warn(
-      "FUNSTACK Router: navigation was requested inside a StaticRouter. " +
-        "StaticRouter does not perform client-side navigation; " +
-        "use regular links or a Router instead.",
-    );
-  }, []);
-
-  const updateCurrentEntryState = useCallback((_state: unknown) => {
-    // No-op: StaticRouter does not manage navigation entry state
-  }, []);
-
-  const url = useMemo(() => {
-    if (clientUrl !== null) {
-      return clientUrl;
-    }
-    if (ssr) {
-      const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
-      return new URL(ssr.path, origin).toString();
-    }
-    return null;
-  }, [clientUrl, ssr]);
-  const urlObject = useMemo(() => (url ? new URL(url) : null), [url]);
+  // Keyed by href so that state-only entry updates don't re-run matching.
+  const clientHref = clientLocation?.url.href ?? null;
+  const clientUrl = useMemo(() => (clientHref === null ? null : new URL(clientHref)), [clientHref]);
+  // Keyed by the path string so that an inline `ssr` object doesn't create a
+  // new URL (and re-run matching) on every render.
+  const ssrPath = ssr?.path;
+  const ssrUrl = useMemo(() => {
+    if (ssrPath === undefined) return null;
+    const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    return new URL(ssrPath, origin);
+  }, [ssrPath]);
+  const urlObject = clientUrl ?? ssrUrl;
 
   /**
    * Whether to run loaders. Loaders always run on the client; during SSR
@@ -147,7 +142,7 @@ export function StaticRouter({
 
     return executeLoaders(
       matched,
-      staticLoaderCacheKey,
+      displayLoaderCacheKey,
       createLoaderRequest(urlObject),
       idleSignal,
       undefined,
@@ -157,17 +152,17 @@ export function StaticRouter({
 
   const routerContextValue: RouterContextValue = useMemo(
     () => ({
-      locationState: undefined,
+      locationState: clientLocation?.state,
       locationInfo: undefined,
       url: urlObject,
-      entryId: null,
-      entryKey: null,
+      entryId: clientLocation?.entryId ?? null,
+      entryKey: clientLocation?.entryKey ?? null,
       isPending: false,
-      navigateAsync,
-      updateCurrentEntryState,
+      navigateAsync: locationSource.navigateAsync,
+      updateCurrentEntryState: locationSource.updateCurrentEntryState,
       features: resolvedFeatures,
     }),
-    [urlObject, navigateAsync, updateCurrentEntryState, resolvedFeatures],
+    [clientLocation, urlObject, locationSource, resolvedFeatures],
   );
 
   return useMemo(() => {

@@ -191,10 +191,10 @@ function AppShell() {
         <p>
           If you are building a multi-page application and never want client-side navigation, use{" "}
           <a href="/api/components">
-            <code>{"<StaticRouter>"}</code>
+            <code>{"<RouteDisplay>"}</code>
           </a>{" "}
-          instead. It always behaves like static fallback mode, whether or not the Navigation API is
-          available.
+          instead. It never intercepts navigations, whether or not the Navigation API is available,
+          and performs navigations requested by hooks as full page loads.
         </p>
       </section>
 
