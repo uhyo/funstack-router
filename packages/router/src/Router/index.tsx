@@ -1,15 +1,4 @@
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useEffectEvent,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  useTransition,
-} from "react";
-import type { LocationEntry } from "../core/RouterAdapter.js";
+import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useState } from "react";
 import { RouterContext, type RouterContextValue } from "../context/RouterContext.js";
 import { BlockerContext, createBlockerRegistry } from "../context/BlockerContext.js";
 import {
@@ -18,21 +7,15 @@ import {
   type OnNavigateCallback,
   type FallbackMode,
   type TrailingSlashMode,
-  type TransitionTypeContext,
   internalRoutes,
 } from "../types.js";
-import { addTransitionType } from "../core/addTransitionType.js";
 import { getBrowserFn } from "../core/browserBailout.js";
 import { matchRoutes } from "../core/matchRoutes.js";
 import { createAdapter } from "../core/createAdapter.js";
 import { executeLoaders, createLoaderRequest } from "../core/loaderCache.js";
 import type { RouteDefinition } from "../route.js";
-import {
-  ServerLocationSnapshot,
-  isServerSnapshot,
-  noopSubscribe,
-} from "./ServerLocationSnapshot.js";
 import { RouteRenderer } from "./RouteRenderer.js";
+import { useLocationEntry } from "./useLocationEntry.js";
 
 /**
  * SSR configuration for the router.
@@ -198,103 +181,10 @@ export function Router({
   // Create blocker registry once
   const [blockerRegistry] = useState(() => createBlockerRegistry());
 
-  // Hydration-aware initial value: null during SSR/hydration, real on client-only mount
-  const getSnapshot = useCallback(() => adapter.getSnapshot(), [adapter]);
-  const serverSnapshotCacheRef = useRef<ServerLocationSnapshot | null>(null);
-  const getServerSnapshot = useCallback(() => {
-    // During SSR/hydration, return special server snapshot object
-    // that captures the real snapshot at the time of first render.
-    // This allows us to detect hydration and sync to real snapshot on client.
-    return (serverSnapshotCacheRef.current ??= new ServerLocationSnapshot(adapter));
-  }, [adapter]);
-  const initialEntry = useSyncExternalStore<LocationEntry | null | ServerLocationSnapshot>(
-    noopSubscribe,
-    getSnapshot,
-    getServerSnapshot,
+  const { locationEntry, actualLocationEntry, isPending } = useLocationEntry(
+    adapter,
+    transitionTypes ?? experimentalTransitionTypes,
   );
-
-  const [isPending, startTransition] = useTransition();
-  const [locationEntryInternal, setLocationEntry] = useState<
-    LocationEntry | null | ServerLocationSnapshot
-  >(initialEntry);
-  const locationEntry = isServerSnapshot(locationEntryInternal) ? null : locationEntryInternal;
-
-  if (isServerSnapshot(locationEntryInternal) && !isServerSnapshot(initialEntry)) {
-    // On second hydrated render on client, sync state with real snapshot
-    // Rendering flow on hydration:
-    // 1. Hydrated Render 1: initialEntry = serverSnapshotSymbol, locationEntryInternal = serverSnapshotSymbol
-    // 2. Render 1 is committed
-    // 3. Hydrated Render 2: initialEntry = client snapshot, locationEntryInternal = serverSnapshotSymbol
-    // 4. This `if` block runs, updating state to client snapshot
-    // 5. Hydrated Render 2 (retry): initialEntry = client snapshot, locationEntryInternal = client snapshot
-    // 6. Render 2 is committed
-    setLocationEntry(initialEntry);
-  }
-
-  // Resolve transition types for the current navigation. Wrapped in
-  // useEffectEvent so the subscription effect doesn't re-run when the
-  // `transitionTypes` prop identity changes.
-  const getTransitionTypes = useEffectEvent((context: TransitionTypeContext): readonly string[] => {
-    const getTypes = transitionTypes ?? experimentalTransitionTypes;
-    return getTypes ? getTypes(context) : ["navigation"];
-  });
-
-  // Subscribe to navigation changes (conditionally wrapped in transition)
-  useEffect(() => {
-    return adapter.subscribe((change) => {
-      if (change.kind === "navigation") {
-        if (change.wait) {
-          // Intercepted form submission: the entry has committed but the
-          // action hasn't run yet. Rendering now would execute loaders
-          // without the action result, so wait (inside an async transition,
-          // keeping the old UI and isPending up) until the adapter has
-          // dispatched loaders with the action result.
-          const { wait, navigationType } = change;
-          // The entry is already committed, so the snapshot has the final
-          // URL. Read it now so transition types can be added synchronously
-          // inside the transition — addTransitionType is not supported
-          // after an await.
-          const committedSnapshot = adapter.getSnapshot();
-          startTransition(async () => {
-            if (committedSnapshot) {
-              const types = getTransitionTypes({
-                url: committedSnapshot.url,
-                navigationType,
-              });
-              for (const type of types) {
-                addTransitionType(type);
-              }
-            }
-            await wait;
-            // Updates after the first await are not part of the transition
-            // unless wrapped in a nested startTransition call.
-            startTransition(() => {
-              // Re-read the snapshot: a superseding navigation may have
-              // resolved the wait, in which case this renders the newest entry.
-              setLocationEntry(adapter.getSnapshot());
-            });
-          });
-          return;
-        }
-        const newSnapshot = adapter.getSnapshot();
-        startTransition(() => {
-          if (newSnapshot) {
-            const types = getTransitionTypes({
-              url: newSnapshot.url,
-              navigationType: change.navigationType,
-            });
-            for (const type of types) {
-              addTransitionType(type);
-            }
-          }
-          setLocationEntry(newSnapshot);
-        });
-      } else {
-        // State-only update: apply synchronously, no transition
-        setLocationEntry(adapter.getSnapshot());
-      }
-    });
-  }, [adapter, startTransition]);
 
   // Wrap in useEffectEvent so interception doesn't re-setup when routes,
   // onNavigate, or trailingSlash change
@@ -357,12 +247,7 @@ export function Router({
    * Key of location provided by the adapter, or null when no location entry
    * is available (SSR, or Navigation API unavailable with fallback="none").
    */
-  const realLocationKey =
-    locationEntry?.key ??
-    (isServerSnapshot(locationEntryInternal)
-      ? locationEntryInternal.actualLocationEntry?.key
-      : null) ??
-    null;
+  const realLocationKey = actualLocationEntry?.key ?? null;
   /**
    * Key of location. This is used as the cache key for loader data saved in navigation entry.
    */
@@ -424,18 +309,8 @@ export function Router({
 
   const locationState = locationEntry?.state;
   const locationInfo = locationEntry?.info;
-  const entryId =
-    locationEntry?.entryId ??
-    (isServerSnapshot(locationEntryInternal)
-      ? locationEntryInternal.actualLocationEntry?.entryId
-      : null) ??
-    null;
-  const entryKey =
-    locationEntry?.entryKey ??
-    (isServerSnapshot(locationEntryInternal)
-      ? locationEntryInternal.actualLocationEntry?.entryKey
-      : null) ??
-    null;
+  const entryId = actualLocationEntry?.entryId ?? null;
+  const entryKey = actualLocationEntry?.entryKey ?? null;
   const routerContextValue: RouterContextValue = useMemo(
     () => ({
       locationState,

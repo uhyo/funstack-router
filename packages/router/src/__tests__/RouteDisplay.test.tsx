@@ -9,6 +9,7 @@ import { useSearchParams } from "../hooks/useSearchParams.js";
 import { useBlocker } from "../hooks/useBlocker.js";
 import { route, routeState, type RouteComponentProps, type RouteDefinition } from "../route.js";
 import { setupNavigationMock, cleanupNavigationMock } from "./setup.js";
+import { clearLoaderCache } from "../core/loaderCache.js";
 
 const originalLocation = window.location;
 
@@ -35,6 +36,7 @@ type CountProps = RouteComponentProps<Record<string, never>, CountState>;
 describe("RouteDisplay", () => {
   beforeEach(() => {
     delete (globalThis as Record<string, unknown>).navigation;
+    clearLoaderCache();
   });
 
   afterEach(() => {
@@ -148,22 +150,6 @@ describe("RouteDisplay", () => {
     expect(loader).toHaveBeenCalledTimes(1);
   });
 
-  it("does not share loader results between instances", () => {
-    setLocation("http://localhost/a");
-    const loader = vi.fn(() => "data");
-    const routes = [
-      route({
-        path: "/a",
-        loader,
-        component: ({ data }: { data: string }) => <div>{data}</div>,
-      }),
-    ];
-
-    render(<RouteDisplay routes={routes} />).unmount();
-    render(<RouteDisplay routes={routes} />).unmount();
-    expect(loader).toHaveBeenCalledTimes(2);
-  });
-
   describe("with Navigation API", () => {
     it("does not intercept navigations", () => {
       const mockNavigation = setupNavigationMock("http://localhost/");
@@ -223,6 +209,43 @@ describe("RouteDisplay", () => {
         state: { __routeStates: [{ count: 1 }] },
       });
       expect(screen.getByText("Count: 1")).toBeInTheDocument();
+    });
+
+    it("follows same-document entry changes in a transition", async () => {
+      const mockNavigation = setupNavigationMock("http://localhost/");
+      function Page() {
+        return <div>Hash: {useLocation().hash}</div>;
+      }
+
+      render(<RouteDisplay routes={[{ path: "/", component: Page }]} />);
+      expect(screen.getByText("Hash:")).toBeInTheDocument();
+
+      await act(async () => {
+        mockNavigation.navigate("http://localhost/#section");
+      });
+      expect(screen.getByText("Hash: #section")).toBeInTheDocument();
+    });
+
+    it("keeps loader results across a same-URL replace from setState", async () => {
+      setupNavigationMock("http://localhost/");
+      const loader = vi.fn(() => "loaded");
+      function Page({ data, state, setState }: CountProps & { data: string }) {
+        return (
+          <button onClick={() => void setState({ count: (state?.count ?? 0) + 1 })}>
+            {data} {state?.count ?? 0}
+          </button>
+        );
+      }
+      const routes = [routeState<CountState>()({ path: "/", loader, component: Page })];
+
+      render(<RouteDisplay routes={routes} />);
+      expect(screen.getByText("loaded 0")).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(screen.getByText("loaded 0"));
+      });
+      expect(screen.getByText("loaded 1")).toBeInTheDocument();
+      expect(loader).toHaveBeenCalledTimes(1);
     });
 
     it("navigates via navigation.navigate from setters", async () => {
@@ -381,6 +404,8 @@ describe("RouteDisplay", () => {
       const container = document.createElement("div");
       container.innerHTML = renderToString(<RouteDisplay routes={routes} ssr={ssr} />);
       document.body.appendChild(container);
+      // The server renders in a separate process
+      clearLoaderCache();
       loader.mockClear();
 
       const onRecoverableError = vi.fn();

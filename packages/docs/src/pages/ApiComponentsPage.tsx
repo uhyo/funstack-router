@@ -158,9 +158,11 @@ export function ApiComponentsPage() {
 <RouteDisplay routes={routes} ssr={{ path: "/about", runLoaders: true }} />`}</CodeBlock>
         <p>
           Hooks that read the location (<code>useLocation</code>, <code>useSearchParams</code>,{" "}
-          <code>useRouteParams</code>, <code>useRouteData</code>, etc.) work as usual. When the
-          Navigation API is available, the current entry's id, key and state are exposed, so route
-          state works too; without it, they are <code>null</code> / <code>undefined</code>.
+          <code>useRouteParams</code>, <code>useRouteData</code>, etc.) work as usual. It follows
+          the current location the same way as <code>{"<Router>"}</code>: when the Navigation API is
+          available, the current entry's id, key and state are exposed (so route state works too),
+          and same-document entry changes such as fragment navigations are rendered in a transition.
+          Without the Navigation API, these values are <code>null</code> / <code>undefined</code>.
         </p>
         <p>
           Setters that navigate (such as the one from <code>useSearchParams</code>, or a route's{" "}
@@ -168,8 +170,7 @@ export function ApiComponentsPage() {
           entry keeps the given state; without it, the state is lost. <code>setStateSync</code>{" "}
           updates the current entry's state in place without navigating (Navigation API only).
           Features that depend on intercepting navigations are inert: <code>useBlocker</code> never
-          blocks, <code>useIsPending</code> is always <code>false</code>, and route actions are not
-          run (forms submit to the server).
+          blocks, and route actions are not run (forms submit to the server).
         </p>
         <h4>Props</h4>
         <div className="table-scroll">

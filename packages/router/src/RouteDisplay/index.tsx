@@ -1,14 +1,15 @@
-import { type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { RouterContext, type RouterContextValue } from "../context/RouterContext.js";
 import { BlockerContext, createBlockerRegistry } from "../context/BlockerContext.js";
 import { type TrailingSlashMode, internalRoutes } from "../types.js";
 import { getBrowserFn } from "../core/browserBailout.js";
 import { matchRoutes } from "../core/matchRoutes.js";
+import { createDisplayAdapter } from "../core/createAdapter.js";
 import { executeLoaders, createLoaderRequest } from "../core/loaderCache.js";
 import type { RouteDefinition } from "../route.js";
 import type { RouterFeatures, SSRConfig } from "../Router/index.js";
 import { RouteRenderer } from "../Router/RouteRenderer.js";
-import { createDisplayLocationSource } from "./locationSource.js";
+import { useLocationEntry } from "../Router/useLocationEntry.js";
 
 export type RouteDisplayProps = {
   routes: RouteDefinition[];
@@ -37,20 +38,6 @@ export type RouteDisplayProps = {
 };
 
 /**
- * Loader cache key used for every render of a RouteDisplay. The document
- * (and thus the pathname, barring same-document URL changes made outside the
- * router) doesn't change during the lifetime of a RouteDisplay, and the cache
- * is scoped to the instance and keyed by params as well, so a single key
- * suffices. Using the same key for the hydration render and the
- * post-hydration render lets loader results from hydration be reused instead
- * of re-executed, and fragment navigations and entry state updates don't
- * re-run loaders.
- */
-const displayLoaderCacheKey = "__display__";
-
-const getServerSnapshot = () => null;
-
-/**
  * Renders the routes matching the current URL, without client-side routing.
  *
  * Unlike `Router`, it does not intercept navigations: links and form
@@ -60,9 +47,11 @@ const getServerSnapshot = () => null;
  * where each page is a separate document but still uses route definitions
  * to decide what to render.
  *
- * When the Navigation API is available, the current entry's id, key and
- * state are exposed (so route state works); otherwise, it falls back to
- * `window.location` and works in all browsers.
+ * It follows the current location the same way as `Router`: when the
+ * Navigation API is available, it reacts to current entry changes (e.g.
+ * entry state updates and fragment navigations) and exposes the entry's id,
+ * key and state; otherwise, it reads `window.location` and works in all
+ * browsers.
  */
 export function RouteDisplay({
   routes: inputRoutes,
@@ -85,43 +74,40 @@ export function RouteDisplay({
     [pathlessSSROutletDeferral],
   );
 
-  const [locationSource] = useState(createDisplayLocationSource);
-  // null during SSR/hydration; React re-renders with the real location after hydration.
-  const clientLocation = useSyncExternalStore(
-    locationSource.subscribe,
-    locationSource.getSnapshot,
-    getServerSnapshot,
-  );
+  // Same adapters as Router, but interception is never set up
+  const [adapter] = useState(createDisplayAdapter);
 
   // useBlocker requires a registry. Blockers never fire because no
   // navigation is intercepted.
   const [blockerRegistry] = useState(() => createBlockerRegistry());
 
-  // Loaders are never aborted: there is no subsequent navigation.
-  const [idleSignal] = useState(() => new AbortController().signal);
+  const { locationEntry, actualLocationEntry, isPending } = useLocationEntry(adapter);
 
-  // Loader results are scoped to this instance so that multiple renders in
-  // the same process (SSR requests, SSG pages) don't share them.
-  const [instanceLoaderCache] = useState(() => new Map<string, unknown>());
-
-  // Keyed by href so that state-only entry updates don't re-run matching.
-  const clientHref = clientLocation?.url.href ?? null;
-  const clientUrl = useMemo(() => (clientHref === null ? null : new URL(clientHref)), [clientHref]);
-  // Keyed by the path string so that an inline `ssr` object doesn't create a
-  // new URL (and re-run matching) on every render.
-  const ssrPath = ssr?.path;
-  const ssrUrl = useMemo(() => {
-    if (ssrPath === undefined) return null;
-    const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
-    return new URL(ssrPath, origin);
-  }, [ssrPath]);
-  const urlObject = clientUrl ?? ssrUrl;
+  const url = useMemo(() => {
+    if (locationEntry) {
+      return locationEntry.url.toString();
+    }
+    if (ssr) {
+      const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+      return new URL(ssr.path, origin).toString();
+    }
+    return null;
+  }, [locationEntry, ssr]);
+  const urlObject = useMemo(() => (url ? new URL(url) : null), [url]);
 
   /**
-   * Whether to run loaders. Loaders always run on the client; during SSR
-   * (and hydration) only when ssr.runLoaders is true and ssr.path is given.
+   * Whether to run loaders. Loaders always run when a location entry is
+   * available; during SSR (and hydration) only when ssr.runLoaders is true
+   * and ssr.path is given.
    */
-  const runLoaders = clientUrl !== null || (!!ssr?.runLoaders && urlObject !== null);
+  const runLoaders = locationEntry !== null || (!!ssr?.runLoaders && urlObject !== null);
+
+  // Loader cache keying is the same as Router's: the adapter's entry key,
+  // or an instance-scoped cache when no entry is available (SSR), so that
+  // renders in the same process don't share loader results.
+  const realLocationKey = actualLocationEntry?.key ?? null;
+  const locationKey = realLocationKey ?? "ssr";
+  const [instanceLoaderCache] = useState(() => new Map<string, unknown>());
 
   const matchedRoutesWithData = useMemo(() => {
     if (!runLoaders) {
@@ -142,27 +128,49 @@ export function RouteDisplay({
 
     return executeLoaders(
       matched,
-      displayLoaderCacheKey,
+      locationKey,
       createLoaderRequest(urlObject),
-      idleSignal,
+      adapter.getIdleAbortSignal(),
       undefined,
-      instanceLoaderCache,
+      realLocationKey === null ? instanceLoaderCache : undefined,
     );
-  }, [routes, urlObject, runLoaders, trailingSlash, idleSignal, instanceLoaderCache]);
+  }, [
+    routes,
+    adapter,
+    urlObject,
+    runLoaders,
+    trailingSlash,
+    locationKey,
+    realLocationKey,
+    instanceLoaderCache,
+  ]);
 
+  const locationState = locationEntry?.state;
+  const locationInfo = locationEntry?.info;
+  const entryId = actualLocationEntry?.entryId ?? null;
+  const entryKey = actualLocationEntry?.entryKey ?? null;
   const routerContextValue: RouterContextValue = useMemo(
     () => ({
-      locationState: clientLocation?.state,
-      locationInfo: undefined,
+      locationState,
+      locationInfo,
       url: urlObject,
-      entryId: clientLocation?.entryId ?? null,
-      entryKey: clientLocation?.entryKey ?? null,
-      isPending: false,
-      navigateAsync: locationSource.navigateAsync,
-      updateCurrentEntryState: locationSource.updateCurrentEntryState,
+      entryId,
+      entryKey,
+      isPending,
+      navigateAsync: (to, options) => adapter.navigateAsync(to, options),
+      updateCurrentEntryState: (state) => adapter.updateCurrentEntryState(state),
       features: resolvedFeatures,
     }),
-    [clientLocation, urlObject, locationSource, resolvedFeatures],
+    [
+      locationState,
+      locationInfo,
+      urlObject,
+      entryId,
+      entryKey,
+      isPending,
+      adapter,
+      resolvedFeatures,
+    ],
   );
 
   return useMemo(() => {
