@@ -32,3 +32,15 @@ export function createAdapter(fallback: FallbackMode): RouterAdapter {
   // No adapter available (fallback="none" or default)
   return new NullAdapter();
 }
+
+/**
+ * Create the adapter for RouteDisplay: the Navigation API adapter when
+ * available (without interception), otherwise a static adapter that performs
+ * full page navigations.
+ */
+export function createDisplayAdapter(): RouterAdapter {
+  if (hasNavigation()) {
+    return new NavigationAPIAdapter();
+  }
+  return new StaticAdapter({ fullPageNavigation: true });
+}

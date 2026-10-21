@@ -4,6 +4,7 @@
 
 // Components
 export { Router, type RouterProps, type RouterFeatures, type SSRConfig } from "./Router/index.js";
+export { RouteDisplay, type RouteDisplayProps } from "./RouteDisplay/index.js";
 export { Outlet } from "./Outlet.js";
 
 // Hooks

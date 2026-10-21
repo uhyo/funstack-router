@@ -1,14 +1,28 @@
 import type { RouterAdapter, LocationEntry, EntryChange } from "./RouterAdapter.js";
 import type { InternalRouteDefinition, NavigateOptions, OnNavigateCallback } from "../types.js";
 
+export type StaticAdapterOptions = {
+  /**
+   * When true, programmatic navigations are performed as full page loads
+   * via `location.assign()` / `location.replace()`. State and info cannot be
+   * carried over. When false (default), they are ignored with a warning.
+   */
+  fullPageNavigation?: boolean;
+};
+
 /**
- * Static adapter for fallback mode when Navigation API is unavailable.
+ * Static adapter for when Navigation API is unavailable.
  * Provides read-only location access with no SPA navigation capabilities.
  * Links will cause full page loads (MPA behavior).
  */
 export class StaticAdapter implements RouterAdapter {
   #cachedSnapshot: LocationEntry | null = null;
   #idleController: AbortController | null = null;
+  #fullPageNavigation: boolean;
+
+  constructor(options?: StaticAdapterOptions) {
+    this.#fullPageNavigation = options?.fullPageNavigation ?? false;
+  }
 
   getSnapshot(): LocationEntry | null {
     if (typeof window === "undefined") {
@@ -34,7 +48,15 @@ export class StaticAdapter implements RouterAdapter {
     return () => {};
   }
 
-  navigate(_to: string, _options?: NavigateOptions): void {
+  navigate(to: string, options?: NavigateOptions): void {
+    if (this.#fullPageNavigation) {
+      if (options?.replace) {
+        window.location.replace(to);
+      } else {
+        window.location.assign(to);
+      }
+      return;
+    }
     console.warn(
       "FUNSTACK Router: navigate() called in static fallback mode. " +
         "Navigation API is not available in this browser. " +
