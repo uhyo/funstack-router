@@ -54,8 +54,10 @@ The router uses two React contexts:
 
 ### Component Rendering (`packages/router/src/Router/index.tsx`)
 
-- `<Router>` subscribes to Navigation API via `useSyncExternalStore`
-- Intercepts navigation events and matches against route definitions
+- `<Router>` tracks the location through an adapter (`core/RouterAdapter.ts`) with `useLocationEntry`
+- It intercepts navigation events with the adapter's `setupInterception`
+- `<RouteDisplay>` (`packages/router/src/RouteDisplay/index.tsx`) tracks the location the same way but never intercepts
+- Both render through `RouteTree` (`Router/RouteTree.tsx`), which matches routes, runs loaders, and provides `RouterContext`
 - `RouteRenderer` recursively renders matched routes, each wrapped in its own `RouteContext.Provider`
 - Child routes are pre-rendered as `outlet` in the context, consumed by `<Outlet>`
 

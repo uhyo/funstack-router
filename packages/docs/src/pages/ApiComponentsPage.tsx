@@ -172,6 +172,13 @@ export function ApiComponentsPage() {
           Features that depend on intercepting navigations are inert: <code>useBlocker</code> never
           blocks, and route actions are not run (forms submit to the server).
         </p>
+        <p>
+          <code>{"<RouteDisplay>"}</code> assumes that nothing else on the page intercepts
+          navigations. If another library intercepts them with the Navigation API, entry changes are
+          still rendered, but behaviors that depend on <code>{"<Router>"}</code>'s own interception
+          are missing: for example, loaders do not re-run on an intercepted reload, and the
+          navigation <code>info</code> is not exposed.
+        </p>
         <h4>Props</h4>
         <div className="table-scroll">
           <table className="props-table">
