@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Router } from "../Router/index.js";
 import { Outlet } from "../Outlet.js";
@@ -21,9 +21,9 @@ describe("route prop", () => {
   it("passes the route definition object to the component", () => {
     setupNavigationMock("http://localhost/users/123");
 
-    let receivedRoute: unknown;
+    const receiveRoute = vi.fn();
     function UserPage(props: RouteComponentProps<{ userId: string }>) {
-      receivedRoute = props.route;
+      receiveRoute(props.route);
       const params = useRouteParams(props.route);
       return <div data-testid="userId">{params.userId}</div>;
     }
@@ -37,15 +37,15 @@ describe("route prop", () => {
     render(<Router routes={[userRoute]} />);
     expect(screen.getByTestId("userId").textContent).toBe("123");
     // The prop is the very object the route was defined with
-    expect(receivedRoute).toBe(userRoute);
+    expect(receiveRoute.mock.lastCall?.[0]).toBe(userRoute);
   });
 
   it("passes the route definition for routes with loader", () => {
     setupNavigationMock("http://localhost/users/123");
 
-    let receivedRoute: unknown;
+    const receiveRoute = vi.fn();
     function UserPage(props: RouteComponentPropsWithData<{ userId: string }, { name: string }>) {
-      receivedRoute = props.route;
+      receiveRoute(props.route);
       const data = useRouteData(props.route);
       return <div data-testid="name">{data.name}</div>;
     }
@@ -59,15 +59,15 @@ describe("route prop", () => {
 
     render(<Router routes={[userRoute]} />);
     expect(screen.getByTestId("name").textContent).toBe("John");
-    expect(receivedRoute).toBe(userRoute);
+    expect(receiveRoute.mock.lastCall?.[0]).toBe(userRoute);
   });
 
   it("passes the route definition for routes without id, usable with nearest-context hooks", () => {
     setupNavigationMock("http://localhost/users/123");
 
-    let receivedRoute: unknown;
+    const receiveRoute = vi.fn();
     function UserPage(props: RouteComponentProps<{ userId: string }>) {
-      receivedRoute = props.route;
+      receiveRoute(props.route);
       // Without an id, hooks fall back to the nearest route context
       const params = useRouteParams(props.route);
       return <div data-testid="userId">{params.userId}</div>;
@@ -80,7 +80,7 @@ describe("route prop", () => {
 
     render(<Router routes={[userRoute]} />);
     expect(screen.getByTestId("userId").textContent).toBe("123");
-    expect(receivedRoute).toBe(userRoute);
+    expect(receiveRoute.mock.lastCall?.[0]).toBe(userRoute);
   });
 
   it("passes the bound route definition in the two-phase (bindRoute) flow", () => {
@@ -92,9 +92,9 @@ describe("route prop", () => {
       loader: () => ({ name: "John" }),
     });
 
-    let receivedRoute: unknown;
+    const receiveRoute = vi.fn();
     function UserPage(props: RouteComponentPropsOf<typeof partialRoute>) {
-      receivedRoute = props.route;
+      receiveRoute(props.route);
       const params = useRouteParams(props.route);
       const data = useRouteData(props.route);
       return (
@@ -109,21 +109,21 @@ describe("route prop", () => {
     render(<Router routes={[boundRoute]} />);
     expect(screen.getByTestId("out").textContent).toBe("John:123");
     // The component receives the bound (full) definition, not the partial one
-    expect(receivedRoute).toBe(boundRoute);
+    expect(receiveRoute.mock.lastCall?.[0]).toBe(boundRoute);
   });
 
   it("passes each matched route its own definition in nested routes", () => {
     setupNavigationMock("http://localhost/parent/child");
 
-    let parentReceived: unknown;
-    let childReceived: unknown;
+    const receiveParentRoute = vi.fn();
+    const receiveChildRoute = vi.fn();
 
     function ParentPage(props: RouteComponentProps<Record<string, never>>) {
-      parentReceived = props.route;
+      receiveParentRoute(props.route);
       return <Outlet />;
     }
     function ChildPage(props: RouteComponentProps<Record<string, never>>) {
-      childReceived = props.route;
+      receiveChildRoute(props.route);
       return <div data-testid="child">child</div>;
     }
 
@@ -141,7 +141,7 @@ describe("route prop", () => {
 
     render(<Router routes={[parentRoute]} />);
     expect(screen.getByTestId("child").textContent).toBe("child");
-    expect(parentReceived).toBe(parentRoute);
-    expect(childReceived).toBe(childRoute);
+    expect(receiveParentRoute.mock.lastCall?.[0]).toBe(parentRoute);
+    expect(receiveChildRoute.mock.lastCall?.[0]).toBe(childRoute);
   });
 });

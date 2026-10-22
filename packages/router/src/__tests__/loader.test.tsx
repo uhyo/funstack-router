@@ -99,10 +99,10 @@ describe("Data Loader", () => {
 
   describe("async loader", () => {
     it("passes Promise to component", () => {
-      let receivedData: Promise<{ name: string }> | undefined;
+      const receiveData = vi.fn();
 
       function AsyncUserPage({ data }: { data: Promise<{ name: string }> }) {
-        receivedData = data;
+        receiveData(data);
         // Don't actually use() the promise in this test
         // Just verify it's received correctly
         return <div>Received data</div>;
@@ -120,7 +120,7 @@ describe("Data Loader", () => {
       render(<Router routes={routesWithPromise} />);
 
       // Verify the component received a Promise
-      expect(receivedData).toBeInstanceOf(Promise);
+      expect(receiveData).toHaveBeenLastCalledWith(expect.any(Promise));
       expect(screen.getByText("Received data")).toBeInTheDocument();
     });
 

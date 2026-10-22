@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { Suspense, type ReactNode } from "react";
 import { Router } from "../Router/index.js";
@@ -211,17 +211,17 @@ describe("hooks", () => {
 
   describe("useIsPending", () => {
     it("returns false when no transition is pending", () => {
-      let pending: boolean | null = null;
+      const receivePending = vi.fn();
 
       function TestComponent() {
-        pending = useIsPending();
+        receivePending(useIsPending());
         return null;
       }
 
       const routes: RouteDefinition[] = [{ path: "/", component: TestComponent }];
 
       render(<Router routes={routes} />);
-      expect(pending).toBe(false);
+      expect(receivePending).toHaveBeenLastCalledWith(false);
     });
 
     it("returns true when a navigation transition is pending due to a suspending route", async () => {
@@ -232,11 +232,11 @@ describe("hooks", () => {
       }
 
       // Track isPending values observed by the home route component
-      let capturedIsPending: boolean | null = null;
+      const receiveIsPending = vi.fn();
 
       function HomeComponent() {
         const isPending = useIsPending();
-        capturedIsPending = isPending;
+        receiveIsPending(isPending);
         return <div data-testid="home">Home (isPending: {String(isPending)})</div>;
       }
 
@@ -252,7 +252,7 @@ describe("hooks", () => {
       );
 
       // Initially, isPending should be false and home should be visible
-      expect(capturedIsPending).toBe(false);
+      expect(receiveIsPending).toHaveBeenLastCalledWith(false);
       expect(screen.getByTestId("home").textContent).toBe("Home (isPending: false)");
 
       // Navigate to /slow — the new route will suspend, so React keeps the old UI
@@ -263,7 +263,7 @@ describe("hooks", () => {
 
       // After the transition starts, the home component should still be visible
       // (because /slow suspends), and isPending should be true
-      expect(capturedIsPending).toBe(true);
+      expect(receiveIsPending).toHaveBeenLastCalledWith(true);
       expect(screen.getByTestId("home").textContent).toBe("Home (isPending: true)");
     });
 

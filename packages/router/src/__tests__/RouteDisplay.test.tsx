@@ -115,19 +115,20 @@ describe("RouteDisplay", () => {
 
   it("performs full page navigations from setters without Navigation API", () => {
     setLocation("http://localhost/?a=1");
-    let setSearchParams: ReturnType<typeof useSearchParams>[1] | undefined;
+    const receiveSetSearchParams = vi.fn<(setter: ReturnType<typeof useSearchParams>[1]) => void>();
     function Page({ setState }: CountProps) {
-      setSearchParams = useSearchParams()[1];
+      receiveSetSearchParams(useSearchParams()[1]);
       return <button onClick={() => void setState({ count: 1 })}>Set</button>;
     }
     const routes = [routeState<CountState>()({ path: "/", component: Page })];
 
     render(<RouteDisplay routes={routes} />);
+    const setSearchParams = receiveSetSearchParams.mock.lastCall![0];
 
-    setSearchParams!({ q: "x" }, { replace: false });
+    setSearchParams({ q: "x" }, { replace: false });
     expect(window.location.assign).toHaveBeenCalledWith("/?q=x");
 
-    setSearchParams!({ q: "y" });
+    setSearchParams({ q: "y" });
     expect(window.location.replace).toHaveBeenCalledWith("/?q=y");
 
     fireEvent.click(screen.getByText("Set"));
@@ -250,9 +251,10 @@ describe("RouteDisplay", () => {
 
     it("navigates via navigation.navigate from setters", async () => {
       const mockNavigation = setupNavigationMock("http://localhost/");
-      let setSearchParams: ReturnType<typeof useSearchParams>[1] | undefined;
+      const receiveSetSearchParams =
+        vi.fn<(setter: ReturnType<typeof useSearchParams>[1]) => void>();
       function Page({ setState }: CountProps) {
-        setSearchParams = useSearchParams()[1];
+        receiveSetSearchParams(useSearchParams()[1]);
         return <button onClick={() => void setState({ count: 1 })}>Set</button>;
       }
       const routes = [routeState<CountState>()({ path: "/", component: Page })];
@@ -268,8 +270,9 @@ describe("RouteDisplay", () => {
         info: undefined,
       });
 
+      const setSearchParams = receiveSetSearchParams.mock.lastCall![0];
       await act(async () => {
-        setSearchParams!({ q: "x" }, { replace: false });
+        setSearchParams({ q: "x" }, { replace: false });
       });
       expect(mockNavigation.navigate).toHaveBeenLastCalledWith("/?q=x", {
         history: "push",
