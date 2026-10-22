@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import type { NavigateOptions } from "../types.js";
 // Type-only import; erased at runtime, so no circular dependency.
-import type { RouterFeatures } from "../Router/index.js";
+import type { RouterFeatures } from "../Router/props.js";
 
 export type RouterContextValue = {
   /**

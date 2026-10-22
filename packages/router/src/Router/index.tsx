@@ -1,49 +1,19 @@
-import { type ReactNode, useCallback, useEffect, useEffectEvent, useMemo, useState } from "react";
-import { RouterContext, type RouterContextValue } from "../context/RouterContext.js";
-import { BlockerContext, createBlockerRegistry } from "../context/BlockerContext.js";
+import { type ReactNode, useEffect, useEffectEvent, useMemo, useState } from "react";
+import { createBlockerRegistry } from "../context/BlockerContext.js";
 import {
   type GetTransitionTypes,
-  type NavigateOptions,
   type OnNavigateCallback,
   type FallbackMode,
-  type TrailingSlashMode,
   internalRoutes,
 } from "../types.js";
-import { getBrowserFn } from "../core/browserBailout.js";
-import { matchRoutes } from "../core/matchRoutes.js";
 import { createAdapter } from "../core/createAdapter.js";
-import { executeLoaders, createLoaderRequest } from "../core/loaderCache.js";
-import type { RouteDefinition } from "../route.js";
-import { RouteRenderer } from "./RouteRenderer.js";
+import type { RouteTreeSharedProps } from "./props.js";
+import { RouteTree } from "./RouteTree.js";
 import { useLocationEntry } from "./useLocationEntry.js";
 
-/**
- * SSR configuration for the router.
- */
-export type SSRConfig = {
-  /**
-   * Pathname to use for route matching during SSR.
-   *
-   * The router uses this pathname to match path-based routes during SSR.
-   * Route params are extracted normally.
-   */
-  path: string;
-  /**
-   * Whether to run loaders during SSR.
-   *
-   * - When `false` or omitted, routes with loaders are skipped during SSR
-   *   and the parent route renders as a shell.
-   * - When `true`, routes with loaders are matched and their loaders are
-   *   executed during SSR. The loader results are passed to components as
-   *   the `data` prop, so server-rendered HTML includes loader content.
-   *
-   * @default false
-   */
-  runLoaders?: boolean;
-};
+export type { RouterFeatures, SSRConfig } from "./props.js";
 
-export type RouterProps = {
-  routes: RouteDefinition[];
+export interface RouterProps extends RouteTreeSharedProps {
   /**
    * Callback invoked before navigation is intercepted.
    * Call `event.preventDefault()` to prevent the router from handling this navigation.
@@ -59,40 +29,6 @@ export type RouterProps = {
    * - `"static"`: Render matched routes without navigation capabilities (MPA behavior)
    */
   fallback?: FallbackMode;
-  /**
-   * SSR configuration for the router.
-   *
-   * By default (no `ssr` prop), during SSR only pathless routes match.
-   * When provided, the router uses the given pathname to match path-based
-   * routes during SSR as well.
-   *
-   * This prop is only used when the location entry is not available (during SSR
-   * or hydration). Once the client hydrates, the real URL from the Navigation API
-   * takes over.
-   *
-   * @example
-   * ```tsx
-   * // SSG: match path-based routes, skip loaders
-   * <Router routes={routes} ssr={{ path: "/about" }} />
-   *
-   * // SSR with loaders: match path-based routes including those with loaders
-   * <Router routes={routes} ssr={{ path: "/about", runLoaders: true }} />
-   * ```
-   */
-  ssr?: SSRConfig;
-  /**
-   * How trailing slashes in the URL pathname are treated during route matching.
-   *
-   * - `"ignore"` (default): a single trailing slash is ignored, so `/users/`
-   *   matches a route with `path: "users"` (and a trailing slash in a route's
-   *   `path` pattern is likewise ignored). The URL itself is never rewritten —
-   *   only matching is affected, and the root pathname `/` is unaffected.
-   * - `"strict"`: pathnames must match patterns exactly; `/users/` does not
-   *   match `path: "users"`.
-   *
-   * @default "ignore"
-   */
-  trailingSlash?: TrailingSlashMode;
   /**
    * Function returning the React transition types to attach to entry-change
    * transitions via `addTransitionType`. Called inside `startTransition` for
@@ -111,69 +47,17 @@ export type RouterProps = {
    * `transitionTypes` takes precedence.
    */
   experimentalTransitionTypes?: GetTransitionTypes;
-  /**
-   * Opt-in feature flags that change the Router's behavior.
-   *
-   * Each flag is opt-in in the current major version; see the documentation
-   * of the individual flags on {@link RouterFeatures} for details.
-   */
-  features?: RouterFeatures;
-};
-
-/**
- * Opt-in feature flags for the Router, passed via the `features` prop.
- */
-export type RouterFeatures = {
-  /**
-   * Use React's `browser()` API to defer unmatched outlet content to the
-   * browser during pathless SSR.
-   *
-   * During pathless SSR (no `ssr` prop), path-based child routes cannot match
-   * because no URL is available, so `<Outlet />` renders `null` on the server
-   * while the same outlet renders content in the browser. When this flag is
-   * enabled, `<Outlet />` instead calls `use(browser())` in that situation,
-   * suspending server rendering at the nearest `<Suspense>` boundary and
-   * deferring the outlet content to the browser — avoiding hydration
-   * mismatches. Each such outlet must be wrapped in a `<Suspense>` boundary,
-   * or the server render fails.
-   *
-   * Requires a React build that exports `browser` from react-dom (React 19.3
-   * or later). On builds that don't expose the API, enabling this flag
-   * throws an error when the Router renders.
-   *
-   * This behavior will become the default in the next major version of
-   * FUNSTACK Router.
-   *
-   * @default false
-   */
-  pathlessSSROutletDeferral?: boolean;
-};
+}
 
 export function Router({
-  routes: inputRoutes,
   onNavigate,
   fallback = "none",
-  ssr,
-  trailingSlash,
   transitionTypes,
   experimentalTransitionTypes,
-  features,
+  ...sharedProps
 }: RouterProps): ReactNode {
-  const routes = internalRoutes(inputRoutes);
-
-  const pathlessSSROutletDeferral = features?.pathlessSSROutletDeferral ?? false;
-
-  if (pathlessSSROutletDeferral) {
-    // Fail fast (on both server and client) when the host React build
-    // doesn't support the browser() API.
-    getBrowserFn();
-  }
-
-  // Feature flags with defaults applied, for consumption via RouterContext
-  const resolvedFeatures = useMemo(
-    () => ({ pathlessSSROutletDeferral }),
-    [pathlessSSROutletDeferral],
-  );
+  const routes = internalRoutes(sharedProps.routes);
+  const { trailingSlash } = sharedProps;
 
   // Create adapter once based on browser capabilities and fallback setting
   const adapter = useMemo(() => createAdapter(fallback), [fallback]);
@@ -181,10 +65,7 @@ export function Router({
   // Create blocker registry once
   const [blockerRegistry] = useState(() => createBlockerRegistry());
 
-  const { locationEntry, actualLocationEntry, isPending } = useLocationEntry(
-    adapter,
-    transitionTypes ?? experimentalTransitionTypes,
-  );
+  const location = useLocationEntry(adapter, transitionTypes ?? experimentalTransitionTypes);
 
   // Wrap in useEffectEvent so interception doesn't re-setup when routes,
   // onNavigate, or trailingSlash change
@@ -204,149 +85,7 @@ export function Router({
     );
   }, [adapter, blockerRegistry]);
 
-  // Navigate function that returns a Promise
-  const navigateAsync = useCallback(
-    (to: string, options?: NavigateOptions) => {
-      return adapter.navigateAsync(to, options);
-    },
-    [adapter],
+  return (
+    <RouteTree {...sharedProps} {...location} adapter={adapter} blockerRegistry={blockerRegistry} />
   );
-
-  // Update current entry's state without navigation
-  const updateCurrentEntryState = useCallback(
-    (state: unknown) => {
-      adapter.updateCurrentEntryState(state);
-    },
-    [adapter],
-  );
-
-  const url = useMemo(() => {
-    if (locationEntry) {
-      return locationEntry.url.toString();
-    }
-    if (ssr) {
-      const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
-      return new URL(ssr.path, origin).toString();
-    }
-    return null;
-  }, [locationEntry, ssr]);
-  /**
-   * URL object. Non-null when client-side or during SSR with ssr.path provided.
-   * Null during SSR without ssr.path.
-   */
-  const urlObject = useMemo(() => (url ? new URL(url) : null), [url]);
-
-  /**
-   * Whether to run loaders.
-   * 1. Loaders are always run for rendering with URL available (client-side)
-   * 2. During SSR, loaders are only run if ssr.runLoaders is true and URL is available (ssr.path provided).
-   */
-  const runLoaders = locationEntry !== null || (!!ssr?.runLoaders && urlObject !== null);
-
-  /**
-   * Key of location provided by the adapter, or null when no location entry
-   * is available (SSR, or Navigation API unavailable with fallback="none").
-   */
-  const realLocationKey = actualLocationEntry?.key ?? null;
-  /**
-   * Key of location. This is used as the cache key for loader data saved in navigation entry.
-   */
-  const locationKey = realLocationKey ?? "ssr";
-
-  // Loader cache for renders without a location entry. The module-level cache
-  // is keyed by navigation entry and cleaned up via dispose events; without an
-  // entry, every render in the same process would share the literal "ssr" slot,
-  // serving one request's loader data to all subsequent SSR/SSG renders. An
-  // instance-scoped cache keeps such results memoized for this Router's
-  // lifetime only, and is garbage-collected with it.
-  const [instanceLoaderCache] = useState(() => new Map<string, unknown>());
-
-  // Match routes and execute loaders
-  const matchedRoutesWithData = useMemo(() => {
-    if (!runLoaders) {
-      // SSR/hydration without loader execution: match routes, data is undefined.
-      // Routes with loaders are skipped (skipLoaders: true).
-      const matched = matchRoutes(routes, urlObject?.pathname ?? null, {
-        skipLoaders: true,
-        trailingSlash,
-      });
-      if (!matched) return null;
-      return matched.map((m) => ({ ...m, data: undefined }));
-    }
-
-    if (urlObject === null) {
-      throw new Error("Invariant failure: loaders cannot run without URL.");
-    }
-
-    // Unified path: SSR with loaders or client-side.
-    // Both cases match routes normally and execute loaders.
-    const matched = matchRoutes(routes, urlObject.pathname, { trailingSlash });
-    if (!matched) return null;
-
-    const entryKey = locationKey;
-    const request = createLoaderRequest(urlObject);
-    const signal = adapter.getIdleAbortSignal();
-    return executeLoaders(
-      matched,
-      entryKey,
-      request,
-      signal,
-      undefined,
-      // Without a real location entry, scope loader results to this Router
-      // instance instead of the shared module-level cache.
-      realLocationKey === null ? instanceLoaderCache : undefined,
-    );
-  }, [
-    routes,
-    adapter,
-    urlObject,
-    runLoaders,
-    trailingSlash,
-    locationKey,
-    realLocationKey,
-    instanceLoaderCache,
-  ]);
-
-  const locationState = locationEntry?.state;
-  const locationInfo = locationEntry?.info;
-  const entryId = actualLocationEntry?.entryId ?? null;
-  const entryKey = actualLocationEntry?.entryKey ?? null;
-  const routerContextValue: RouterContextValue = useMemo(
-    () => ({
-      locationState,
-      locationInfo,
-      url: urlObject,
-      entryId,
-      entryKey,
-      isPending,
-      navigateAsync,
-      updateCurrentEntryState,
-      features: resolvedFeatures,
-    }),
-    [
-      locationState,
-      locationInfo,
-      urlObject,
-      entryId,
-      entryKey,
-      isPending,
-      navigateAsync,
-      updateCurrentEntryState,
-      resolvedFeatures,
-    ],
-  );
-
-  return useMemo(() => {
-    const blockerContextValue = { registry: blockerRegistry };
-
-    return (
-      <BlockerContext.Provider value={blockerContextValue}>
-        <RouterContext.Provider value={routerContextValue}>
-          {matchedRoutesWithData ? (
-            <RouteRenderer matchedRoutes={matchedRoutesWithData} index={0} />
-          ) : null}
-        </RouterContext.Provider>
-      </BlockerContext.Provider>
-    );
-  }, [routerContextValue, matchedRoutesWithData, blockerRegistry]);
 }
