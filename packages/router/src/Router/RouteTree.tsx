@@ -1,23 +1,19 @@
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { RouterContext, type RouterContextValue } from "../context/RouterContext.js";
 import { BlockerContext, type BlockerRegistry } from "../context/BlockerContext.js";
-import type { InternalRouteDefinition, NavigateOptions, TrailingSlashMode } from "../types.js";
+import { type NavigateOptions, internalRoutes } from "../types.js";
 import type { RouterAdapter } from "../core/RouterAdapter.js";
 import { getBrowserFn } from "../core/browserBailout.js";
 import { matchRoutes } from "../core/matchRoutes.js";
 import { executeLoaders, createLoaderRequest } from "../core/loaderCache.js";
-import type { RouterFeatures, SSRConfig } from "./index.js";
+import type { RouteTreeSharedProps } from "./props.js";
 import type { UseLocationEntryResult } from "./useLocationEntry.js";
 import { RouteRenderer } from "./RouteRenderer.js";
 
-export type RouteTreeProps = UseLocationEntryResult & {
+export interface RouteTreeProps extends RouteTreeSharedProps, UseLocationEntryResult {
   adapter: RouterAdapter;
-  routes: InternalRouteDefinition[];
-  ssr: SSRConfig | undefined;
-  trailingSlash: TrailingSlashMode | undefined;
-  features: RouterFeatures | undefined;
   blockerRegistry: BlockerRegistry;
-};
+}
 
 /**
  * Renders the routes matching the resolved location, with the contexts
@@ -29,12 +25,14 @@ export function RouteTree({
   actualLocationEntry,
   isPending,
   adapter,
-  routes,
+  routes: inputRoutes,
   ssr,
   trailingSlash,
   features,
   blockerRegistry,
 }: RouteTreeProps): ReactNode {
+  const routes = internalRoutes(inputRoutes);
+
   const pathlessSSROutletDeferral = features?.pathlessSSROutletDeferral ?? false;
 
   if (pathlessSSROutletDeferral) {
