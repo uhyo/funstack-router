@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocation } from "@funstack/router";
-import { useState, useEffect, type ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
 
 type NavLinkProps = {
   href: string;
@@ -19,8 +19,10 @@ type NavLinkProps = {
  * mounts after hydration, so `useLocation` is never called during SSR.
  */
 export function NavLink(props: NavLinkProps) {
-  const [isClient, setIsClient] = useState(false);
-  useEffect(() => setIsClient(true), []);
+  // The server snapshot (false) is used during SSR and the hydration render,
+  // so the hydrated markup matches the server; React then re-renders with the
+  // client snapshot (true).
+  const isClient = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
 
   if (isClient) {
     return <ActiveNavLink {...props} />;
@@ -33,6 +35,11 @@ export function NavLink(props: NavLinkProps) {
     </a>
   );
 }
+
+// Whether we are on the client never changes, so there is nothing to subscribe to.
+const subscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 function ActiveNavLink({ href, className, activeClassName, exact, children }: NavLinkProps) {
   const location = useLocation();

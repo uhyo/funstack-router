@@ -8,7 +8,7 @@
     "test": "turbo run test",
     "test:run": "turbo run test:run",
     "typecheck": "turbo run typecheck",
-    "lint": "oxlint",
+    "lint": "oxlint --deny-warnings",
     "format": "oxfmt .",
     "format:check": "oxfmt --check ."
   },
