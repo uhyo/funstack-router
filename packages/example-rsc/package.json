@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@funstack/router": "workspace:*",
-    "@funstack/static": "^1.3.2",
+    "@funstack/static": "^1.3.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
